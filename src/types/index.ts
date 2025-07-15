@@ -82,4 +82,10 @@ export interface Zone {
   isPremium: boolean
   articleCount: number
   videoCount: number
-} 
+}
+
+export type CoachCategory = 'tactics' | 'technique' | 'conditioning' | 'periodization' | 'psychology';
+
+export type PlayerCategory = 'technical-skills' | 'physical-fitness' | 'tactical-awareness' | 'mental-strength' | 'nutrition-recovery';
+
+export type ParentCategory = 'child-development' | 'safety-first-aid' | 'nutrition-health' | 'psychology-support' | 'education-planning'; 

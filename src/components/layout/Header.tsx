@@ -11,6 +11,7 @@ const navigation = [
   { name: 'COACHES ZONE', href: '/coach' },
   { name: 'PLAYERS ZONE', href: '/players' },
   { name: 'PARENTS ZONE', href: '/parents' },
+  { name: 'STORE', href: '/store' },
 ]
 
 export default function Header() {
