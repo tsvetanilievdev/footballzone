@@ -27,7 +27,8 @@ export interface Article {
     name: string
     avatar?: string
   }
-  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition'
+  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition' | 'technique' | 'conditioning' | 'periodization'
+  subcategory?: string
   tags: string[]
   publishedAt: Date
   readTime: number

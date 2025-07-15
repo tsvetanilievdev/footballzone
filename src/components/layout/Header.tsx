@@ -8,7 +8,7 @@ import { Bars3Icon, XMarkIcon, UserCircleIcon, ShoppingCartIcon } from '@heroico
 const navigation = [
   { name: 'HOME', href: '/' },
   { name: 'READ ZONE', href: '/read' },
-  { name: 'COACHES ZONE', href: '/coaches' },
+  { name: 'COACHES ZONE', href: '/coach' },
   { name: 'PLAYERS ZONE', href: '/players' },
   { name: 'PARENTS ZONE', href: '/parents' },
 ]
