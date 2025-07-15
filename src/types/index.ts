@@ -27,7 +27,7 @@ export interface Article {
     name: string
     avatar?: string
   }
-  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition' | 'technique' | 'conditioning' | 'periodization'
+  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition' | 'technique' | 'conditioning' | 'periodization' | 'technical-skills' | 'physical-fitness' | 'tactical-awareness' | 'mental-strength' | 'nutrition-recovery'
   subcategory?: string
   tags: string[]
   publishedAt: Date
