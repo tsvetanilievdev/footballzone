@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Button } from './Button'
 import { ArrowRightIcon, PlayIcon } from '@heroicons/react/24/outline'
 
@@ -11,7 +12,7 @@ const slides = [
     subtitle: 'AT THE',
     highlight: 'TIME',
     description: 'Подобри своите футболни умения с нашите експертни тренировки и съвети',
-    image: 'https://images.unsplash.com/photo-1579952363873-27d3bade8f55?w=1920&h=1080&fit=crop&crop=center',
+    image: 'https://images.unsplash.com/photo-1508780709619-79562169bc64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDJ8fGZvb3RiYWxsfGVufDB8fHx8MTY4NDg3NjQ3Mg&ixlib=rb-1.2.1&q=80&w=1080',
     ctaText: 'SHOP NOW'
   },
   {
@@ -96,13 +97,15 @@ export default function HeroSlider() {
               </div>
 
               <div className="flex items-center gap-4 pt-4 animate-fade-in-delayed-2">
-                <Button 
-                  size="lg" 
-                  className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 text-lg transition-all duration-300 hover:scale-105"
-                >
-                  {currentSlideData.ctaText}
-                  <ArrowRightIcon className="ml-2 h-5 w-5" />
-                </Button>
+                <Link href="/auth/register">
+                  <Button 
+                    size="lg" 
+                    className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 text-lg transition-all duration-300 hover:scale-105"
+                  >
+                    {currentSlideData.ctaText}
+                    <ArrowRightIcon className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
                 
                 <button className="flex items-center gap-3 text-white hover:text-green-400 transition-colors duration-300 group">
                   <div className="w-12 h-12 rounded-full border-2 border-white group-hover:border-green-400 flex items-center justify-center transition-colors duration-300">
@@ -153,19 +156,7 @@ export default function HeroSlider() {
         <ArrowRightIcon className="h-6 w-6" />
       </button>
 
-      {/* RELATED badge (like in the screenshot) */}
-      <div className="absolute top-1/4 right-8 z-20 lg:block hidden">
-        <div className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold tracking-wide">
-          RELATED
-        </div>
-      </div>
 
-      {/* BUY NOW badge */}
-      <div className="absolute top-1/3 right-8 z-20 lg:block hidden">
-        <div className="bg-white text-black px-6 py-3 rounded-full text-sm font-bold tracking-wide mt-4 hover:bg-gray-100 transition-colors cursor-pointer">
-          🛒 BUY NOW
-        </div>
-      </div>
     </div>
   )
 } 

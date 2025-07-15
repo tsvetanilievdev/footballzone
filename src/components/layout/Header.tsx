@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { Bars3Icon, XMarkIcon, UserCircleIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 
 const navigation = [
   { name: 'HOME', href: '/' },
@@ -11,7 +11,6 @@ const navigation = [
   { name: 'COACHES ZONE', href: '/coach' },
   { name: 'PLAYERS ZONE', href: '/players' },
   { name: 'PARENTS ZONE', href: '/parents' },
-  { name: 'STORE', href: '/store' },
 ]
 
 export default function Header() {
@@ -70,13 +69,11 @@ export default function Header() {
         </div>
         
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4 lg:items-center">
-          <button className="text-white hover:text-green-400 transition-colors duration-200">
-            <ShoppingCartIcon className="h-6 w-6" />
-          </button>
-          <span className="text-white text-sm">0</span>
-          <Button variant="outline" size="sm" className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black transition-all duration-200">
-            LOGIN
-          </Button>
+          <Link href="/auth/login">
+            <Button variant="outline" size="sm" className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black transition-all duration-200">
+              LOGIN
+            </Button>
+          </Link>
         </div>
       </nav>
       
@@ -122,9 +119,11 @@ export default function Header() {
                   ))}
                 </div>
                 <div className="py-6 space-y-2">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    LOGIN
-                  </Button>
+                  <Link href="/auth/login" className="block" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                      LOGIN
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

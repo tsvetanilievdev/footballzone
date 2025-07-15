@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import HeroSlider from '@/components/ui/HeroSlider'
@@ -186,12 +187,16 @@ export default function HomePage() {
               премиум съдържание от експерти.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button size="lg" className="bg-white text-green-700 hover:bg-gray-100">
-                Абонирай се сега
-              </Button>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-green-700">
-                Научи повече
-              </Button>
+              <Link href="/auth/register">
+                <Button size="lg" className="bg-white text-green-700 hover:bg-gray-100">
+                  Абонирай се сега
+                </Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-green-700">
+                  Влез в профила
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
