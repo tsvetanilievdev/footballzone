@@ -1,5 +1,6 @@
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import HeroSlider from '@/components/ui/HeroSlider'
 import ZoneCard from '@/components/zones/ZoneCard'
 import ArticleCard from '@/components/ui/ArticleCard'
 import { Button } from '@/components/ui/Button'
@@ -58,7 +59,7 @@ const featuredArticles: Article[] = [
     slug: 'kak-da-podobrim-pasa-v-igrata',
     excerpt: 'Основни техники за подобряване на предаването на топката в различни игрови ситуации',
     content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1579952363873-27d3bade8f55?w=800&h=450&fit=crop',
+    featuredImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=450&fit=crop',
     author: { name: 'Иван Петров', avatar: '/avatars/ivan.jpg' },
     category: 'read',
     tags: ['техники', 'пас', 'основи'],
@@ -108,31 +109,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              Образователна футболна платформа
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-green-100">
-              Специализирано съдържание за играчи, треньори и родители. 
-              Подобри своите умения с експертни статии и видео уроци.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button size="lg" className="bg-white text-green-700 hover:bg-gray-100">
-                Започни безплатно
-                <ArrowRightIcon className="ml-2 h-5 w-5" />
-              </Button>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-green-700">
-                <PlayIcon className="mr-2 h-5 w-5" />
-                Гледай видео
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Slider */}
+      <HeroSlider />
 
       {/* Stats Section */}
       <section className="bg-white py-16">
