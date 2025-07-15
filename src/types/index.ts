@@ -27,7 +27,7 @@ export interface Article {
     name: string
     avatar?: string
   }
-  category: 'read' | 'coach' | 'player' | 'parent'
+  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition'
   tags: string[]
   publishedAt: Date
   readTime: number
@@ -41,7 +41,7 @@ export interface Video {
   videoUrl: string
   thumbnail: string
   duration: number
-  category: 'read' | 'coach' | 'player' | 'parent'
+  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition'
   isPremium: boolean
   publishedAt: Date
 }
