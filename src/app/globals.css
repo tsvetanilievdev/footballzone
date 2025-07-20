@@ -111,10 +111,118 @@ body {
   background: #22c55e;
 }
 
+/* Prose styling for article content */
+.prose {
+  color: #374151;
+  max-width: none;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: #111827;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.prose h1 { font-size: 2.25rem; }
+.prose h2 { font-size: 1.875rem; }
+.prose h3 { font-size: 1.5rem; }
+.prose h4 { font-size: 1.25rem; }
+
+.prose p {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+}
+
+.prose ul, .prose ol {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.625rem;
+}
+
+.prose li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose ul li {
+  list-style-type: disc;
+}
+
+.prose ol li {
+  list-style-type: decimal;
+}
+
+.prose blockquote {
+  margin-top: 1.6rem;
+  margin-bottom: 1.6rem;
+  padding-left: 1rem;
+  border-left: 4px solid #16a34a;
+  background-color: #f0fdf4;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-style: italic;
+  color: #166534;
+  font-size: 1.125rem;
+  quotes: """ """ "'" "'";
+}
+
+.prose blockquote::before {
+  content: open-quote;
+  font-size: 2rem;
+  color: #16a34a;
+  margin-right: 0.5rem;
+}
+
+.prose blockquote::after {
+  content: close-quote;
+  font-size: 2rem;
+  color: #16a34a;
+  margin-left: 0.5rem;
+}
+
+.prose-green a {
+  color: #16a34a;
+  text-decoration: underline;
+}
+
+.prose-green a:hover {
+  color: #15803d;
+}
+
+.prose-lg {
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
+
+.prose-xl {
+  font-size: 1.25rem;
+  line-height: 1.8;
+}
+
+.prose-gray {
+  color: #4b5563;
+}
+
 /* Additional responsive typography */
 @media (max-width: 768px) {
   .glow-text {
     animation: none;
     text-shadow: 0 0 10px #4ade80;
+  }
+  
+  .prose h1 { font-size: 1.875rem; }
+  .prose h2 { font-size: 1.5rem; }
+  .prose h3 { font-size: 1.25rem; }
+  .prose h4 { font-size: 1.125rem; }
+  
+  .prose-lg {
+    font-size: 1rem;
+  }
+  
+  .prose-xl {
+    font-size: 1.125rem;
   }
 }
