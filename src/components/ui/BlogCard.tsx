@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { Article } from '@/types'
 import { UserIcon, ChatBubbleLeftIcon, CameraIcon, PlayIcon } from '@heroicons/react/24/outline'
 
@@ -21,9 +22,11 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
     <div className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-lg transition-shadow duration-300">
       {/* Image with Date Badge */}
       <div className="relative">
-        <img
+        <NextImage
           src={article.featuredImage}
           alt={article.title}
+          width={400}
+          height={208}
           className="w-full h-48 sm:h-52 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         

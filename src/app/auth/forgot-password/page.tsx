@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
                 </p>
                 <p className="text-sm text-gray-500 mb-8">
                   Проверете входящата си поща и следвайте инструкциите в имейла. 
-                  Ако не виждате имейла, проверете в папката "Спам".
+                  Ако не виждате имейла, проверете в папката &ldquo;Спам&rdquo;.
                 </p>
               </div>
 

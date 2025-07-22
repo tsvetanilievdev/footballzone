@@ -33,6 +33,24 @@ export interface Article {
   publishedAt: Date
   readTime: number
   isPremium: boolean
+  series?: {
+    name: string
+    slug: string
+    description?: string
+    part?: number
+    totalParts?: number
+  }
+}
+
+export interface Series {
+  name: string
+  slug: string
+  description: string
+  image: string
+  articleCount: number
+  tags: string[]
+  lastUpdated: Date
+  articles: Article[]
 }
 
 export interface Video {

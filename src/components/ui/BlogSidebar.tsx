@@ -1,12 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from './Button'
 import { 
-  EnvelopeIcon, 
-  UserIcon,
   HeartIcon,
-  ChatBubbleLeftIcon,
   CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline'
@@ -109,7 +105,7 @@ export default function BlogSidebar() {
       
       setSubscribeStatus('success')
       setEmail('')
-    } catch (error) {
+    } catch {
       setSubscribeStatus('error')
       setErrorMessage('Възникна грешка. Моля, опитайте отново.')
     } finally {
@@ -173,7 +169,7 @@ export default function BlogSidebar() {
         <div className="space-y-4">
           {tweets.map((tweet) => (
             <div key={tweet.id} className="text-sm">
-              <p className="text-gray-700 leading-relaxed mb-2">"{tweet.content}"</p>
+              <p className="text-gray-700 leading-relaxed mb-2">&ldquo;{tweet.content}&rdquo;</p>
               <div className="text-xs text-gray-500">{tweet.time}</div>
             </div>
           ))}

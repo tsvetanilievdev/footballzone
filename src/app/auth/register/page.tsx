@@ -77,12 +77,12 @@ export default function RegisterPage() {
     setTimeout(() => {
       setIsLoading(false)
       // Handle registration logic here
-      console.log('Registration data:', { ...formData, role: selectedRole, subscribeNewsletter })
+      // TODO: Implement actual registration logic here
     }, 2000)
   }
 
-  const handleSocialRegister = (provider: string) => {
-    console.log(`Register with ${provider}`)
+  const handleSocialRegister = () => {
+    // TODO: Implement social registration logic here
     // Handle social registration
   }
 
@@ -128,7 +128,7 @@ export default function RegisterPage() {
             {/* Social Registration */}
             <div className="space-y-3">
               <button
-                onClick={() => handleSocialRegister('google')}
+                onClick={() => handleSocialRegister()}
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 hover:shadow-md"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export default function RegisterPage() {
               </button>
 
               <button
-                onClick={() => handleSocialRegister('facebook')}
+                onClick={() => handleSocialRegister()}
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:shadow-md"
               >
                 <svg className="w-5 h-5 mr-3" fill="#1877F2" viewBox="0 0 24 24">
