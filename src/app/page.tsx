@@ -40,16 +40,6 @@ const zones: Zone[] = [
     articleCount: 92,
     videoCount: 203,
   },
-  {
-    id: 'parent',
-    name: 'Parent Zone',
-    description: 'Ръководство за родители: безопасност, хранене, ментална подкрепа',
-    icon: '👨‍👩‍👧‍👦',
-    color: 'bg-orange-500',
-    isPremium: true,
-    articleCount: 34,
-    videoCount: 67,
-  },
 ]
 
 // Примерни статии
@@ -195,7 +185,7 @@ export default function HomePage() {
               Защо да изберете Football Zone?
             </h2>
             <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              Предлагаме най-доброто футболно образование за играчи, треньори и родители
+              Предлагаме най-доброто футболно образование за играчи и треньори
             </p>
           </div>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">

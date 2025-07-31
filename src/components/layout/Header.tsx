@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -10,12 +11,12 @@ const navigation = [
   { name: 'READ ZONE', href: '/read' },
   { name: 'COACHES ZONE', href: '/coach' },
   { name: 'PLAYERS ZONE', href: '/players' },
-  { name: 'PARENTS ZONE', href: '/parents' },
 ]
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,7 +28,7 @@ export default function Header() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-black/90 backdrop-blur-md' : 'bg-transparent'
+      isScrolled ? 'bg-black/90 backdrop-blur-md' : 'bg-black/70 backdrop-blur-sm'
     }`}>
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
@@ -66,6 +67,14 @@ export default function Header() {
               {item.name}
             </Link>
           ))}
+          {pathname === '/' && (
+            <Link
+              href="/admin"
+              className="text-sm font-bold leading-6 text-white hover:text-red-400 transition-colors duration-200 tracking-wide"
+            >
+              ADMIN
+            </Link>
+          )}
         </div>
         
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4 lg:items-center">
@@ -117,6 +126,15 @@ export default function Header() {
                       {item.name}
                     </Link>
                   ))}
+                  {pathname === '/' && (
+                    <Link
+                      href="/admin"
+                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-white hover:bg-red-600/20"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      ADMIN
+                    </Link>
+                  )}
                 </div>
                 <div className="py-6 space-y-2">
                   <Link href="/auth/login" className="block" onClick={() => setMobileMenuOpen(false)}>

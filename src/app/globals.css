@@ -226,3 +226,45 @@ body {
     font-size: 1.125rem;
   }
 }
+
+/* Enhanced Coach Zone Article Styles */
+.prose-green h2 {
+  border-bottom: 3px solid #10b981 !important;
+  padding-bottom: 0.5rem;
+}
+
+.prose-green ul li {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.prose-green ul li::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 0.7rem;
+  width: 6px;
+  height: 6px;
+  background-color: #10b981;
+  border-radius: 50%;
+}
+
+.prose-green blockquote {
+  border-left: 4px solid #10b981;
+  background-color: #f0fdf4;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.prose p {
+  margin-bottom: 1.25rem;
+}
+
+.prose ul, .prose ol {
+  margin-bottom: 1.25rem;
+}
+
+.prose li {
+  margin-bottom: 0.5rem;
+}
