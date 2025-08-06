@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Article } from '@/types'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import PlayersHero from '@/components/zones/PlayersHero'
 import InteractiveCategoryGrid from '@/components/zones/InteractiveCategoryGrid'
 import AnimatedSubCategories from '@/components/zones/AnimatedSubCategories'
 import PlayerArticleCard from '@/components/zones/PlayerArticleCard'
-import { Article } from '@/types'
+
+
 
 // Player Zone Categories with enhanced design data
 const playerCategories = [
@@ -93,9 +95,14 @@ const playerCategories = [
   }
 ]
 
-// Sample player articles
-const playerArticles: Article[] = [
-  {
+// Use centralized articles - filter for player zone  
+// import { allArticles } from '@/data/articles'
+
+// Sample player articles - temporary empty until data migration
+const playerArticles: Article[] = []
+
+/* Mock data fallback
+{
     id: '1',
     title: '10 упражнения за подобряване на контрола на топката',
     slug: '10-exercises-ball-control-improvement',
@@ -185,7 +192,7 @@ const playerArticles: Article[] = [
     readTime: 18,
     isPremium: true,
   }
-]
+] */
 
 export default function PlayersZonePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -240,14 +247,14 @@ export default function PlayersZonePage() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-200 rounded-full blur-3xl opacity-20 translate-x-48 translate-y-48"></div>
         
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-full text-sm font-semibold mb-6">
+          <div className="text-center mb-12 animate-fade-in-up">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-full text-sm font-semibold mb-6 animate-scale-in" style={{ animationDelay: '200ms' }}>
               🏆 Развийте своите умения
             </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
               Изберете областта за развитие
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto animate-fade-in-up" style={{ animationDelay: '400ms' }}>
               Открийте персонализирани тренировъчни програми и експертни съвети в 5 ключови области на футболното развитие
             </p>
           </div>
@@ -273,9 +280,9 @@ export default function PlayersZonePage() {
 
       {/* Articles Display */}
       {filteredArticles.length > 0 && (
-        <section className="py-12 lg:py-16 bg-white">
+        <section className="py-12 lg:py-16 bg-white animate-fade-in-up">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
+            <div className="mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl lg:text-3xl font-bold text-gray-900">
                   {selectedCategoryData?.name}
@@ -296,11 +303,16 @@ export default function PlayersZonePage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredArticles.map((article) => (
-                <PlayerArticleCard 
-                  key={article.id} 
-                  article={article}
-                />
+              {filteredArticles.map((article, index) => (
+                <div
+                  key={article.id}
+                  className="animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300"
+                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                >
+                  <PlayerArticleCard 
+                    article={article}
+                  />
+                </div>
               ))}
             </div>
           </div>

@@ -1,4 +1,63 @@
-import { Article } from '@/types'
+import { Article, ArticleTemplate } from '@/types'
+
+// Default templates for articles
+const defaultReadTemplate: ArticleTemplate = {
+  id: 'read-comprehensive',
+  name: 'Comprehensive Article',
+  description: 'Long-form article with rich media support',
+  category: 'read',
+  settings: {
+    textLength: 'long',
+    allowVideos: true,
+    maxVideos: 2,
+    videoTypes: ['youtube', 'vimeo'],
+    allowImages: true,
+    maxImages: 5,
+    imageLayout: 'gallery',
+    allowDownloads: true,
+    downloadTypes: ['pdf', 'doc'],
+    allowLinks: true,
+    styling: {
+      layout: 'single-column',
+      fontSize: 'medium',
+      spacing: 'normal',
+      colors: {
+        primary: '#1a365d',
+        secondary: '#2d3748',
+        text: '#374151'
+      }
+    }
+  }
+}
+
+const defaultCoachTemplate: ArticleTemplate = {
+  id: 'coach-training',
+  name: 'Training Article',
+  description: 'Coach-focused training content',
+  category: 'coach',
+  settings: {
+    textLength: 'medium',
+    allowVideos: true,
+    maxVideos: 3,
+    videoTypes: ['youtube', 'vimeo'],
+    allowImages: true,
+    maxImages: 8,
+    imageLayout: 'grid',
+    allowDownloads: true,
+    downloadTypes: ['pdf', 'doc'],
+    allowLinks: true,
+    styling: {
+      layout: 'single-column',
+      fontSize: 'medium',
+      spacing: 'normal',
+      colors: {
+        primary: '#1a365d',
+        secondary: '#2d3748',
+        text: '#374151'
+      }
+    }
+  }
+}
 
 // Централизирани данни за статии (в реален проект ще идват от API)
 export const allArticles: Article[] = [
@@ -157,7 +216,9 @@ export const allArticles: Article[] = [
       description: 'Серия статии за треньорската философия и методите на Антонио Конте',
       part: 1,
       totalParts: 5
-    }
+    },
+    zones: ['read', 'coach'],
+    template: defaultReadTemplate
   },
   {
     id: '1',
@@ -216,7 +277,9 @@ export const allArticles: Article[] = [
       description: 'Серия статии за треньорската философия и методите на Антонио Конте',
       part: 2,
       totalParts: 5
-    }
+    },
+    zones: ['read', 'coach'],
+    template: defaultCoachTemplate
   },
   {
     id: '2',
@@ -249,7 +312,9 @@ export const allArticles: Article[] = [
       description: 'Серия статии за треньорската философия и методите на Антонио Конте',
       part: 3,
       totalParts: 5
-    }
+    },
+    zones: ['read', 'coach'],
+    template: defaultCoachTemplate
   },
   {
     id: '3',
@@ -284,7 +349,9 @@ export const allArticles: Article[] = [
       description: 'Серия статии за треньорската философия и методите на Антонио Конте',
       part: 4,
       totalParts: 5
-    }
+    },
+    zones: ['read', 'coach'],
+    template: defaultCoachTemplate
   },
   {
     id: '4',
@@ -321,7 +388,9 @@ export const allArticles: Article[] = [
       description: 'Серия статии за треньорската философия и методите на Антонио Конте',
       part: 5,
       totalParts: 5
-    }
+    },
+    zones: ['read', 'coach'],
+    template: defaultCoachTemplate
   },
   // Други статии...
   {
@@ -337,6 +406,8 @@ export const allArticles: Article[] = [
     publishedAt: new Date('2024-11-25'),
     readTime: 5,
     isPremium: false,
+    zones: ['read'],
+    template: defaultReadTemplate
   },
   {
     id: '6',
@@ -351,6 +422,8 @@ export const allArticles: Article[] = [
     publishedAt: new Date('2024-11-24'),
     readTime: 8,
     isPremium: false,
+    zones: ['read', 'coach'],
+    template: defaultCoachTemplate
   }
 ]
 

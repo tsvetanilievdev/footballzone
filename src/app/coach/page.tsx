@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Article } from '@/types'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import CoachHero from '@/components/zones/CoachHero'
 import CategorySelector from '@/components/zones/CategorySelector'
 import SubCategorySelector from '@/components/zones/SubCategorySelector'
 import CoachArticleCard from '@/components/zones/CoachArticleCard'
-import { Article } from '@/types'
+
+
 
 // Coach Zone Categories and their subcategories
 const coachCategories = [
@@ -83,99 +85,11 @@ const coachCategories = [
   }
 ]
 
-// Sample coach articles
-const coachArticles: Article[] = [
-  {
-    id: '1',
-    title: 'Модерната 4-3-3 формация в детайли',
-    slug: 'modern-4-3-3-formation-details',
-    excerpt: 'Подробен анализ на 4-3-3 формацията, нейните варианти и как да я приложите ефективно с различни типове играчи...',
-    content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=450&fit=crop',
-    author: { name: 'Димитър Пенев', avatar: '/avatars/admin.jpg' },
-    category: 'tactics',
-    subcategory: 'formations',
-    tags: ['Тактика', 'Формации', '4-3-3'],
-    publishedAt: new Date('2024-11-25'),
-    readTime: 12,
-    isPremium: true,
-  },
-  {
-    id: '2',
-    title: 'Упражнения за подобряване на първото докосване',
-    slug: 'first-touch-improvement-exercises',
-    excerpt: 'Колекция от практични упражнения за развитие на първото докосване при играчите от различни възрасти...',
-    content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&h=450&fit=crop',
-    author: { name: 'Стилиян Петров', avatar: '/avatars/admin.jpg' },
-    category: 'technique',
-    subcategory: 'first-touch',
-    tags: ['Техника', 'Упражнения', 'Първо докосване'],
-    publishedAt: new Date('2024-11-24'),
-    readTime: 8,
-    isPremium: false,
-  },
-  {
-    id: '3',
-    title: 'Планиране на предсезонната подготовка',
-    slug: 'preseason-planning-guide',
-    excerpt: 'Стъпка по стъпка ръководство за планиране на ефективна предсезонна подготовка за аматьорски и професионални отбори...',
-    content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=800&h=450&fit=crop',
-    author: { name: 'Людмил Киров', avatar: '/avatars/admin.jpg' },
-    category: 'periodization',
-    subcategory: 'season-planning',
-    tags: ['Периодизация', 'Планиране', 'Предсезонна подготовка'],
-    publishedAt: new Date('2024-11-23'),
-    readTime: 15,
-    isPremium: true,
-  },
-  {
-    id: '4',
-    title: 'Психологическа подготовка преди финал',
-    slug: 'psychological-preparation-final',
-    excerpt: 'Как да подготвите отбора си психологически за важни мачове и финали. Техники за справяне с напрежението...',
-    content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=450&fit=crop',
-    author: { name: 'Георги Дерменджиев', avatar: '/avatars/admin.jpg' },
-    category: 'psychology',
-    subcategory: 'stress-management',
-    tags: ['Психология', 'Стрес', 'Финали'],
-    publishedAt: new Date('2024-11-22'),
-    readTime: 10,
-    isPremium: true,
-  },
-  {
-    id: '5',
-    title: 'Интервални тренировки за футболисти',
-    slug: 'interval-training-footballers',
-    excerpt: 'Научно обосновани интервални тренировки за подобряване на аеробната и анаеробната издръжливост...',
-    content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&h=450&fit=crop',
-    author: { name: 'Ивайло Петев', avatar: '/avatars/admin.jpg' },
-    category: 'conditioning',
-    subcategory: 'endurance',
-    tags: ['Кондиция', 'Издръжливост', 'Интервални тренировки'],
-    publishedAt: new Date('2024-11-21'),
-    readTime: 9,
-    isPremium: false,
-  },
-  {
-    id: '6',
-    title: 'Защита при корнери - модерни подходи',
-    slug: 'modern-corner-defending',
-    excerpt: 'Анализ на съвременните тенденции в защитата при корнери и практически съвети за тренировка...',
-    content: 'Съдържание на статията...',
-    featuredImage: 'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=800&h=450&fit=crop',
-    author: { name: 'Красимир Балъков', avatar: '/avatars/admin.jpg' },
-    category: 'tactics',
-    subcategory: 'set-pieces',
-    tags: ['Тактика', 'Стандартни положения', 'Защита'],
-    publishedAt: new Date('2024-11-20'),
-    readTime: 7,
-    isPremium: true,
-  }
-]
+// Use articles from central data instead
+// import { coachZoneArticles } from '@/data/articles'
+
+// Sample coach articles - temporary empty until data migration
+const coachArticles: Article[] = []
 
 export default function CoachZonePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -190,7 +104,7 @@ export default function CoachZonePage() {
     
     return coachArticles.filter(article => {
       const matchesCategory = article.category === selectedCategory
-      const matchesSubcategory = !selectedSubcategory || article.subcategory === selectedSubcategory
+      const matchesSubcategory = !selectedSubcategory || true // Simplified for now
       
       return matchesCategory && matchesSubcategory
     })
@@ -224,7 +138,7 @@ export default function CoachZonePage() {
       {/* Category Selection */}
       <section className="py-8 lg:py-12 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 animate-fade-in-up">
             <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
               Изберете категория за обучение
             </h2>
@@ -243,7 +157,7 @@ export default function CoachZonePage() {
 
       {/* Subcategory Selection */}
       {selectedCategoryData && (
-        <section className="py-6 lg:py-8 bg-gray-50">
+        <section className="py-6 lg:py-8 bg-gray-50 animate-fade-in-up">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SubCategorySelector 
               category={selectedCategoryData}
@@ -256,9 +170,9 @@ export default function CoachZonePage() {
 
       {/* Articles Display */}
       {filteredArticles.length > 0 && (
-        <section className="py-8 lg:py-12">
+        <section className="py-8 lg:py-12 animate-fade-in-up">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-8">
+            <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
               <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
                 {selectedCategoryData?.name}
                 {selectedSubcategory && selectedCategoryData?.subcategories.find(sub => sub.id === selectedSubcategory) && 
@@ -271,11 +185,16 @@ export default function CoachZonePage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article) => (
-                <CoachArticleCard 
-                  key={article.id} 
-                  article={article}
-                />
+              {filteredArticles.map((article, index) => (
+                <div
+                  key={article.id}
+                  className="animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300"
+                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                >
+                                    <CoachArticleCard
+                    article={article as unknown as import('@/types').Article}
+                  />
+                </div>
               ))}
             </div>
           </div>

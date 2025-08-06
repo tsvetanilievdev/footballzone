@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Article } from '@/types'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ParentsHero from '@/components/zones/ParentsHero'
 import ParentCategoryGrid from '@/components/zones/ParentCategoryGrid'
 import ParentSubCategories from '@/components/zones/ParentSubCategories'
 import ParentArticleCard from '@/components/zones/ParentArticleCard'
-import { Article } from '@/types'
+
 
 // Parent Zone Categories with comprehensive support content
 const parentCategories = [
@@ -88,9 +89,14 @@ const parentCategories = [
   }
 ]
 
-// Sample articles for parents zone
-const sampleParentArticles: Article[] = [
-  {
+// Use centralized articles - filter for parent zone
+// import { allArticles } from '@/data/articles'
+
+// Sample articles for parents zone - temporary empty until data migration
+const sampleParentArticles: Article[] = []
+
+/* Mock data fallback if no parent articles found
+{
     id: '1',
     title: 'Как да разпознаем футболния талант при детето си',
     slug: 'recognize-football-talent-child',
@@ -180,7 +186,7 @@ const sampleParentArticles: Article[] = [
     readTime: 11,
     isPremium: true
   }
-]
+] */
 
 export default function ParentsZone() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)

@@ -12,6 +12,7 @@ import NextImage from 'next/image'
 import { BookOpenIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import { getReadZoneArticles } from '@/data/articles'
 
+
 // Получаваме статиите от централизирания файл
 const readArticles: Article[] = getReadZoneArticles()
 
@@ -60,11 +61,11 @@ export default function ReadZonePage() {
         </div>
         
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-8 lg:px-8">
-          <div className="text-center">
-            <div className="mb-2">
+          <div className="text-center animate-fade-in-up">
+            <div className="mb-2 animate-scale-in" style={{ animationDelay: '200ms' }}>
               <span className="text-green-400 text-sm font-semibold uppercase tracking-wider">BLOG</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight animate-fade-in-up" style={{ animationDelay: '300ms' }}>
               Football Zone Blog
             </h1>
           </div>
@@ -74,7 +75,7 @@ export default function ReadZonePage() {
       {/* Series Section */}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between animate-fade-in-up">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 📚 Тематични поредици
@@ -83,43 +84,47 @@ export default function ReadZonePage() {
                 Дълбочинни анализи и експертни ръководства разделени в логически поредици
               </p>
             </div>
-            <Link 
-              href="/read/series"
-              className="inline-flex items-center px-6 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors group"
-            >
-              <BookOpenIcon className="w-4 h-4 mr-2" />
-              Виж всички поредици
-              <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            <div className="hover:scale-105 active:scale-95 transition-transform duration-200">
+              <Link 
+                href="/read/series"
+                className="inline-flex items-center px-6 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors group"
+              >
+                <BookOpenIcon className="w-4 h-4 mr-2" />
+                Виж всички поредици
+                <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
           </div>
           
           {/* Featured Series Preview */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link 
-              href="/read/series/antonio-conte-philosophy"
-              className="group bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 border border-green-200 hover:border-green-300 transition-all duration-200"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-green-800 transition-colors">
-                    Философията на Антонио Конте
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    5 статии за треньорската философия и методите
-                  </p>
+            <div className="animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300" style={{ animationDelay: '100ms' }}>
+              <Link 
+                href="/read/series/antonio-conte-philosophy"
+                className="group bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 border border-green-200 hover:border-green-300 transition-all duration-200 block"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-green-800 transition-colors">
+                      Философията на Антонио Конте
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      5 статии за треньорската философия и методите
+                    </p>
+                  </div>
+                  <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    5 части
+                  </span>
                 </div>
-                <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  5 части
-                </span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <BookOpenIcon className="w-4 h-4 mr-1" />
-                <span>Завършена поредица</span>
-              </div>
-            </Link>
+                <div className="flex items-center text-sm text-gray-500">
+                  <BookOpenIcon className="w-4 h-4 mr-1" />
+                  <span>Завършена поредица</span>
+                </div>
+              </Link>
+            </div>
             
             {/* Placeholder for future series */}
-            <div className="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300">
+            <div className="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300 animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300" style={{ animationDelay: '200ms' }}>
               <div className="text-center">
                 <div className="text-3xl mb-2">📝</div>
                 <h3 className="font-semibold text-gray-700 mb-1">
@@ -131,7 +136,7 @@ export default function ReadZonePage() {
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300">
+            <div className="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300 animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300" style={{ animationDelay: '300ms' }}>
               <div className="text-center">
                 <div className="text-3xl mb-2">⚽</div>
                 <h3 className="font-semibold text-gray-700 mb-1">
