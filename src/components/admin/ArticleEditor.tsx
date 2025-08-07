@@ -9,6 +9,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 import TemplateSelector from './TemplateSelector'
+import RichTextEditor from './RichTextEditor'
 // import ZoneAssignmentSelector from './ZoneAssignmentSelector'
 // import PremiumScheduler from './PremiumScheduler'
 
@@ -375,20 +376,15 @@ export default function ArticleEditor({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Съдържание на статията *
           </label>
-          <textarea
+          <RichTextEditor
             value={formData.content}
-            onChange={(e) => handleInputChange('content', e.target.value)}
-            rows={15}
-            className={`w-full p-3 border rounded-lg font-mono text-sm ${
-              errors.content ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Въведете съдържанието на статията. Можете да използвате HTML или Markdown."
+            onChange={(value) => handleInputChange('content', value)}
+            placeholder="Въведете съдържанието на статията..."
+            className={`${errors.content ? 'border-red-500' : ''}`}
           />
           {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
-          
           <div className="mt-2 text-sm text-gray-500">
-            <p>💡 Съвет: Можете да използвате HTML тагове за форматиране</p>
-            <p>Пример: &lt;h2&gt;Подзаглавие&lt;/h2&gt;, &lt;p&gt;Параграф&lt;/p&gt;</p>
+            <p>💡 Съвет: Използвайте toolbar-а за форматиране на текста</p>
           </div>
         </div>
       </div>
