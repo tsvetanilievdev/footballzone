@@ -1,4 +1,4 @@
-import { Article, ArticleTemplate } from '@/types'
+  import { Article, ArticleTemplate } from '@/types'
 
 // Default templates for articles
 const defaultReadTemplate: ArticleTemplate = {
