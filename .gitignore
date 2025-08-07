@@ -137,11 +137,44 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-# Project specific files
-assignment-footballzone.md
+# Build outputs
+frontend/dist/
+frontend/build/
+frontend/.next/
+backend/dist/
+backend/build/
 
+# Environment files (both dirs)
+*/.env
+*/.env.local
+*/.env.development.local
+*/.env.test.local
+*/.env.production.local
 
-backend.md
+# Additional Next.js files
+frontend/out/
+
+# Prisma
+backend/prisma/migrations/*/migration.sql
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
+
+# Documentation and Claude-related files
+docs/
 docs-req/
-database-structure.md
-admin-panel-design.md
+CLAUDE.md
+*.md
+!README.md
+!backend/README.md
+.claude/

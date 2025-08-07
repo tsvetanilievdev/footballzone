@@ -1,0 +1,411 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  FREE
+  PLAYER
+  COACH
+  PARENT
+  ADMIN
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+}
+
+enum ArticleCategory {
+  TACTICS
+  TRAINING
+  PSYCHOLOGY
+  NUTRITION
+  TECHNIQUE
+  FITNESS
+  NEWS
+  INTERVIEWS
+  ANALYSIS
+  YOUTH
+  CONDITIONING
+  PERIODIZATION
+  MANAGEMENT
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  REVIEW
+}
+
+enum ZoneType {
+  READ
+  coach
+  player
+  parent
+  series
+}
+
+enum TemplateCategory {
+  read
+  coach
+  player
+  parent
+  universal
+}
+
+enum SeriesCategory {
+  coaches
+  players
+  teams
+  general
+}
+
+enum SeriesStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum CourseCategory {
+  COACH
+  PLAYER
+  GENERAL
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ALL
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LessonType {
+  VIDEO
+  TEXT
+  QUIZ
+  ASSIGNMENT
+  LIVE_SESSION
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  PDF
+  DOC
+  EXCEL
+  AUDIO
+}
+
+enum ActivityAction {
+  VIEW
+  READ
+  SHARE
+  DOWNLOAD
+  LIKE
+  COMMENT
+  LOGIN
+  LOGOUT
+  REGISTER
+  SUBSCRIBE
+  UNSUBSCRIBE
+}
+
+enum ActivityResource {
+  ARTICLE
+  COURSE
+  LESSON
+  MEDIA
+  USER
+  SUBSCRIPTION
+}
+
+// Models
+model User {
+  id                        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                     String   @unique @db.VarChar(255)
+  passwordHash              String   @map("password_hash") @db.VarChar(255)
+  name                      String   @db.VarChar(100)
+  role                      UserRole @default(FREE)
+  avatarUrl                 String?  @map("avatar_url")
+  emailVerified             Boolean  @default(false) @map("email_verified")
+  emailVerificationToken    String?  @map("email_verification_token") @db.VarChar(255)
+  passwordResetToken        String?  @map("password_reset_token") @db.VarChar(255)
+  passwordResetExpires      DateTime? @map("password_reset_expires")
+  lastLogin                 DateTime? @map("last_login")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  articles                  Article[]
+  courses                   Course[] @relation("CourseInstructor")
+  subscriptions             Subscription[]
+  userActivities            UserActivity[]
+  articleViews              ArticleView[]
+  mediaFiles                MediaFile[]
+  templates                 ArticleTemplate[]
+
+  @@map("users")
+}
+
+model Subscription {
+  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                  String             @map("user_id") @db.Uuid
+  planId                  String             @map("plan_id") @db.VarChar(50)
+  status                  SubscriptionStatus
+  currentPeriodStart      DateTime           @map("current_period_start")
+  currentPeriodEnd        DateTime           @map("current_period_end")
+  cancelAtPeriodEnd       Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt              DateTime?          @map("canceled_at")
+  stripeSubscriptionId    String?            @map("stripe_subscription_id") @db.VarChar(255)
+  stripeCustomerId        String?            @map("stripe_customer_id") @db.VarChar(255)
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model ArticleTemplate {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String           @db.VarChar(100)
+  description String?
+  category    TemplateCategory
+  settings    Json
+  isDefault   Boolean          @default(false) @map("is_default")
+  createdBy   String?          @map("created_by") @db.Uuid
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  creator     User?            @relation(fields: [createdBy], references: [id])
+  articles    Article[]
+
+  @@map("article_templates")
+}
+
+model ArticleSeries {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String        @db.VarChar(255)
+  slug                  String        @unique @db.VarChar(255)
+  description           String?
+  coverImageUrl         String?       @map("cover_image_url")
+  category              SeriesCategory
+  status                SeriesStatus  @default(ACTIVE)
+  totalPlannedArticles  Int?          @map("total_planned_articles")
+  tags                  String[]      @default([])
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  articles              Article[]
+
+  @@map("article_series")
+}
+
+model Article {
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                String          @db.VarChar(255)
+  slug                 String          @unique @db.VarChar(255)
+  excerpt              String?
+  content              String
+  featuredImageUrl     String?         @map("featured_image_url")
+  authorId             String?         @map("author_id") @db.Uuid
+  category             ArticleCategory
+  subcategory          String?         @db.VarChar(100)
+  tags                 String[]        @default([])
+  publishedAt          DateTime?       @map("published_at")
+  readTime             Int             @default(5) @map("read_time")
+  isPremium            Boolean         @default(false) @map("is_premium")
+  premiumReleaseDate   DateTime?       @map("premium_release_date")
+  isPermanentPremium   Boolean         @default(false) @map("is_permanent_premium")
+  viewCount            Int             @default(0) @map("view_count")
+  isFeatured           Boolean         @default(false) @map("is_featured")
+  customOrder          Int?            @map("custom_order")
+  templateId           String?         @map("template_id") @db.Uuid
+  seriesId             String?         @map("series_id") @db.Uuid
+  seriesPart           Int?            @map("series_part")
+  status               ArticleStatus   @default(DRAFT)
+  seoTitle             String?         @map("seo_title") @db.VarChar(255)
+  seoDescription       String?         @map("seo_description")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  author               User?           @relation(fields: [authorId], references: [id])
+  template             ArticleTemplate? @relation(fields: [templateId], references: [id])
+  series               ArticleSeries?  @relation(fields: [seriesId], references: [id])
+  zones                ArticleZone[]
+  views                ArticleView[]
+  userActivities       UserActivity[]
+
+  @@map("articles")
+}
+
+model ArticleZone {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  articleId           String    @map("article_id") @db.Uuid
+  zone                ZoneType
+  visible             Boolean   @default(true)
+  requiresSubscription Boolean  @default(false) @map("requires_subscription")
+  freeAfterDate       DateTime? @map("free_after_date")
+
+  // Relations
+  article             Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, zone])
+  @@map("article_zones")
+}
+
+model Course {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String        @db.VarChar(255)
+  slug            String        @unique @db.VarChar(255)
+  description     String?
+  longDescription String?       @map("long_description")
+  featuredImageUrl String?      @map("featured_image_url")
+  instructorId    String?       @map("instructor_id") @db.Uuid
+  category        CourseCategory
+  level           CourseLevel
+  duration        String?       @db.VarChar(50)
+  price           Decimal       @default(0) @db.Decimal(10, 2)
+  currency        String        @default("BGN") @db.VarChar(3)
+  isPremium       Boolean       @default(true) @map("is_premium")
+  isPopular       Boolean       @default(false) @map("is_popular")
+  isBestseller    Boolean       @default(false) @map("is_bestseller")
+  tags            String[]      @default([])
+  skills          String[]      @default([])
+  requirements    String[]      @default([])
+  targetAudience  String[]      @default([]) @map("target_audience")
+  enrollmentCount Int           @default(0) @map("enrollment_count")
+  status          CourseStatus  @default(DRAFT)
+  publishedAt     DateTime?     @map("published_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  instructor      User?         @relation("CourseInstructor", fields: [instructorId], references: [id])
+  lessons         CourseLesson[]
+
+  @@map("courses")
+}
+
+model CourseLesson {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId        String     @map("course_id") @db.Uuid
+  title           String     @db.VarChar(255)
+  description     String?
+  content         String?
+  lessonOrder     Int        @map("lesson_order")
+  durationMinutes Int?       @map("duration_minutes")
+  lessonType      LessonType @map("lesson_type")
+  videoUrl        String?    @map("video_url")
+  isPreview       Boolean    @default(false) @map("is_preview")
+  resources       Json       @default("[]")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  course          Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("course_lessons")
+}
+
+model MediaFile {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filename      String    @db.VarChar(255)
+  originalName  String    @map("original_name") @db.VarChar(255)
+  filePath      String    @map("file_path")
+  fileUrl       String    @map("file_url")
+  fileType      MediaType @map("file_type")
+  fileSize      Int       @map("file_size")
+  mimeType      String?   @map("mime_type") @db.VarChar(100)
+  width         Int?
+  height        Int?
+  duration      Int?
+  thumbnailUrl  String?   @map("thumbnail_url")
+  altText       String?   @map("alt_text")
+  tags          String[]  @default([])
+  uploadedBy    String?   @map("uploaded_by") @db.Uuid
+  usageCount    Int       @default(0) @map("usage_count")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  uploader      User?     @relation(fields: [uploadedBy], references: [id])
+
+  @@map("media_files")
+}
+
+model UserActivity {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String?           @map("user_id") @db.Uuid
+  sessionId    String?           @map("session_id") @db.VarChar(255)
+  action       ActivityAction
+  resourceType ActivityResource? @map("resource_type")
+  resourceId   String?           @map("resource_id") @db.Uuid
+  metadata     Json              @default("{}")
+  ipAddress    String?           @map("ip_address") @db.Inet
+  userAgent    String?           @map("user_agent")
+  deviceType   String?           @map("device_type") @db.VarChar(50)
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  user         User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  article      Article?          @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+
+  @@map("user_activities")
+}
+
+model ArticleView {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  articleId         String   @map("article_id") @db.Uuid
+  userId            String?  @map("user_id") @db.Uuid
+  sessionId         String   @map("session_id") @db.VarChar(255)
+  viewDuration      Int?     @map("view_duration")
+  completionPercent Int      @default(0) @map("completion_percent")
+  referrer          String?
+  deviceType        String?  @map("device_type") @db.VarChar(50)
+  ipAddress         String?  @map("ip_address") @db.Inet
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relations
+  article           Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("article_views")
+}
+
+model DailyAnalytics {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date                  DateTime          @db.Date
+  resourceType          ActivityResource  @map("resource_type")
+  resourceId            String?           @map("resource_id") @db.Uuid
+  totalViews            Int               @default(0) @map("total_views")
+  uniqueViews           Int               @default(0) @map("unique_views")
+  totalUsers            Int               @default(0) @map("total_users")
+  newUsers              Int               @default(0) @map("new_users")
+  avgSessionDuration    Int               @default(0) @map("avg_session_duration")
+  bounceRate            Decimal           @default(0) @map("bounce_rate") @db.Decimal(5, 2)
+  conversionRate        Decimal           @default(0) @map("conversion_rate") @db.Decimal(5, 2)
+
+  @@unique([date, resourceType, resourceId])
+  @@map("daily_analytics")
+}

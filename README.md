@@ -1,169 +1,191 @@
-# FootballZone.bg - Frontend
+# FootballZone.bg - Full Stack Application
 
-Образователна футболна платформа за играчи, треньори и родители.
+Educational football platform for Bulgarian players, coaches, and parents.
 
-## 🚀 Технологии
-
-- **Next.js 14** - React framework с App Router
-- **TypeScript** - Типизиран JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
-- **Headless UI** - Достъпни React компоненти
-- **Framer Motion** - Анимации
-- **React Hook Form + Zod** - Форми и валидация
-- **Lucide React** - Икони
-
-## 📁 Структура на проекта
+## 🏗️ Project Structure
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx         # Основен layout
-│   ├── page.tsx           # Начална страница
-│   ├── read/              # Read Zone страници
-│   ├── coach/             # Coach Zone страници
-│   ├── player/            # Player Zone страници
-│   └── parent/            # Parent Zone страници
-├── components/            # React компоненти
-│   ├── layout/           # Layout компоненти
-│   │   ├── Header.tsx
-│   │   └── Footer.tsx
-│   ├── ui/               # UI компоненти
-│   │   ├── Button.tsx
-│   │   └── ArticleCard.tsx
-│   └── zones/            # Zone специфични компоненти
-│       └── ZoneCard.tsx
-├── lib/                  # Utility функции
-│   └── utils.ts
-└── types/                # TypeScript типове
-    └── index.ts
+footballzone/
+├── frontend/           # Next.js React application
+├── backend/            # Node.js Express API
+├── docs/              # Project documentation
+├── .claude/           # Claude Code configuration
+└── CLAUDE.md          # Development guide
 ```
 
-## 🎯 Функционалности
+## 🚀 Quick Start
 
-### ✅ Имплементирани
-- [x] Responsive дизайн
-- [x] Навигация с мобилно меню
-- [x] Hero секции за всяка зона
-- [x] Карти за статии и зони
-- [x] Филтри и търсене (UI)
-- [x] Премиум съдържание индикатори
-- [x] SEO оптимизация
+### Prerequisites
+- Node.js 18+
+- Docker & Docker Compose
+- npm or yarn
 
-### 🚧 В процес на разработка
-- [ ] Потребителска автентикация
-- [ ] Stripe интеграция за плащания
-- [ ] CMS интеграция
-- [ ] Видео плеър
-- [ ] Коментари система
-- [ ] Админ панел
-
-## 🏃‍♂️ Стартиране на проекта
-
-### Предварителни изисквания
-- Node.js 18+ 
-- npm или yarn
-
-### Инсталация
+### 1. Frontend Setup (Next.js)
 ```bash
-# Клониране на репозиторията
-git clone <repository-url>
-cd football-zone-frontend
-
-# Инсталиране на зависимости
+cd frontend
 npm install
-
-# Стартиране на development сървъра
 npm run dev
 ```
+Frontend available at: `http://localhost:3000`
 
-Приложението ще бъде достъпно на `http://localhost:3000`
-
-### Други команди
+### 2. Backend Setup (Node.js + Express)
 ```bash
-# Build за production
-npm run build
+cd backend
+npm install
 
-# Стартиране на production build
-npm start
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
 
-# Линт проверка
-npm run lint
+# Start databases
+docker-compose up -d
 
-# TypeScript проверка
-npm run type-check
+# Setup database
+npm run db:generate
+npm run db:migrate
+
+# Start API server
+npm run dev
+```
+API available at: `http://localhost:5000`
+
+## 🎯 Features
+
+### Multi-Zone Content System
+- **Read Zone**: General football articles
+- **Coach Zone**: Training materials and tactics
+- **Player Zone**: Skills development (planned)
+- **Parent Zone**: Child development support (planned)
+- **Admin Zone**: Content management
+
+### Advanced Content Management
+- Template-based article creation
+- Rich text editor with media support
+- Premium content scheduling
+- Article series organization
+- Multi-zone visibility controls
+
+### Premium Features
+- Stripe payment integration (planned)
+- Subscription-based content access
+- Time-based content release
+- Analytics and tracking
+
+## 🛠️ Tech Stack
+
+### Frontend
+- Next.js 15 with App Router
+- React 19 & TypeScript 5
+- Tailwind CSS 4
+- Headless UI & Framer Motion
+- React Hook Form + Zod
+
+### Backend
+- Node.js 20+ & Express.js
+- PostgreSQL 15+ & Redis 6+
+- Prisma ORM & TypeScript 5
+- JWT Authentication
+- Stripe & Cloudinary integration
+
+## 📚 Documentation
+
+- **[Frontend Architecture](docs/README-ORIGINAL.md)** - Next.js app details
+- **[Backend Architecture](docs/BACKEND_ARCHITECTURE.md)** - API design and database schema
+- **[Implementation Plan](docs/BACKEND_IMPLEMENTATION_PLAN.md)** - Step-by-step development guide
+- **[CLAUDE.md](CLAUDE.md)** - Developer guidance for Claude Code
+
+## 🚀 Development Commands
+
+### Frontend Development
+```bash
+cd frontend
+npm run dev          # Start development server
+npm run build        # Build for production
+npm start           # Start production server
+npm run lint        # Lint code
 ```
 
-## 🎨 Дизайн система
+### Backend Development
+```bash
+cd backend
+npm run dev         # Start with hot reload
+npm run build       # Build TypeScript
+npm start          # Start production
+npm test           # Run tests
+npm run db:studio  # Open Prisma Studio
+```
 
-### Цветове
-- **Primary**: Green (600-800) - за основни действия
-- **Secondary**: Blue (600-700) - за Read Zone
-- **Accent**: Purple (500) - за Player Zone
-- **Warning**: Orange (500) - за Parent Zone
+## 🏃‍♂️ Available Features
 
-### Типография
-- **Font**: Inter (Google Fonts)
-- **Headings**: Bold, различни размери
-- **Body**: Regular, 16px base
+### Currently Implemented (Frontend)
+- ✅ Responsive multi-zone layout
+- ✅ Article browsing and reading
+- ✅ Rich text editor for admin
+- ✅ Template-based article creation
+- ✅ Premium content indicators
+- ✅ Series organization
+- ✅ Search and filtering
 
-### Компоненти
-- **Button**: Различни варианти (default, outline, ghost)
-- **Card**: За статии и зони
-- **Header**: Responsive навигация
-- **Footer**: Линкове и социални мрежи
+### Currently Implemented (Backend)
+- ✅ Article CRUD API endpoints
+- ✅ Database schema with Prisma
+- ✅ Redis caching layer
+- ✅ Error handling and logging
+- ✅ Basic analytics tracking
 
-## 📱 Responsive дизайн
+### Planned Features
+- 🔲 User authentication (JWT)
+- 🔲 Payment processing (Stripe)
+- 🔲 Email notifications
+- 🔲 Advanced analytics
+- 🔲 Course system
+- 🔲 Mobile app
 
-- **Mobile**: < 768px
-- **Tablet**: 768px - 1024px  
-- **Desktop**: > 1024px
+## 🌐 API Endpoints
 
-## 🔒 Премиум съдържание
+**Base URL:** `http://localhost:5000/api/v1`
 
-Системата поддържа:
-- Индикатори за премиум съдържание
-- Защитени зони
-- Абонамент планове
-- Роля базиран достъп
+### Available Now
+- `GET /health` - API health check
+- `GET /articles` - List articles with filtering
+- `GET /articles/search` - Search articles
+- `GET /articles/:slug` - Get article by slug
 
-## 🚀 Следващи стъпки
+### Coming Soon
+- `POST /auth/login` - User authentication
+- `GET /zones/:zone` - Zone-specific content
+- `POST /subscriptions/create` - Create subscription
 
-### Phase 1: Backend API
-- [ ] Node.js + Express сървър
-- [ ] Prisma ORM за PostgreSQL
-- [ ] MongoDB за съдържание
-- [ ] JWT автентикация
+## 🗄️ Database Schema
 
-### Phase 2: Интеграции
-- [ ] Stripe за плащания
-- [ ] Vimeo/YouTube API за видео
-- [ ] Email маркетинг (MailerLite)
-- [ ] Google Analytics
+The application uses PostgreSQL with comprehensive schemas for:
+- User management and roles
+- Article content and zones
+- Premium subscriptions
+- Analytics tracking
+- Media file management
 
-### Phase 3: Допълнителни функции
-- [ ] Реално време уведомления
-- [ ] Мобилно приложение
-- [ ] AI персонализация
-- [ ] Социални функции
+See `backend/prisma/schema.prisma` for complete schema.
 
-## 🤝 Принос
+## 🔒 Environment Configuration
 
-1. Fork проекта
-2. Създайте feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit промените (`git commit -m 'Add amazing feature'`)
-4. Push към branch (`git push origin feature/amazing-feature`)
-5. Отворете Pull Request
+Both frontend and backend require environment setup. See respective directories for `.env.example` files.
 
-## 📄 Лиценз
+## 🤝 Contributing
 
-Този проект е под MIT лиценз.
+1. Fork the repository
+2. Create feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit pull request
 
-## 📞 Контакти
+## 📞 Support
 
-- **Email**: info@footballzone.bg
-- **Website**: https://footballzone.bg
-- **GitHub**: [repository-url]
+For development questions or issues:
+- Check documentation in `/docs`
+- Review CLAUDE.md for development guidance
+- Open an issue for bugs or feature requests
 
 ---
 
-Създадено с ❤️ за българския футбол
+**Built for Bulgarian Football Education** ⚽ 🇧🇬
