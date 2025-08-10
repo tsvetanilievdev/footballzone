@@ -40,12 +40,12 @@ const navigation = {
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900">
+    <footer className="bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white">
       <div className="mx-auto max-w-7xl overflow-hidden px-6 py-20 sm:py-24 lg:px-8">
         <nav className="-mb-6 columns-2 sm:flex sm:justify-center sm:space-x-12" aria-label="Footer">
           {navigation.main.map((item) => (
             <div key={item.name} className="pb-6">
-              <Link href={item.href} className="text-sm leading-6 text-gray-300 hover:text-white">
+              <Link href={item.href} className="text-base leading-6 text-gray-200 hover:text-white font-medium transition-colors">
                 {item.name}
               </Link>
             </div>
@@ -54,19 +54,19 @@ export default function Footer() {
         
         <div className="mt-10 flex justify-center space-x-10">
           {navigation.social.map((item) => (
-            <Link key={item.name} href={item.href} className="text-gray-400 hover:text-gray-300">
+            <Link key={item.name} href={item.href} className="text-gray-300 hover:text-white transition-colors">
               <span className="sr-only">{item.name}</span>
               <item.icon className="h-6 w-6" aria-hidden="true" />
             </Link>
           ))}
         </div>
         
-        <div className="mt-10 border-t border-gray-800 pt-8">
+        <div className="mt-10 border-t border-gray-800/80 pt-8">
           <div className="text-center">
-            <p className="text-xs leading-5 text-gray-400">
+            <p className="text-sm leading-6 text-gray-300">
               &copy; 2024 FootballZone.bg. Всички права запазени.
             </p>
-            <p className="mt-2 text-xs leading-5 text-gray-400">
+            <p className="mt-2 text-sm leading-6 text-gray-300">
               Образователна футболна платформа за играчи, треньори и родители.
             </p>
           </div>

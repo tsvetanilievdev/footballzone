@@ -182,7 +182,10 @@ export default function Header() {
             {/* Right side actions */}
             <div className="flex items-center gap-3">
               {/* Search button - desktop */}
-              <button className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100/80 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110 group">
+              <button 
+                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100/80 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110 group"
+                aria-label="Търсене"
+              >
                 <MagnifyingGlassIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               </button>
 
@@ -246,6 +249,7 @@ export default function Header() {
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/80 hover:bg-white text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110 group shadow-md"
+                  aria-label="Затвори меню"
                 >
                   <XMarkIcon className="h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
                 </button>

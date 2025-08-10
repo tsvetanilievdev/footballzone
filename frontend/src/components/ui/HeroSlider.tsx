@@ -128,6 +128,7 @@ export default function HeroSlider() {
                   ? 'bg-green-400 scale-125' 
                   : 'bg-white/50 hover:bg-white/75'
               }`}
+              aria-label={`Отиди на слайд ${index + 1}`}
             />
           ))}
         </div>
@@ -137,6 +138,7 @@ export default function HeroSlider() {
       <button
         onClick={() => goToSlide((currentSlide - 1 + slides.length) % slides.length)}
         className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all backdrop-blur-sm z-20"
+        aria-label="Предишен слайд"
       >
         <ArrowRightIcon className="h-6 w-6 rotate-180" />
       </button>
@@ -144,6 +146,7 @@ export default function HeroSlider() {
       <button
         onClick={() => goToSlide((currentSlide + 1) % slides.length)}
         className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all backdrop-blur-sm z-20"
+        aria-label="Следващ слайд"
       >
         <ArrowRightIcon className="h-6 w-6" />
       </button>
