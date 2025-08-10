@@ -63,7 +63,7 @@ app.use('/api', limiter)
 // Body parsing middleware
 app.use(express.json({ 
   limit: `${env.MAX_FILE_SIZE}b`,
-  verify: (req, res, buf) => {
+  verify: (req, _res, buf) => {
     // Store raw body for webhooks
     if (req.url?.includes('/webhooks/')) {
       (req as any).rawBody = buf
@@ -82,7 +82,7 @@ if (env.NODE_ENV !== 'test') {
 app.use(requestLogger)
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),

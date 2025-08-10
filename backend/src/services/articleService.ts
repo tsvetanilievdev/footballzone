@@ -1,7 +1,7 @@
 import prisma from '@/config/database'
 import redis from '@/config/redis'
 import { AppError } from '@/middleware/errorHandler'
-import type { Article, ArticleStatus, ArticleCategory, ZoneType } from '@prisma/client'
+import type { ArticleStatus, ArticleCategory, ZoneType } from '@prisma/client'
 
 interface ArticleFilters {
   page: number
@@ -292,7 +292,7 @@ export const searchArticles = async (filters: SearchFilters) => {
   }
 }
 
-export const createArticle = async (articleData: any) => {
+export const createArticle = async (_articleData: any) => {
   try {
     // This will be implemented when authentication is added
     throw new AppError('Not implemented yet', 501)
@@ -302,7 +302,7 @@ export const createArticle = async (articleData: any) => {
   }
 }
 
-export const updateArticle = async (id: string, updateData: any) => {
+export const updateArticle = async (_id: string, _updateData: any) => {
   try {
     // This will be implemented when authentication is added
     throw new AppError('Not implemented yet', 501)
@@ -312,7 +312,7 @@ export const updateArticle = async (id: string, updateData: any) => {
   }
 }
 
-export const deleteArticle = async (id: string) => {
+export const deleteArticle = async (_id: string) => {
   try {
     // This will be implemented when authentication is added
     throw new AppError('Not implemented yet', 501)

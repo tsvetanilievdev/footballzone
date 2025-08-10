@@ -17,7 +17,7 @@ async function connectDatabase() {
 }
 
 // Test Redis connection
-async function connectRedis() {
+async function _connectRedis() {
   try {
     await redis.client.ping()
     console.log('✅ Redis connected successfully')
@@ -30,7 +30,8 @@ async function connectRedis() {
 async function startServer() {
   // Connect to databases
   await connectDatabase()
-  await connectRedis()
+  // Redis is optional for now
+  // await connectRedis()
 
   // Start HTTP server
   const server = app.listen(PORT, () => {

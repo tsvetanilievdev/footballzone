@@ -3,11 +3,6 @@ import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 import env from '@/config/environment'
 
-export interface AppError extends Error {
-  statusCode: number
-  isOperational?: boolean
-}
-
 export class AppError extends Error {
   public readonly statusCode: number
   public readonly isOperational: boolean
@@ -25,7 +20,7 @@ export const createError = (message: string, statusCode: number) => {
   return new AppError(message, statusCode)
 }
 
-export const notFound = (req: Request, res: Response, next: NextFunction) => {
+export const notFound = (req: Request, _res: Response, next: NextFunction) => {
   const error = new AppError(`Route ${req.originalUrl} not found`, 404)
   next(error)
 }
@@ -34,10 +29,15 @@ export const errorHandler = (
   error: Error | AppError | ZodError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
-  let err = { ...error } as AppError
-  err.message = error.message
+  let err: AppError
+  
+  if (error instanceof AppError) {
+    err = error
+  } else {
+    err = new AppError(error.message, 500)
+  }
 
   // Log error
   console.error('Error:', {
@@ -98,10 +98,8 @@ export const errorHandler = (
     }
   }
 
-  // Set default error
-  if (!err.statusCode) {
-    err.statusCode = 500
-  }
+  // Use default status code if not AppError instance
+  const statusCode = err.statusCode || 500
 
   // Send error response
   const response: any = {
@@ -117,5 +115,5 @@ export const errorHandler = (
     response.error.validation = error.errors
   }
 
-  res.status(err.statusCode).json(response)
+  res.status(statusCode).json(response)
 }

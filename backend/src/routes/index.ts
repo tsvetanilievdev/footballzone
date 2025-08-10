@@ -7,7 +7,7 @@ import articlesRouter from './articles'
 const router = Router()
 
 // Health check for API
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({
     status: 'healthy',
     message: 'API is working',
@@ -22,7 +22,7 @@ router.use('/articles', articlesRouter)
 // router.use('/zones', zonesRouter)
 
 // API documentation
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   res.json({
     name: 'FootballZone.bg API',
     version: '1.0.0',

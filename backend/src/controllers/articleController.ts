@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import * as articleService from '@/services/articleService'
 import { AppError } from '@/middleware/errorHandler'
+import { ArticleFilters, SearchFilters, TrackViewData } from '@/types/api'
 
 export const getArticles = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -16,17 +17,23 @@ export const getArticles = async (req: Request, res: Response, next: NextFunctio
       sortOrder = 'desc'
     } = req.query
 
-    const filters = {
+    const filters: ArticleFilters = {
       page: parseInt(page as string),
       limit: parseInt(limit as string),
-      category: category as string,
-      zone: zone as string,
-      isPremium: isPremium === 'true' ? true : isPremium === 'false' ? false : undefined,
-      status: status as string,
-      search: search as string,
       sortBy: sortBy as string,
       sortOrder: sortOrder as 'asc' | 'desc'
     }
+
+    // Add optional properties only if they exist
+    if (category) filters.category = category as string
+    if (zone) filters.zone = zone as string
+    if (isPremium === 'true') {
+      filters.isPremium = true
+    } else if (isPremium === 'false') {
+      filters.isPremium = false
+    }
+    if (status) filters.status = status as string
+    if (search) filters.search = search as string
 
     const result = await articleService.getArticles(filters)
 
@@ -78,13 +85,15 @@ export const searchArticles = async (req: Request, res: Response, next: NextFunc
       throw new AppError('Search query is required', 400)
     }
 
-    const filters = {
+    const filters: SearchFilters = {
       query: q,
       page: parseInt(page as string),
-      limit: parseInt(limit as string),
-      zone: zone as string,
-      category: category as string
+      limit: parseInt(limit as string)
     }
+
+    // Add optional properties only if they exist
+    if (zone) filters.zone = zone as string
+    if (category) filters.category = category as string
 
     const result = await articleService.searchArticles(filters)
 
@@ -160,19 +169,25 @@ export const trackView = async (req: Request, res: Response, next: NextFunction)
   try {
     const { id } = req.params
     const { duration, completionPercent } = req.body
-    const sessionId = req.sessionID || req.correlationId
+    const sessionId = req.correlationId
     const userAgent = req.get('User-Agent')
     const ipAddress = req.ip
 
-    await articleService.trackArticleView({
+    const trackData: TrackViewData = {
       articleId: id,
       sessionId,
       viewDuration: duration,
-      completionPercent,
-      referrer: req.get('Referer'),
-      deviceType: userAgent?.includes('Mobile') ? 'mobile' : 'desktop',
-      ipAddress
-    })
+      completionPercent
+    }
+
+    // Add optional properties only if they exist
+    const referrer = req.get('Referer')
+    if (referrer) trackData.referrer = referrer
+    if (userAgent) trackData.deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+    if (ipAddress) trackData.ipAddress = ipAddress
+    if (req.user?.id) trackData.userId = req.user.id
+
+    await articleService.trackArticleView(trackData)
 
     res.json({
       success: true,

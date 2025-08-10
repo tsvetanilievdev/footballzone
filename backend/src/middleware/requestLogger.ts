@@ -1,13 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 
-declare global {
-  namespace Express {
-    interface Request {
-      correlationId: string
-    }
-  }
-}
+// correlationId is declared in types/api.ts
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   // Generate correlation ID for request tracking
