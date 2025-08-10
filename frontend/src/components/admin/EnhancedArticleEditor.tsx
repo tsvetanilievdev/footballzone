@@ -22,6 +22,7 @@ interface EnhancedArticleEditorProps {
   onSave: (article: Article) => void
   onCancel: () => void
   mode: 'create' | 'edit'
+  onContentChange?: () => void
 }
 
 export default function EnhancedArticleEditor({
@@ -29,7 +30,8 @@ export default function EnhancedArticleEditor({
   templates,
   onSave,
   onCancel,
-  mode
+  mode,
+  onContentChange
 }: EnhancedArticleEditorProps) {
   const [activeTab, setActiveTab] = useState<'content' | 'settings' | 'zones' | 'styling' | 'template'>('content')
   const [showPreview, setShowPreview] = useState(false)
@@ -72,11 +74,40 @@ export default function EnhancedArticleEditor({
     }
   }, [article, templates])
 
+  // Guard: handle empty templates gracefully
+  useEffect(() => {
+    if (!templates || templates.length === 0) {
+      setArticleData(prev => ({
+        ...prev,
+        template: prev.template || {
+          id: 'default',
+          name: 'Default',
+          description: 'Базов темплейт',
+          category: 'universal' as any,
+          settings: {
+            textLength: 'medium',
+            allowVideos: true,
+            allowImages: true,
+            allowDownloads: false,
+            imageLayout: 'single',
+            styling: {
+              layout: 'single-column',
+              fontSize: 'medium',
+              spacing: 'normal',
+              colors: { primary: '#16a34a', secondary: '#0ea5e9', text: '#111827' }
+            }
+          } as any
+        }
+      }))
+    }
+  }, [templates])
+
   const handleInputChange = (field: string, value: any) => {
     setArticleData(prev => ({
       ...prev,
       [field]: value
     }))
+    onContentChange?.()
   }
 
   const handleZoneSettingChange = (zone: keyof typeof articleData.zoneSettings, setting: string, value: any) => {
@@ -90,6 +121,7 @@ export default function EnhancedArticleEditor({
         }
       }
     }))
+    onContentChange?.()
   }
 
   const handleFormattingChange = (property: string, value: any) => {
@@ -100,6 +132,7 @@ export default function EnhancedArticleEditor({
         [property]: value
       }
     }))
+    onContentChange?.()
   }
 
   const handleTemplateSelect = (templateId: string) => {
@@ -110,6 +143,7 @@ export default function EnhancedArticleEditor({
         ...prev,
         template
       }))
+      onContentChange?.()
     }
   }
 
@@ -175,10 +209,10 @@ export default function EnhancedArticleEditor({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-black">
             {mode === 'create' ? 'Създаване на нова статия' : 'Редактиране на статия'}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-black mt-1">
             Използвайте разширените опции за форматиране и контрол на видимостта
           </p>
         </div>
@@ -196,7 +230,7 @@ export default function EnhancedArticleEditor({
           </button>
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-black border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Отказ
           </button>
@@ -210,7 +244,7 @@ export default function EnhancedArticleEditor({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-6">
+      <div className="flex gap-1 p-1 bg-white/70 backdrop-blur border border-gray-200 rounded-lg mb-6 sticky top-16 z-10">
         {[
           { id: 'template', icon: DocumentDuplicateIcon, label: 'Темплейт' },
           { id: 'content', icon: DocumentTextIcon, label: 'Съдържание' },
@@ -226,7 +260,7 @@ export default function EnhancedArticleEditor({
               className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
+                  : 'text-black hover:bg-gray-200'
               }`}
             >
               <Icon className="w-4 h-4 mr-2" />
@@ -240,7 +274,7 @@ export default function EnhancedArticleEditor({
         /* Full-screen Preview */
         <div className="bg-white rounded-lg border shadow-sm">
           <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Предварителен преглед на статията</h3>
+            <h3 className="text-lg font-semibold text-black">Предварителен преглед на статията</h3>
           </div>
           <div className="p-8">
             {/* Article Preview */}
@@ -263,17 +297,17 @@ export default function EnhancedArticleEditor({
                   </span>
                 </div>
                 
-                <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                <h1 className="text-4xl font-bold text-black mb-4 leading-tight">
                   {articleData.title || 'Заглавие на статията'}
                 </h1>
                 
                 {articleData.excerpt && (
-                  <p className="text-xl text-gray-600 leading-relaxed mb-6">
+                  <p className="text-xl text-black leading-relaxed mb-6">
                     {articleData.excerpt}
                   </p>
                 )}
                 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-black mb-6">
                   <div className="flex items-center">
                     <span>Автор: Admin</span>
                   </div>
@@ -290,7 +324,7 @@ export default function EnhancedArticleEditor({
                     {(articleData.tags || []).map((tag, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full"
+                        className="px-3 py-1 bg-gray-200 text-black text-sm rounded-full"
                       >
                         {tag}
                       </span>
@@ -316,6 +350,7 @@ export default function EnhancedArticleEditor({
                   selectedTemplate={selectedTemplate}
                   onTemplateSelect={handleTemplateSelect}
                   category={articleData.category || 'read'}
+                  zone={articleData.category || 'read'}
                   onTemplateConfig={(templateId) => {
                     console.log('Configure template:', templateId)
                   }}
@@ -329,7 +364,7 @@ export default function EnhancedArticleEditor({
               <div className="bg-white p-6 rounded-lg border">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-black mb-2">
                       Заглавие *
                     </label>
                     <input
@@ -342,7 +377,7 @@ export default function EnhancedArticleEditor({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-black mb-2">
                       Кратко описание
                     </label>
                     <textarea
@@ -359,7 +394,7 @@ export default function EnhancedArticleEditor({
               {/* Content Editor */}
               <div className="bg-white rounded-lg border">
                 <div className="p-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900">Съдържание на статията</h3>
+                  <h3 className="text-lg font-semibold text-black">Съдържание на статията</h3>
                 </div>
                 <div className="p-6">
                   <AdvancedRichTextEditor
@@ -375,11 +410,11 @@ export default function EnhancedArticleEditor({
 
           {activeTab === 'settings' && (
             <div className="bg-white p-6 rounded-lg border space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Основни настройки</h3>
+              <h3 className="text-lg font-semibold text-black">Основни настройки</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Основна категория
                   </label>
                   <select
@@ -399,7 +434,7 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Подкатегория
                   </label>
                   <input
@@ -412,22 +447,27 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Темплейт
                   </label>
                   <select
                     value={selectedTemplate}
                     onChange={(e) => handleTemplateSelect(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={!templates || templates.length === 0}
                   >
-                    {templates.map(template => (
-                      <option key={template.id} value={template.id}>{template.name}</option>
-                    ))}
+                    {templates && templates.length > 0 ? (
+                      templates.map(template => (
+                        <option key={template.id} value={template.id}>{template.name}</option>
+                      ))
+                    ) : (
+                      <option value="default">Default</option>
+                    )}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Изображение (URL)
                   </label>
                   <input
@@ -486,8 +526,8 @@ export default function EnhancedArticleEditor({
 
           {activeTab === 'zones' && (
             <div className="bg-white p-6 rounded-lg border space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Настройки на зоните</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold text-black">Настройки на зоните</h3>
+              <p className="text-black">
                 Конфигурирайте в кои зони да се показва статията и дали да изисква абонамент
               </p>
 
@@ -556,11 +596,11 @@ export default function EnhancedArticleEditor({
 
           {activeTab === 'styling' && (
             <div className="bg-white p-6 rounded-lg border space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Стилизиране на статията</h3>
+              <h3 className="text-lg font-semibold text-black">Стилизиране на статията</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Размер на шрифта
                   </label>
                   <select
@@ -578,7 +618,7 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Тип шрифт
                   </label>
                   <select
@@ -595,7 +635,7 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Подравняване
                   </label>
                   <select
@@ -611,7 +651,7 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Цвят на текста
                   </label>
                   <input
@@ -623,7 +663,7 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Цвят на фона
                   </label>
                   <input
@@ -635,7 +675,7 @@ export default function EnhancedArticleEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Междуредие
                   </label>
                   <select
@@ -659,7 +699,7 @@ export default function EnhancedArticleEditor({
         <div className="lg:col-span-1 space-y-6">
           {/* Tags */}
           <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
               <TagIcon className="w-5 h-5 mr-2" />
               Тагове
             </h3>
@@ -706,8 +746,8 @@ export default function EnhancedArticleEditor({
                 Избран темплейт
               </h3>
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">{articleData.template.name}</h4>
-                <p className="text-sm text-gray-600">{articleData.template.description}</p>
+                <h4 className="font-medium text-black">{articleData.template.name}</h4>
+                <p className="text-sm text-black">{articleData.template.description}</p>
                 <div className="flex items-center text-sm">
                   <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
                     {articleData.template.category}
@@ -719,11 +759,11 @@ export default function EnhancedArticleEditor({
 
           {/* Preview */}
           <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
               <EyeIcon className="w-5 h-5 mr-2" />
               Кратък преглед
             </h3>
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-2 text-sm text-black">
               <div>Заглавие: <span className="font-medium">{articleData.title || 'Без заглавие'}</span></div>
               <div>Категория: <span className="font-medium">{articleData.category}</span></div>
               <div>Тагове: <span className="font-medium">{(articleData.tags || []).length}</span></div>

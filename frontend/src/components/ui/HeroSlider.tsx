@@ -71,14 +71,14 @@ export default function HeroSlider() {
           <div className="max-w-2xl">
             <div className="text-white space-y-6">
               <div className="space-y-2">
-                <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-none">
-                  <span className="block">{currentSlideData.title}</span>
-                  <span className="block">{currentSlideData.subtitle}</span>
-                  <span className="block text-green-400">{currentSlideData.highlight}</span>
+                <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-none drop-shadow-xl">
+                  <span className="block drop-shadow-xl">{currentSlideData.title}</span>
+                  <span className="block drop-shadow-xl">{currentSlideData.subtitle}</span>
+                  <span className="block text-green-300 drop-shadow-xl">{currentSlideData.highlight}</span>
                 </h1>
               </div>
               
-              <p className="text-lg text-gray-300 leading-relaxed max-w-md">
+              <p className="text-xl text-white leading-relaxed max-w-md font-semibold drop-shadow-lg">
                 {currentSlideData.description}
               </p>
 
@@ -97,7 +97,7 @@ export default function HeroSlider() {
                   <div className="w-12 h-12 rounded-full border-2 border-white group-hover:border-green-400 flex items-center justify-center">
                     <PlayIcon className="h-5 w-5 ml-1" />
                   </div>
-                  <span className="font-semibold">Гледай видео</span>
+                  <span className="font-bold drop-shadow-md">Гледай видео</span>
                 </button>
               </div>
             </div>

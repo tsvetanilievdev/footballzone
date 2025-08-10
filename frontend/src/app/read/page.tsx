@@ -100,8 +100,8 @@ export default function ReadZonePage() {
                     <BlogCard 
                       key={article.id} 
                       article={article}
-                      showVideo={index === 1 || index === 3}
-                      showPhoto={index === 0 || index === 4}
+                      showVideo={index % 4 === 1}
+                      showPhoto={index % 5 === 0}
                     />
                   ))
                 ) : (

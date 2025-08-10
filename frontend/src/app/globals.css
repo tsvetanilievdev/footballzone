@@ -1,31 +1,386 @@
 @import "tailwindcss";
 
 :root {
+  /* Light theme colors */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+  
+  /* Brand colors - Football Zone emerald-teal palette */
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --primary-50: #ecfdf5;
+  --primary-100: #d1fae5;
+  --primary-200: #a7f3d0;
+  --primary-300: #6ee7b7;
+  --primary-400: #34d399;
+  --primary-500: #10b981;
+  --primary-600: #059669;
+  --primary-700: #047857;
+  --primary-800: #065f46;
+  --primary-900: #064e3b;
+  
+  /* Zone-specific gradient colors for modern 2025 design */
+  --read-gradient-from: #3b82f6;    /* Blue */
+  --read-gradient-to: #1d4ed8;      /* Blue-700 */
+  --read-accent: #3b82f6;
+  
+  --coach-gradient-from: #059669;    /* Emerald-600 */
+  --coach-gradient-to: #047857;     /* Emerald-700 */  
+  --coach-accent: #059669;
+  
+  --player-gradient-from: #ea580c;  /* Orange-600 */
+  --player-gradient-to: #c2410c;    /* Orange-700 */
+  --player-accent: #ea580c;
+  
+  --series-gradient-from: #4f46e5;  /* Indigo-600 */
+  --series-gradient-to: #3730a3;    /* Indigo-700 */
+  --series-accent: #4f46e5;
+  
+  --courses-gradient-from: #7c3aed; /* Purple-600 */
+  --courses-gradient-to: #5b21b6;   /* Purple-700 */
+  --courses-accent: #7c3aed;
+  
+  --admin-gradient-from: #dc2626;   /* Red-600 */
+  --admin-gradient-to: #b91c1c;     /* Red-700 */
+  --admin-accent: #dc2626;
+  
+  /* Semantic colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* Neutral colors */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* Component colors */
+  --card-background: #ffffff;
+  --card-border: var(--gray-200);
+  --input-background: #ffffff;
+  --input-border: var(--gray-300);
+  --button-shadow: rgba(0, 0, 0, 0.1);
+  
+  /* Typography */
+  --heading-color: #0f172a;
+  --text-color: #1e293b;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  
+  /* Modern gradient backgrounds */
+  --gradient-brand: linear-gradient(135deg, var(--primary-500) 0%, #0891b2 100%);
+  --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0891b2 100%);
+  --gradient-feature: linear-gradient(135deg, var(--primary-50) 0%, #f1f5f9 100%);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Border radius */
+  --radius-sm: 0.125rem;
+  --radius: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Animations */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Dark theme colors */
     --background: #0a0a0a;
     --foreground: #ededed;
+    
+    /* Darker variants for cards and inputs */
+    --card-background: #1f2937;
+    --card-border: var(--gray-700);
+    --input-background: #374151;
+    --input-border: var(--gray-600);
+    
+    /* Typography in dark mode */
+    --heading-color: var(--gray-100);
+    --text-color: var(--gray-300);
+    --text-muted: var(--gray-400);
+    
+    /* Adjust shadows for dark mode */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography improvements */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading-color);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  margin-bottom: 0.875rem;
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  margin-bottom: 0.625rem;
+}
+
+p {
+  color: #1f2937;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* Global text visibility improvements */
+.text-muted {
+  color: #4b5563 !important;
+}
+
+.text-gray-500 {
+  color: #4b5563 !important;
+}
+
+.text-gray-600 {
+  color: #374151 !important;
+}
+
+.text-gray-700 {
+  color: #1f2937 !important;
+}
+
+/* Zone-specific utility classes */
+.gradient-read {
+  background: linear-gradient(135deg, var(--read-gradient-from), var(--read-gradient-to));
+}
+
+.gradient-coach {
+  background: linear-gradient(135deg, var(--coach-gradient-from), var(--coach-gradient-to));
+}
+
+.gradient-player {
+  background: linear-gradient(135deg, var(--player-gradient-from), var(--player-gradient-to));
+}
+
+.gradient-series {
+  background: linear-gradient(135deg, var(--series-gradient-from), var(--series-gradient-to));
+}
+
+.gradient-courses {
+  background: linear-gradient(135deg, var(--courses-gradient-from), var(--courses-gradient-to));
+}
+
+.gradient-admin {
+  background: linear-gradient(135deg, var(--admin-gradient-from), var(--admin-gradient-to));
+}
+
+/* Text gradient utilities */
+.text-gradient-read {
+  background: linear-gradient(135deg, var(--read-gradient-from), var(--read-gradient-to));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-coach {
+  background: linear-gradient(135deg, var(--coach-gradient-from), var(--coach-gradient-to));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-brand {
+  background: var(--gradient-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gray-400 {
+  color: #6b7280 !important;
+}
+
+/* Custom overrides */
+.grid.grid-cols-3 > div:first-child h3 {
+  color: #1f2937 !important; /* Тъмно сиво (gray-800) */
+}
+
+/* Force white color for all article titles */
+.grid.grid-cols-1.gap-8.lg\:grid-cols-3.mb-16 h3 {
+  color: #ffffff !important;
+}
+
+/* Force white color for article descriptions */
+.grid.grid-cols-1.gap-8.lg\:grid-cols-3.mb-16 p {
+  color: #ffffff !important;
+}
+
+/* Force white color for footer text */
+.grid.grid-cols-1.gap-8.lg\:grid-cols-3.mb-16 .text-sm div {
+  color: #ffffff !important;
+}
+
+/* Force white color for feature section text */
+.grid.grid-cols-1.gap-12.sm\:grid-cols-2 h3 {
+  color: #ffffff !important;
+}
+
+.grid.grid-cols-1.gap-12.sm\:grid-cols-2 p {
+  color: #ffffff !important;
+}
+
+/* Force white color for all text in the features section */
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 h2 {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 p {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 span {
+  color: #ffffff !important;
+}
+
+/* Force white color for zones section text */
+.bg-gradient-to-br.from-slate-900.via-gray-900.to-blue-900 h2 {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-br.from-slate-900.via-gray-900.to-blue-900 p {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-br.from-slate-900.via-gray-900.to-blue-900 span {
+  color: #ffffff !important;
+}
+
+/* Force white color for hero section text */
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 h2 {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 p {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 span {
+  color: #ffffff !important;
+}
+
+/* Force white color for statistics cards text */
+.bg-gradient-to-br.from-slate-900.via-blue-900.to-green-900 .text-center div {
+  color: #ffffff !important;
+}
+
+/* Force white color for hero slider text */
+.h-\[80vh\] p {
+  color: #ffffff !important;
+}
+
+.h-\[80vh\] h1 {
+  color: #ffffff !important;
+}
+
+.h-\[80vh\] span {
+  color: #ffffff !important;
+}
+
+/* Force readable colors for navigation */
+.bg-gradient-to-r.from-green-100\/98.via-blue-100\/98.to-purple-100\/98 a {
+  color: #111827 !important;
+}
+
+.bg-gradient-to-r.from-green-100\/98.via-blue-100\/98.to-purple-100\/98 a:hover {
+  color: #ffffff !important;
+}
+
+/* Force readable colors for navigation text */
+.bg-gradient-to-r.from-green-100\/95.via-blue-100\/95.to-purple-100\/95 a {
+  color: #111827 !important;
+}
+
+.bg-gradient-to-r.from-green-100\/95.via-blue-100\/95.to-purple-100\/95 a:hover {
+  color: #ffffff !important;
+}
+
+/* Force dark gray color for main heading */
+.text-center.mb-16.animate-fade-in-up h2 {
+  color: #1f2937 !important;
+}
+
+/* Better contrast for small text */
+small, .text-sm {
+  color: #374151;
+  font-weight: 500;
+}
+
+.text-xs {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.text-balance {
+  text-wrap: balance;
 }
 
 /* Line clamp utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -36,6 +391,13 @@ body {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -116,6 +478,82 @@ body {
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translate3d(0, -100%, 0);
+    visibility: visible;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+    visibility: visible;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-slide-up {
   animation: slideUp 0.8s ease-out;
 }
@@ -148,6 +586,104 @@ body {
   animation: glow 2s ease-in-out infinite;
 }
 
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 1000px 100%;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.75s ease-out both;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.6s ease-out both;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.6s ease-out both;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.5s ease-out both;
+}
+
+/* Micro-interactions and hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-brightness {
+  transition: filter 0.3s ease;
+}
+
+.hover-brightness:hover {
+  filter: brightness(1.1);
+}
+
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: all 0.2s ease;
+}
+
+.focus-ring:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glass morphism effects */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Zone-specific gradient backgrounds */
+.zone-gradient-read {
+  background: linear-gradient(135deg, var(--read-accent), var(--primary));
+}
+
+.zone-gradient-coach {
+  background: linear-gradient(135deg, var(--coach-accent), var(--primary));
+}
+
+.zone-gradient-player {
+  background: linear-gradient(135deg, var(--player-accent), var(--primary));
+}
+
+.zone-gradient-parent {
+  background: linear-gradient(135deg, var(--parent-accent), var(--primary));
+}
+
 /* Smooth transitions for dynamic header */
 .backdrop-blur-md {
   backdrop-filter: blur(12px);
@@ -173,7 +709,7 @@ body {
 
 /* Prose styling for article content */
 .prose {
-  color: #374151;
+  color: #1f2937;
   max-width: none;
 }
 
@@ -194,6 +730,8 @@ body {
   margin-top: 1.25rem;
   margin-bottom: 1.25rem;
   line-height: 1.75;
+  color: #1f2937;
+  font-weight: 500;
 }
 
 .prose ul, .prose ol {
@@ -327,4 +865,12 @@ body {
 
 .prose li {
   margin-bottom: 0.5rem;
+}
+
+/* Placeholder for contenteditable editors */
+.contenteditable-placeholder:empty:before,
+[contenteditable][data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
 }

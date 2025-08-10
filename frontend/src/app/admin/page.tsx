@@ -16,13 +16,17 @@ import {
   ArrowUpIcon,
   BookOpenIcon,
   ClipboardDocumentListIcon,
-  BarsArrowUpIcon
+  BarsArrowUpIcon,
+  SquaresPlusIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/Button'
+import { Article } from '@/types'
 import EnhancedArticleEditor from '@/components/admin/EnhancedArticleEditor'
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
 import ArticleOrderManager from '@/components/admin/ArticleOrderManager'
 import EnhancedMediaManager from '@/components/admin/EnhancedMediaManager'
+import TemplateManager from '@/components/admin/TemplateManager'
+import { getActiveTemplates, convertToLegacyTemplate } from '@/data/templates'
 
 // Types
 interface AdminArticle {
@@ -120,12 +124,15 @@ const mockCategories = [
   { id: '5', name: 'Новини', count: 40, color: 'red' }
 ]
 
-type ActiveTab = 'dashboard' | 'articles' | 'analytics' | 'ordering' | 'series' | 'users' | 'categories' | 'media' | 'settings' | 'create-article'
+type ActiveTab = 'dashboard' | 'articles' | 'analytics' | 'ordering' | 'series' | 'users' | 'categories' | 'media' | 'templates' | 'settings' | 'moderation' | 'create-article'
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard')
   const [showArticleEditor, setShowArticleEditor] = useState(false)
   const [editingArticle, setEditingArticle] = useState<AdminArticle | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false)
+  const [pendingTab, setPendingTab] = useState<ActiveTab | null>(null)
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: ChartBarIcon },
@@ -136,6 +143,8 @@ export default function AdminPage() {
     { id: 'users', name: 'Потребители', icon: UserGroupIcon },
     { id: 'categories', name: 'Категории', icon: TagIcon },
     { id: 'media', name: 'Медия', icon: PhotoIcon },
+    { id: 'templates', name: 'Темплейти', icon: SquaresPlusIcon },
+    { id: 'moderation', name: 'Модерация', icon: ClipboardDocumentListIcon },
     { id: 'settings', name: 'Настройки', icon: CogIcon }
   ]
 
@@ -144,12 +153,48 @@ export default function AdminPage() {
     // Here you would typically save to your backend
     setShowArticleEditor(false)
     setEditingArticle(null)
+    setHasUnsavedChanges(false)
     // Refresh articles list
   }
 
   const handleCancelEdit = () => {
+    if (hasUnsavedChanges) {
+      setShowExitConfirmation(true)
+      return
+    }
     setShowArticleEditor(false)
     setEditingArticle(null)
+    setHasUnsavedChanges(false)
+  }
+
+  const confirmExit = () => {
+    setShowArticleEditor(false)
+    setEditingArticle(null)
+    setHasUnsavedChanges(false)
+    setShowExitConfirmation(false)
+    if (pendingTab) {
+      setActiveTab(pendingTab)
+      setPendingTab(null)
+    }
+  }
+
+  const cancelExit = () => {
+    setShowExitConfirmation(false)
+    setPendingTab(null)
+  }
+
+  const handleTabChange = (tabId: ActiveTab) => {
+    if (showArticleEditor && hasUnsavedChanges) {
+      setPendingTab(tabId)
+      setShowExitConfirmation(true)
+      return
+    }
+    setActiveTab(tabId)
+    if (showArticleEditor && tabId !== 'articles') {
+      setShowArticleEditor(false)
+      setEditingArticle(null)
+      setHasUnsavedChanges(false)
+    }
   }
 
   const handleCreateArticle = () => {
@@ -162,27 +207,39 @@ export default function AdminPage() {
     setShowArticleEditor(true)
   }
 
+  const convertAdminToArticlePartial = (a: AdminArticle | null): Partial<Article> | undefined => {
+    if (!a) return undefined
+    const zone = (a.zone || 'read').toLowerCase()
+    const mappedZone = ['read', 'coach', 'player', 'parent'].includes(zone) ? (zone as any) : 'read'
+    return {
+      id: a.id,
+      title: a.title,
+      author: { name: a.author },
+      category: mappedZone,
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
       <Header />
       
       <div className="pt-20">
         <div className="flex">
           {/* Sidebar */}
-          <div className="w-64 bg-white shadow-sm border-r min-h-screen">
+          <div className="w-64 bg-white/95 backdrop-blur sticky top-16 self-start shadow-sm border-r border-green-100 min-h-screen">
             <div className="p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">Admin Panel</h2>
+              <h2 className="text-lg font-bold text-[#000000] mb-6">Admin Panel</h2>
               <nav className="space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon
                   return (
                     <button
                       key={item.id}
-                      onClick={() => setActiveTab(item.id as ActiveTab)}
-                      className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
+                      onClick={() => handleTabChange(item.id as ActiveTab)}
+                      className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-all hover-lift ${
                         activeTab === item.id
-                          ? 'bg-green-100 text-green-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-800 font-semibold shadow-sm'
+                          : 'text-[#000000] hover:bg-green-50 hover:text-green-800'
                       }`}
                     >
                       <Icon className="w-5 h-5 mr-3" />
@@ -198,72 +255,16 @@ export default function AdminPage() {
           <div className="flex-1 p-8">
             {showArticleEditor ? (
               <EnhancedArticleEditor
-                article={editingArticle || undefined}
-                templates={[
-                  {
-                    id: 'default',
-                    name: 'Стандартна статия',
-                    description: 'Универсален темплейт за всякакъв тип съдържание',
-                    category: 'universal' as const,
-                    settings: {
-                      textLength: 'medium' as const,
-                      allowVideos: true,
-                      maxVideos: 3,
-                      videoTypes: ['youtube', 'vimeo'] as const,
-                      allowImages: true,
-                      maxImages: 5,
-                      imageLayout: 'inline' as const,
-                      allowDownloads: true,
-                      downloadTypes: ['pdf', 'doc'] as const,
-                      allowLinks: true,
-                      styling: {
-                        layout: 'single-column' as const,
-                        fontSize: 'medium' as const,
-                        spacing: 'normal' as const,
-                        colors: {
-                          primary: '#1a365d',
-                          secondary: '#2d3748',
-                          text: '#374151'
-                        }
-                      }
-                    }
-                  },
-                  {
-                    id: 'coach',
-                    name: 'Треньорска статия',
-                    description: 'Специализиран темплейт за треньорски съдържание',
-                    category: 'coach' as const,
-                    settings: {
-                      textLength: 'long' as const,
-                      allowVideos: true,
-                      maxVideos: 5,
-                      videoTypes: ['youtube', 'vimeo'] as const,
-                      allowImages: true,
-                      maxImages: 10,
-                      imageLayout: 'gallery' as const,
-                      allowDownloads: true,
-                      downloadTypes: ['pdf', 'doc', 'excel'] as const,
-                      allowLinks: true,
-                      styling: {
-                        layout: 'single-column' as const,
-                        fontSize: 'medium' as const,
-                        spacing: 'normal' as const,
-                        colors: {
-                          primary: '#059669',
-                          secondary: '#065f46',
-                          text: '#374151'
-                        }
-                      }
-                    }
-                  }
-                ]}
+                article={convertAdminToArticlePartial(editingArticle)}
+                templates={getActiveTemplates().map(convertToLegacyTemplate)}
                 onSave={handleSaveArticle}
                 onCancel={handleCancelEdit}
                 mode={editingArticle ? 'edit' : 'create'}
+                onContentChange={() => setHasUnsavedChanges(true)}
               />
             ) : (
               <>
-                {activeTab === 'dashboard' && <DashboardTab stats={mockStats} onCreateArticle={handleCreateArticle} onSetActiveTab={setActiveTab} />}
+                {activeTab === 'dashboard' && <DashboardTab stats={mockStats} onCreateArticle={handleCreateArticle} onSetActiveTab={handleTabChange} />}
                 {activeTab === 'articles' && <ArticlesTab articles={mockArticles} onEditArticle={handleEditArticle} onCreateArticle={handleCreateArticle} />}
                 {activeTab === 'analytics' && <AnalyticsDashboard />}
                 {activeTab === 'ordering' && <ArticleOrderTab />}
@@ -271,12 +272,60 @@ export default function AdminPage() {
                 {activeTab === 'users' && <UsersTab users={mockUsers} />}
                 {activeTab === 'categories' && <CategoriesTab categories={mockCategories} />}
                 {activeTab === 'media' && <EnhancedMediaTab />}
+                {activeTab === 'templates' && <TemplatesTab />}
+                {activeTab === 'moderation' && <ModerationTab />}
                 {activeTab === 'settings' && <SettingsTab />}
               </>
             )}
           </div>
         </div>
       </div>
+      
+      {/* Exit Confirmation Modal */}
+      {showExitConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.083 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#000000]">Незапазени промени</h3>
+              </div>
+            </div>
+            
+            <p className="text-[#166534] mb-6">
+              Имате незапазени промени в статията. Искате ли да ги запазите преди да продължите?
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  handleSaveArticle({})
+                  confirmExit()
+                }}
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                Запази и продължи
+              </button>
+              <button
+                onClick={confirmExit}
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Изхвърли промените
+              </button>
+              <button
+                onClick={cancelExit}
+                className="flex-1 text-[#000000] border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors"
+              >
+                Отказ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -294,77 +343,77 @@ function DashboardTab({
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Добре дошли в Admin панела на Football Zone</p>
+        <h1 className="text-3xl font-bold text-[#000000]">Dashboard</h1>
+        <p className="text-[#000000] mt-2">Добре дошли в Admin панела на Football Zone</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover-lift">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Общо статии</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalArticles}</p>
+              <p className="text-sm font-medium text-[#166534]">Общо статии</p>
+              <p className="text-3xl font-bold text-[#000000]">{stats.totalArticles}</p>
             </div>
             <DocumentTextIcon className="w-8 h-8 text-green-600" />
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
             <span className="text-green-600 font-medium">+8</span>
-            <span className="text-gray-500 ml-1">този месец</span>
+            <span className="text-[#000000] ml-1">този месец</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover-lift">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Потребители</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalUsers}</p>
+              <p className="text-sm font-medium text-[#166534]">Потребители</p>
+              <p className="text-3xl font-bold text-[#000000]">{stats.totalUsers}</p>
             </div>
             <UserGroupIcon className="w-8 h-8 text-blue-600" />
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
             <span className="text-green-600 font-medium">+{stats.monthlyGrowth}%</span>
-            <span className="text-gray-500 ml-1">растеж</span>
+            <span className="text-[#000000] ml-1">растеж</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover-lift">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Общо прегледи</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalViews.toLocaleString()}</p>
+              <p className="text-sm font-medium text-[#166534]">Общо прегледи</p>
+              <p className="text-3xl font-bold text-[#000000]">{stats.totalViews.toLocaleString()}</p>
             </div>
             <EyeIcon className="w-8 h-8 text-purple-600" />
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
             <span className="text-green-600 font-medium">+2.4k</span>
-            <span className="text-gray-500 ml-1">тази седмица</span>
+            <span className="text-[#000000] ml-1">тази седмица</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover-lift">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Premium потребители</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.premiumUsers}</p>
+              <p className="text-sm font-medium text-[#166534]">Premium потребители</p>
+              <p className="text-3xl font-bold text-[#000000]">{stats.premiumUsers}</p>
             </div>
             <ChartBarIcon className="w-8 h-8 text-yellow-600" />
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
             <span className="text-green-600 font-medium">+15</span>
-            <span className="text-gray-500 ml-1">нови абонати</span>
+            <span className="text-[#000000] ml-1">нови абонати</span>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Бързи действия</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
+          <h3 className="text-lg font-semibold text-[#000000] mb-4">Бързи действия</h3>
           <div className="space-y-3">
             <Button 
               className="w-full justify-start bg-green-600 hover:bg-green-700"
@@ -375,7 +424,7 @@ function DashboardTab({
             </Button>
             <Button 
               variant="outline" 
-              className="w-full justify-start"
+              className="w-full justify-start border-green-200 text-[#000000] hover:bg-green-50"
               onClick={() => onSetActiveTab('analytics')}
             >
               <ChartBarIcon className="w-4 h-4 mr-2" />
@@ -383,7 +432,7 @@ function DashboardTab({
             </Button>
             <Button 
               variant="outline" 
-              className="w-full justify-start"
+              className="w-full justify-start border-green-200 text-[#000000] hover:bg-green-50"
               onClick={() => onSetActiveTab('ordering')}
             >
               <BarsArrowUpIcon className="w-4 h-4 mr-2" />
@@ -392,28 +441,28 @@ function DashboardTab({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Последна активност</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
+          <h3 className="text-lg font-semibold text-[#000000] mb-4">Последна активност</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm text-gray-900">Нова статия публикувана</p>
-                <p className="text-xs text-gray-500">преди 2 часа</p>
+                <p className="text-sm text-[#000000]">Нова статия публикувана</p>
+                <p className="text-xs text-[#000000]">преди 2 часа</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm text-gray-900">Нов потребител се регистрира</p>
-                <p className="text-xs text-gray-500">преди 4 часа</p>
+                <p className="text-sm text-[#000000]">Нов потребител се регистрира</p>
+                <p className="text-xs text-[#000000]">преди 4 часа</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm text-gray-900">Видео качено в Coach Zone</p>
-                <p className="text-xs text-gray-500">преди 6 часа</p>
+                <p className="text-sm text-[#000000]">Видео качено в Coach Zone</p>
+                <p className="text-xs text-[#000000]">преди 6 часа</p>
               </div>
             </div>
           </div>
@@ -437,8 +486,8 @@ function ArticlesTab({
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Статии</h1>
-          <p className="text-gray-600 mt-2">Управление на всички статии в платформата</p>
+          <h1 className="text-3xl font-bold text-[#000000]">Статии</h1>
+          <p className="text-[#000000] mt-2">Управление на всички статии в платформата</p>
         </div>
         <Button 
           className="bg-green-600 hover:bg-green-700"
@@ -450,22 +499,22 @@ function ArticlesTab({
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border">
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-green-100">
         <div className="flex items-center space-x-4">
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
             <option>Всички зони</option>
             <option>Coach Zone</option>
             <option>Player Zone</option>
             <option>Parent Zone</option>
             <option>Read Zone</option>
           </select>
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          <select className="border border-green-2 00 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
             <option>Всички статуси</option>
             <option>Публикувано</option>
             <option>Чернова</option>
             <option>На ревизия</option>
           </select>
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
             <option>Всички категории</option>
             <option>Тактика</option>
             <option>Тренировки</option>
@@ -475,43 +524,43 @@ function ArticlesTab({
       </div>
 
       {/* Articles Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-green-100 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-green-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Статия
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Автор
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Зона
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Статус
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Прегледи
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Дата
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Действия
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-green-100">
             {articles.map((article) => (
-              <tr key={article.id} className="hover:bg-gray-50">
+              <tr key={article.id} className="hover:bg-green-50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-[#000000]">
                         {article.title}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-[#166534]">
                         {article.category}
                         {article.isPremium && (
                           <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -522,7 +571,7 @@ function ArticlesTab({
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000]">
                   {article.author}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -530,7 +579,7 @@ function ArticlesTab({
                     article.zone === 'Coach' ? 'bg-green-100 text-green-800' :
                     article.zone === 'Player' ? 'bg-blue-100 text-blue-800' :
                     article.zone === 'Parent' ? 'bg-orange-100 text-orange-800' :
-                    'bg-gray-100 text-gray-800'
+                    'bg-green-50 text-green-800'
                   }`}>
                     {article.zone}
                   </span>
@@ -538,17 +587,17 @@ function ArticlesTab({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     article.status === 'published' ? 'bg-green-100 text-green-800' :
-                    article.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                    article.status === 'draft' ? 'bg-green-50 text-green-800' :
                     'bg-yellow-100 text-yellow-800'
                   }`}>
                     {article.status === 'published' ? 'Публикувано' :
                      article.status === 'draft' ? 'Чернова' : 'На ревизия'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000]">
                   {article.views.toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
                   {article.publishedAt || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -582,8 +631,8 @@ function UsersTab({ users }: { users: typeof mockUsers }) {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Потребители</h1>
-          <p className="text-gray-600 mt-2">Управление на потребителски акаунти</p>
+          <h1 className="text-3xl font-bold text-[#000000]">Потребители</h1>
+          <p className="text-[#166534] mt-2">Управление на потребителски акаунти</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <PlusIcon className="w-4 h-4 mr-2" />
@@ -591,50 +640,50 @@ function UsersTab({ users }: { users: typeof mockUsers }) {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-green-100 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-green-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Потребител
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Роля
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Регистрация
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Последна активност
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Статус
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-[#166534] uppercase tracking-wider">
                 Действия
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-green-100">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
+              <tr key={user.id} className="hover:bg-green-50 transition-colors">
                 <td className="px-6 py-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm font-medium text-[#000000]">{user.name}</div>
+                    <div className="text-sm text-[#166534]">{user.email}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.role.includes('Premium') ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                    user.role.includes('Premium') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-50 text-green-800'
                   }`}>
                     {user.role}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
                   {user.registeredAt}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
                   {user.lastActive}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -709,7 +758,18 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
       case 'green': return 'bg-green-100 text-green-800 border-green-200'
       case 'purple': return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'orange': return 'bg-orange-100 text-orange-800 border-orange-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      default: return 'bg-green-50 text-green-800 border-green-200'
+    }
+  }
+
+  // Fix Tailwind dynamic class bug for tabs by mapping explicit classes
+  const getZoneTabClasses = (color: string) => {
+    switch (color) {
+      case 'blue': return 'border-blue-500 text-blue-600'
+      case 'green': return 'border-green-500 text-green-600'
+      case 'purple': return 'border-purple-500 text-purple-600'
+      case 'orange': return 'border-orange-500 text-orange-600'
+      default: return 'border-green-500 text-green-600'
     }
   }
 
@@ -734,12 +794,12 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-[#000000]">
               {editingCategory ? 'Редактиране на категория' : 'Създаване на нова категория'}
             </h2>
             <button
               onClick={() => setShowCategoryForm(false)}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-[#166534] hover:text-green-700"
             >
               ✕
             </button>
@@ -754,25 +814,25 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
             })
           }} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Име на категорията
               </label>
               <input
                 type="text"
                 name="name"
                 defaultValue={editingCategory?.name || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Въведете име на категорията"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Зона
               </label>
               <select
                 defaultValue={selectedZone}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 {zones.map(zone => (
                   <option key={zone.id} value={zone.id}>{zone.name}</option>
@@ -781,25 +841,25 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Описание
               </label>
               <textarea
                 rows={3}
                 defaultValue={editingCategory?.description || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Кратко описание на категорията"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Slug (URL идентификатор)
               </label>
               <input
                 type="text"
                 defaultValue={editingCategory?.id || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="напр. taktika, hranene, tehnika"
               />
             </div>
@@ -808,7 +868,7 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
               <button
                 type="button"
                 onClick={() => setShowCategoryForm(false)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-6 py-2 border border-green-200 text-[#000000] rounded-lg hover:bg-green-50"
               >
                 Отказ
               </button>
@@ -829,8 +889,8 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Категории</h1>
-          <p className="text-gray-600 mt-2">Управление на категории в различните зони</p>
+          <h1 className="text-3xl font-bold text-[#000000]">Категории</h1>
+          <p className="text-[#166534] mt-2">Управление на категории в различните зони</p>
         </div>
         <Button 
           className="bg-purple-600 hover:bg-purple-700"
@@ -843,7 +903,7 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
 
       {/* Zone Tabs */}
       <div className="mb-8">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-green-200">
           <nav className="-mb-px flex space-x-8">
             {zones.map(zone => (
               <button
@@ -851,12 +911,12 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
                 onClick={() => setSelectedZone(zone.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   selectedZone === zone.id
-                    ? `border-${zone.color}-500 text-${zone.color}-600`
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? getZoneTabClasses(zone.color)
+                    : 'border-transparent text-[#166534] hover:text-green-700 hover:border-green-300'
                 }`}
               >
                 {zone.name}
-                <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                <span className="ml-2 px-2 py-1 text-xs bg-green-50 text-green-700 rounded-full">
                   {zoneCategories[selectedZone as keyof typeof zoneCategories]?.length || 0}
                 </span>
               </button>
@@ -866,17 +926,17 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
       </div>
 
       {/* Zone Summary */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-lg border">
+      <div className="mb-8 p-6 bg-gradient-to-r from-green-50 to-white rounded-lg border border-green-200 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-[#000000]">
               {zones.find(z => z.id === selectedZone)?.name}
             </h3>
-            <p className="text-gray-600 mt-1">
+            <p className="text-[#166534] mt-1">
               Общо {zoneCategories[selectedZone as keyof typeof zoneCategories]?.reduce((sum, cat) => sum + cat.count, 0)} статии в {zoneCategories[selectedZone as keyof typeof zoneCategories]?.length} категории
             </p>
           </div>
-          <div className={`px-4 py-2 rounded-lg border ${getZoneColor(zones.find(z => z.id === selectedZone)?.color || 'gray')}`}>
+          <div className={`px-4 py-2 rounded-lg border ${getZoneColor(zones.find(z => z.id === selectedZone)?.color || 'gray')} shadow-xs` }>
             <span className="font-medium">
               {zones.find(z => z.id === selectedZone)?.name}
             </span>
@@ -887,11 +947,11 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {zoneCategories[selectedZone as keyof typeof zoneCategories]?.map((category) => (
-          <div key={category.id} className="bg-white rounded-lg shadow-sm p-6 border hover:shadow-md transition-shadow">
+          <div key={category.id} className="bg-white rounded-lg shadow-sm p-6 border border-green-100 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{category.name}</h3>
-                <p className="text-sm text-gray-600 mb-3">{category.description}</p>
+                <h3 className="text-lg font-semibold text-[#000000] mb-2">{category.name}</h3>
+                <p className="text-sm text-[#166534] mb-3">{category.description}</p>
               </div>
               <div className="flex items-center space-x-2 ml-4">
                 <button 
@@ -913,22 +973,22 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-900">{category.count}</span>
-                <span className="text-sm text-gray-600">статии</span>
+                <span className="text-sm font-medium text-[#000000]">{category.count}</span>
+                <span className="text-sm text-[#166534]">статии</span>
               </div>
-              <span className="text-xs text-gray-500">#{category.id}</span>
+              <span className="text-xs text-[#166534]">#{category.id}</span>
             </div>
           </div>
         ))}
         
         {/* Add Category Card */}
         <div 
-          className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+          className="bg-green-50 border-2 border-dashed border-green-300 rounded-lg p-6 flex items-center justify-center cursor-pointer hover:border-green-400 transition-colors"
           onClick={handleCreateCategory}
         >
           <div className="text-center">
-            <PlusIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600">Добави категория</p>
+            <PlusIcon className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <p className="text-green-700">Добави категория</p>
           </div>
         </div>
       </div>
@@ -940,14 +1000,14 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
           const totalArticles = zoneData.reduce((sum, cat) => sum + cat.count, 0)
           
           return (
-            <div key={zone.id} className="bg-white rounded-lg shadow-sm p-6 border">
+            <div key={zone.id} className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
               <div className="text-center">
                 <div className={`w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center ${getZoneColor(zone.color)}`}>
                   <span className="font-bold text-lg">{zone.name.charAt(0)}</span>
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-1">{zone.name}</h4>
-                <p className="text-2xl font-bold text-gray-900">{totalArticles}</p>
-                <p className="text-sm text-gray-600">статии в {zoneData.length} категории</p>
+                <h4 className="font-semibold text-[#000000] mb-1">{zone.name}</h4>
+                <p className="text-2xl font-bold text-[#000000]">{totalArticles}</p>
+                <p className="text-sm text-[#166534]">статии в {zoneData.length} категории</p>
               </div>
             </div>
           )
@@ -960,6 +1020,32 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
 // Enhanced Media Tab
 function EnhancedMediaTab() {
   return <EnhancedMediaManager />
+}
+
+// Templates Tab
+function TemplatesTab() {
+  const handleCreateTemplate = () => {
+    console.log('Creating new template')
+    // Here you would typically open the template editor
+  }
+
+  const handleEditTemplate = (template: any) => {
+    console.log('Editing template:', template)
+    // Here you would typically open the template editor with the template data
+  }
+
+  const handleDeleteTemplate = (templateId: string) => {
+    console.log('Deleting template:', templateId)
+    // Here you would typically confirm and delete the template
+  }
+
+  return (
+    <TemplateManager
+      onCreateTemplate={handleCreateTemplate}
+      onEditTemplate={handleEditTemplate}
+      onDeleteTemplate={handleDeleteTemplate}
+    />
+  )
 }
 
 // Article Order Tab
@@ -994,32 +1080,32 @@ function SettingsTab() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Настройки</h1>
-        <p className="text-gray-600 mt-2">Общи настройки на платформата</p>
+        <h1 className="text-3xl font-bold text-[#000000]">Настройки</h1>
+        <p className="text-[#166534] mt-2">Общи настройки на платформата</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Site Settings */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Настройки на сайта</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
+          <h3 className="text-lg font-semibold text-[#000000] mb-4">Настройки на сайта</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Име на сайта
               </label>
               <input
                 type="text"
                 defaultValue="Football Zone"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Описание
               </label>
               <textarea
                 defaultValue="Българска футболна платформа за треньори, играчи и родители"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg"
                 rows={3}
               />
             </div>
@@ -1030,27 +1116,27 @@ function SettingsTab() {
         </div>
 
         {/* Email Settings */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Email настройки</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
+          <h3 className="text-lg font-semibold text-[#000000] mb-4">Email настройки</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 SMTP Host
               </label>
               <input
                 type="text"
                 defaultValue="smtp.gmail.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 SMTP Port
               </label>
               <input
                 type="text"
                 defaultValue="587"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg"
               />
             </div>
             <Button className="bg-blue-600 hover:bg-blue-700">
@@ -1060,37 +1146,37 @@ function SettingsTab() {
         </div>
 
         {/* Analytics */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Analytics</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
+          <h3 className="text-lg font-semibold text-[#000000] mb-4">Analytics</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Google Analytics ID
               </label>
               <input
                 type="text"
                 placeholder="GA-XXXXXXXXX"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#166534] mb-2">
                 Facebook Pixel ID
               </label>
               <input
                 type="text"
                 placeholder="123456789"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg"
               />
             </div>
           </div>
         </div>
 
         {/* Backup */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Резервно копие</h3>
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-green-100">
+          <h3 className="text-lg font-semibold text-[#000000] mb-4">Резервно копие</h3>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[#166534]">
               Последно резервно копие: 15.01.2024, 14:30
             </p>
             <div className="flex space-x-3">
@@ -1103,6 +1189,86 @@ function SettingsTab() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// Moderation Tab (Коментари и сигнали)
+function ModerationTab() {
+  const mockReports = [
+    { id: 'r1', type: 'comment', reason: 'Обиден език', target: 'Коментар #1245', createdAt: 'преди 2 часа', status: 'pending' },
+    { id: 'r2', type: 'user', reason: 'Спам поведение', target: 'Потребител maria@example.com', createdAt: 'преди 5 часа', status: 'reviewing' },
+    { id: 'r3', type: 'comment', reason: 'Неподходящо съдържание', target: 'Коментар #1189', createdAt: 'вчера', status: 'resolved' }
+  ] as const
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'reviewing':
+        return 'bg-blue-100 text-blue-800'
+      case 'resolved':
+        return 'bg-green-100 text-green-800'
+      default:
+        return 'bg-green-50 text-green-800'
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#000000]">Модерация</h1>
+        <p className="text-[#166534] mt-2">Управлявайте коментари, сигнали и нарушения</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white border border-green-100 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-[#000000] mb-2">Отворени сигнали</h3>
+          <p className="text-3xl font-bold text-[#000000]">12</p>
+        </div>
+        <div className="bg-white border border-green-100 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-[#000000] mb-2">Очакват преглед</h3>
+          <p className="text-3xl font-bold text-[#000000]">5</p>
+        </div>
+        <div className="bg-white border border-green-100 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-[#000000] mb-2">Решени тази седмица</h3>
+          <p className="text-3xl font-bold text-[#000000]">27</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-green-100 overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-green-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">Тип</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">Причина</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">Обект</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">Създаден</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#166534] uppercase tracking-wider">Статус</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-[#166534] uppercase tracking-wider">Действия</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-green-100">
+            {mockReports.map((r) => (
+              <tr key={r.id} className="hover:bg-green-50 transition-colors">
+                <td className="px-6 py-4 text-sm text-[#000000]">{r.type === 'comment' ? 'Коментар' : 'Потребител'}</td>
+                <td className="px-6 py-4 text-sm text-[#000000]">{r.reason}</td>
+                <td className="px-6 py-4 text-sm text-[#166534]">{r.target}</td>
+                <td className="px-6 py-4 text-sm text-[#166534]">{r.createdAt}</td>
+                <td className="px-6 py-4">
+                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadge(r.status)}`}>{r.status}</span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <div className="inline-flex gap-2">
+                    <button className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">Одобри</button>
+                    <button className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Изтрий</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
@@ -1178,8 +1344,8 @@ function SeriesTab() {
       case 'coaches': return 'bg-green-100 text-green-800'
       case 'players': return 'bg-purple-100 text-purple-800'
       case 'teams': return 'bg-blue-100 text-blue-800'
-      case 'general': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'general': return 'bg-green-50 text-green-800'
+      default: return 'bg-green-50 text-green-800'
     }
   }
 
@@ -1188,7 +1354,7 @@ function SeriesTab() {
       case 'active': return 'bg-green-100 text-green-800'
       case 'draft': return 'bg-yellow-100 text-yellow-800'
       case 'completed': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
+      default: return 'bg-green-50 text-green-800'
     }
   }
 
@@ -1372,16 +1538,16 @@ function SeriesTab() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border">
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-green-100">
         <div className="flex items-center space-x-4">
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
             <option>Всички категории</option>
             <option>Треньори</option>
             <option>Играчи</option>
             <option>Отбори</option>
             <option>Общи</option>
           </select>
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
             <option>Всички статуси</option>
             <option>Активни</option>
             <option>Чернови</option>
@@ -1393,7 +1559,7 @@ function SeriesTab() {
       {/* Series Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mockSeries.map((series) => (
-          <div key={series.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
+          <div key={series.id} className="bg-white rounded-lg shadow-sm border border-green-100 overflow-hidden hover:shadow-md transition-shadow hover-lift">
             {/* Cover Image */}
             <div className="h-48 bg-gray-200 overflow-hidden">
               <img 
@@ -1406,7 +1572,7 @@ function SeriesTab() {
             {/* Content */}
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-gray-900 text-lg leading-tight">
+                <h3 className="font-semibold text-[#000000] text-lg leading-tight">
                   {series.name}
                 </h3>
                 <div className="flex space-x-1">
@@ -1422,7 +1588,7 @@ function SeriesTab() {
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+              <p className="text-sm text-[#166534] mb-4 line-clamp-2">
                 {series.description}
               </p>
 
@@ -1439,18 +1605,18 @@ function SeriesTab() {
               {/* Progress */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Прогрес</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm text-[#166534]">Прогрес</span>
+                  <span className="text-sm font-medium text-[#000000]">
                     {series.articleCount} / {series.totalPlanned}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-green-100 rounded-full h-2">
                   <div 
                     className="bg-blue-600 h-2 rounded-full transition-all"
                     style={{ width: `${getProgressPercent(series.articleCount, series.totalPlanned)}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-[#166534] mt-1">
                   {getProgressPercent(series.articleCount, series.totalPlanned)}% завършено
                 </div>
               </div>
@@ -1472,7 +1638,7 @@ function SeriesTab() {
               </div>
 
               {/* Footer */}
-              <div className="flex justify-between items-center text-xs text-gray-500 border-t pt-3">
+              <div className="flex justify-between items-center text-xs text-[#166534] border-t pt-3">
                 <span>Обновено: {formatDate(series.lastUpdated)}</span>
                 <button className="text-blue-600 hover:text-blue-800 font-medium">
                   Виж статии →

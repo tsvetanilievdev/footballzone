@@ -23,10 +23,10 @@ export default function ZoneCard({ zone }: ZoneCardProps) {
         </div>
         
         <h3 className="text-xl font-semibold text-gray-900 mb-2">{zone.name}</h3>
-        <p className="text-gray-600 mb-4">{zone.description}</p>
+        <p className="text-gray-700 mb-4">{zone.description}</p>
         
         <div className="flex items-center justify-between mb-4">
-          <div className="flex space-x-4 text-sm text-gray-500">
+          <div className="flex space-x-4 text-sm text-gray-600">
             <span>{zone.articleCount} статии</span>
             <span>{zone.videoCount} видео</span>
           </div>

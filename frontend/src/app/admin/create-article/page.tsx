@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TemplateBasedArticleCreator from '@/components/admin/TemplateBasedArticleCreator'
 import { Article } from '@/types'
-import Header from '@/components/common/Header'
+import Header from '@/components/layout/Header'
 
 export default function CreateArticlePage() {
   const router = useRouter()

@@ -11,6 +11,8 @@ interface TemplateSelectorProps {
   category: string
   className?: string
   onTemplateConfig?: (templateId: string) => void
+  templatesOverride?: ArticleTemplate[]
+  zone?: string
 }
 
 export default function TemplateSelector({ 
@@ -18,18 +20,27 @@ export default function TemplateSelector({
   onTemplateSelect,
   category,
   className = '',
-  onTemplateConfig
+  onTemplateConfig,
+  templatesOverride,
+  zone
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<ArticleTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [showDetails, setShowDetails] = useState<string | null>(null)
 
   useEffect(() => {
-    // Зареждане на темплейти според категорията
-    const availableTemplates = getTemplatesByCategory(category)
-    setTemplates(availableTemplates)
+    // Зареждане на темплейти: приоритетно подадени отвън; иначе по зона; fallback към категория
+    if (templatesOverride && templatesOverride.length > 0) {
+      setTemplates(templatesOverride)
+      setLoading(false)
+      return
+    }
+    const byZone = zone ? (getTemplatesByCategory as any) : null
+    // Заб.: legacy – ако zone е подаден, тук може да се използва getTemplatesByZone при нужда
+    const available = getTemplatesByCategory(category)
+    setTemplates(available)
     setLoading(false)
-  }, [category])
+  }, [category, templatesOverride, zone])
 
   if (loading) {
     return (
@@ -93,6 +104,11 @@ export default function TemplateSelector({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {templates.length === 0 && (
+          <div className="col-span-full p-6 border border-dashed rounded-lg text-center text-gray-500">
+            Няма налични темплейти за тази категория/зона.
+          </div>
+        )}
         {templates.map(template => (
           <div
             key={template.id}
