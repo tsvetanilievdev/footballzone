@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from './Button'
 import { ArrowRightIcon, PlayIcon } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 
 const slides = [
   {
@@ -37,11 +38,17 @@ const slides = [
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  // Tiny blur placeholder (1x1 transparent gif) used for ultra-fast LCP
+  const BLUR_DATA_URL =
+    'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
 
   useEffect(() => {
+    // Advance slides only when the tab is visible to avoid unnecessary work
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 6000) // Increased interval for better performance
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        setCurrentSlide((prev) => (prev + 1) % slides.length)
+      }
+    }, 6000)
 
     return () => clearInterval(interval)
   }, [])
@@ -56,11 +63,15 @@ export default function HeroSlider() {
     <div className="relative h-[80vh] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img
+        <Image
           src={currentSlideData.image}
           alt="Hero background"
-          className="w-full h-full object-cover"
-          loading="eager"
+          fill
+          priority
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          sizes="100vw"
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>
       </div>

@@ -99,7 +99,7 @@ export default function Header() {
     <>
       {/* Desktop & Mobile Header */}
       <header className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out',
+        'fixed top-0 left-0 right-0 z-50 transition-[background,box-shadow,border-color] duration-500 ease-out will-change-[background,box-shadow,border-color]',
         isScrolled 
           ? 'bg-gradient-to-r from-green-100/98 via-blue-100/98 to-purple-100/98 backdrop-blur-xl border-b border-green-300/50 shadow-lg shadow-green-500/20' 
           : 'bg-gradient-to-r from-green-100/95 via-blue-100/95 to-purple-100/95 backdrop-blur-md border-b border-transparent'

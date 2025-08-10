@@ -46,6 +46,7 @@ const zones: Zone[] = [
 
 // Import articles from centralized data
 import { allArticles } from '@/data/articles'
+export const revalidate = 60 // ISR: revalidate homepage every 60s
 
 // Featured articles - select first 3 articles for showcase
 const featuredArticles: Article[] = allArticles.slice(0, 3)
