@@ -16,6 +16,18 @@
 /* Headings default to text-heading for strong contrast */
 h1, h2, h3, h4, h5, h6 { color: var(--color-text-heading); }
 
+/* Semantic color tokens (single source of truth) */
+:root {
+  --color-text-heading: #000000;
+  --color-text-body: #1f2937; /* gray-800 */
+  --color-text-muted: #374151; /* gray-700 */
+  --color-text-inverse: #ffffff;
+  --color-text-accent: #059669; /* brand green */
+  --color-border-muted: #e5e7eb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9fafb;
+}
+
 /* Keep existing styles below */
 
 :root {
@@ -88,8 +100,9 @@ h1, h2, h3, h4, h5, h6 { color: var(--color-text-heading); }
   --button-shadow: rgba(0, 0, 0, 0.1);
   
   /* Typography */
-  --heading-color: #0f172a;
-  --text-color: #1e293b;
+  /* legacy vars kept for safety but unused */
+  --heading-color: var(--color-text-heading);
+  --text-color: var(--color-text-body);
   --text-body: #334155;
   --text-muted: #64748b;
   --text-light: #94a3b8;
@@ -141,8 +154,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--color-text-heading); }
     --input-border: var(--gray-600);
     
     /* Typography in dark mode */
-    --heading-color: var(--gray-100);
-    --text-color: var(--gray-300);
+    --heading-color: var(--color-text-heading);
+    --text-color: var(--color-text-body);
     --text-muted: var(--gray-400);
     
     /* Adjust shadows for dark mode */
@@ -155,8 +168,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--color-text-heading); }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-surface);
+  color: var(--color-text-body);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.6;
   text-rendering: optimizeLegibility;
@@ -167,7 +180,7 @@ body {
 
 /* Typography improvements */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--heading-color);
+  color: var(--color-text-heading);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -194,17 +207,13 @@ h4 {
 }
 
 p {
-  color: #1f2937;
+  color: var(--color-text-body);
   line-height: 1.7;
   margin-bottom: 1rem;
   font-weight: 500;
 }
 
 /* Global text visibility improvements - DISABLED to prevent gray text override */
-.text-muted {
-  color: #000000 !important; /* Changed to black */
-}
-
 /* Gray text classes are now handled by Tailwind - no global overrides */
 
 /* Zone-specific utility classes */
