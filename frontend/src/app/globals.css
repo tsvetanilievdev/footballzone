@@ -1,32 +1,14 @@
-@import "tailwindcss";
+/*
+  Single Source of Truth for colors and typography
+  See: frontend/ACCESSIBILITY-COLORS.md
+*/
 
-/* Design Tokens: Colors */
-:root {
-  /* Text tokens */
-  --color-text-heading: #000000;
-  --color-text-body: #0a0a0a;
-  --color-text-muted: #134e4a; /* deliberately not gray; dark teal-green for subtle text */
-  --color-text-inverse: #ffffff;
-  --color-text-accent: #166534; /* green-700 */
-
-  /* Brand tokens */
-  --color-brand-primary: #16a34a; /* green-600 */
-  --color-brand-secondary: #2563eb; /* blue-600 */
-
-  /* Surface tokens */
-  --color-surface: #ffffff;
-  --color-surface-muted: #f0fdf4; /* green-50 */
-  --color-border-muted: #bbf7d0; /* green-200 */
-}
-
-/* Semantic text utilities */
+/* Semantic utility classes */
 .text-heading { color: var(--color-text-heading); }
 .text-body { color: var(--color-text-body); }
 .text-muted { color: var(--color-text-muted); }
 .text-inverse { color: var(--color-text-inverse); }
 .text-accent { color: var(--color-text-accent); }
-
-/* Semantic background/border utilities */
 .bg-surface { background-color: var(--color-surface); }
 .bg-surface-muted { background-color: var(--color-surface-muted); }
 .border-muted { border-color: var(--color-border-muted); }
@@ -928,3 +910,16 @@ small, .text-sm {
   color: #9ca3af;
   pointer-events: none;
 }
+
+/* Legacy Tailwind gray aliases mapped to semantic tokens (temporary) */
+.text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-gray-300 {
+  color: var(--color-text-body);
+}
+.text-gray-900 h1, .text-gray-900 h2, .text-gray-900 h3,
+.text-gray-800 h1, .text-gray-800 h2, .text-gray-800 h3,
+.text-gray-700 h1, .text-gray-700 h2, .text-gray-700 h3,
+.text-gray-600 h1, .text-gray-600 h2, .text-gray-600 h3,
+.text-gray-500 h1, .text-gray-500 h2, .text-gray-500 h3 {
+  color: var(--color-text-heading);
+}
+/* Encourage using text-heading/text-body going forward */
