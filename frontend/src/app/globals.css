@@ -1,5 +1,41 @@
 @import "tailwindcss";
 
+/* Design Tokens: Colors */
+:root {
+  /* Text tokens */
+  --color-text-heading: #000000;
+  --color-text-body: #0a0a0a;
+  --color-text-muted: #134e4a; /* deliberately not gray; dark teal-green for subtle text */
+  --color-text-inverse: #ffffff;
+  --color-text-accent: #166534; /* green-700 */
+
+  /* Brand tokens */
+  --color-brand-primary: #16a34a; /* green-600 */
+  --color-brand-secondary: #2563eb; /* blue-600 */
+
+  /* Surface tokens */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f0fdf4; /* green-50 */
+  --color-border-muted: #bbf7d0; /* green-200 */
+}
+
+/* Semantic text utilities */
+.text-heading { color: var(--color-text-heading); }
+.text-body { color: var(--color-text-body); }
+.text-muted { color: var(--color-text-muted); }
+.text-inverse { color: var(--color-text-inverse); }
+.text-accent { color: var(--color-text-accent); }
+
+/* Semantic background/border utilities */
+.bg-surface { background-color: var(--color-surface); }
+.bg-surface-muted { background-color: var(--color-surface-muted); }
+.border-muted { border-color: var(--color-border-muted); }
+
+/* Headings default to text-heading for strong contrast */
+h1, h2, h3, h4, h5, h6 { color: var(--color-text-heading); }
+
+/* Keep existing styles below */
+
 :root {
   /* Light theme colors */
   --background: #ffffff;
@@ -854,6 +890,35 @@ small, .text-sm {
 
 .prose li {
   margin-bottom: 0.5rem;
+}
+
+/* Read Zone readability */
+.read-zone {
+  --rz-bg: var(--color-surface);
+  --rz-text: var(--color-text-body);
+  --rz-heading: var(--color-text-heading);
+}
+.read-zone h1,
+.read-zone h2,
+.read-zone h3,
+.read-zone h4,
+.read-zone h5,
+.read-zone h6 { color: var(--rz-heading); }
+.read-zone p,
+.read-zone li,
+.read-zone span { color: var(--rz-text); }
+.read-zone .card { background: var(--rz-bg); }
+
+/* Remove conflicting forced white/dark overrides for content grids */
+.grid.grid-cols-1.gap-8.lg\:grid-cols-3.mb-16 h3,
+.grid.grid-cols-1.gap-8.lg\:grid-cols-3.mb-16 p,
+.grid.grid-cols-1.gap-8.lg\:grid-cols-3.mb-16 .text-sm div {
+  color: inherit;
+}
+
+.grid.grid-cols-1.gap-12.sm\:grid-cols-2 h3,
+.grid.grid-cols-1.gap-12.sm\:grid-cols-2 p {
+  color: inherit;
 }
 
 /* Placeholder for contenteditable editors */

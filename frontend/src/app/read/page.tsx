@@ -84,7 +84,7 @@ export default function ReadZonePage() {
       />
 
       {/* Main Content - With sidebar */}
-      <section className="py-6 lg:py-8">
+      <section className="py-6 lg:py-8 read-zone">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             {/* Main Content */}
