@@ -88,7 +88,7 @@ export default function ArticleTemplatePage() {
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Избери темплейт за статия
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-black max-w-3xl mx-auto">
               Разгледай 3-те различни темплейта за показване на статии и избери този, който най-добре отговаря на нуждите ти.
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function ArticleTemplatePage() {
                     <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                     <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <div className="flex items-center space-x-4 text-sm text-green-700">
                     <span className="flex items-center"><UserIcon className="w-4 h-4 mr-1" /> Автор</span>
                     <span className="flex items-center"><ClockIcon className="w-4 h-4 mr-1" /> {article.readTime} мин</span>
                   </div>
@@ -240,31 +240,31 @@ export default function ArticleTemplatePage() {
                   </thead>
                   <tbody className="text-sm">
                     <tr className="border-b">
-                      <td className="py-4 text-gray-700">Четим дизайн</td>
+                      <td className="py-4 text-black">Четим дизайн</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">✅</td>
                     </tr>
                     <tr className="border-b">
-                      <td className="py-4 text-gray-700">Интерактивни елементи</td>
+                      <td className="py-4 text-black">Интерактивни елементи</td>
                       <td className="text-center py-4">⭐</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">⭐</td>
                     </tr>
                     <tr className="border-b">
-                      <td className="py-4 text-gray-700">Боковa лента</td>
+                      <td className="py-4 text-black">Боковa лента</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">❌</td>
                       <td className="text-center py-4">✅</td>
                     </tr>
                     <tr className="border-b">
-                      <td className="py-4 text-gray-700">Социални функции</td>
+                      <td className="py-4 text-black">Социални функции</td>
                       <td className="text-center py-4">⭐</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">⭐</td>
                     </tr>
                     <tr>
-                      <td className="py-4 text-gray-700">Мобилна оптимизация</td>
+                      <td className="py-4 text-black">Мобилна оптимизация</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">✅</td>
                       <td className="text-center py-4">✅</td>
@@ -273,7 +273,7 @@ export default function ArticleTemplatePage() {
                 </table>
               </div>
               
-              <div className="mt-6 text-center text-sm text-gray-500">
+              <div className="mt-6 text-center text-sm text-green-700">
                 ✅ Пълна поддръжка | ⭐ Основна поддръжка | ❌ Не се поддържа
               </div>
             </div>
@@ -307,7 +307,7 @@ function ClassicTemplate({ article }: { article: Article }) {
                   {article.title}
                 </h1>
                 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-black mb-6">
                   <div className="flex items-center">
                     <UserIcon className="w-4 h-4 mr-2" />
                     <span>{article.author.name}</span>
@@ -353,7 +353,7 @@ function ClassicTemplate({ article }: { article: Article }) {
                   {article.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 hover:bg-green-200 transition-colors cursor-pointer"
                     >
                       <TagIcon className="w-3 h-3 mr-1" />
                       {tag}
@@ -375,10 +375,10 @@ function ClassicTemplate({ article }: { article: Article }) {
                   <div key={i} className="flex space-x-3">
                     <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
+                      <h4 className="text-sm font-medium text-black line-clamp-2">
                         Примерна свързана статия {i}
                       </h4>
-                      <p className="text-xs text-gray-500 mt-1">5 мин четене</p>
+                      <p className="text-xs text-green-700 mt-1">5 мин четене</p>
                     </div>
                   </div>
                 ))}
@@ -451,7 +451,7 @@ function ModernTemplate({ article }: { article: Article }) {
                 setLikes(isLiked ? likes - 1 : likes + 1)
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-colors ${
-                isLiked ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                isLiked ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600 hover:bg-green-200'
               }`}
             >
               {isLiked ? (
@@ -462,17 +462,17 @@ function ModernTemplate({ article }: { article: Article }) {
               <span className="font-medium">{likes}</span>
             </button>
             
-            <button className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+            <button className="flex items-center space-x-2 px-4 py-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors">
               <ChatBubbleLeftIcon className="w-5 h-5" />
               <span className="font-medium">12</span>
             </button>
           </div>
           
           <div className="flex items-center space-x-2">
-            <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+            <button className="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors">
               <BookmarkIcon className="w-5 h-5" />
             </button>
-            <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+            <button className="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors">
               <ShareIcon className="w-5 h-5" />
             </button>
           </div>
@@ -533,7 +533,7 @@ function MagazineTemplate({ article }: { article: Article }) {
                 </h1>
                 
                 <div className="border-l-4 border-green-600 pl-6 mb-8">
-                  <p className="text-xl text-gray-600 leading-relaxed">
+                  <p className="text-xl text-black leading-relaxed">
                     {article.excerpt}
                   </p>
                 </div>
@@ -547,19 +547,19 @@ function MagazineTemplate({ article }: { article: Article }) {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">{article.author.name}</p>
-                      <p className="text-sm text-gray-500">Автор</p>
+                      <p className="text-sm text-green-700">Автор</p>
                     </div>
                   </div>
                   
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-green-700">
                       {new Intl.DateTimeFormat('bg-BG', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
                       }).format(article.publishedAt)}
                     </p>
-                    <p className="text-sm text-gray-500">{article.readTime} минути четене</p>
+                    <p className="text-sm text-green-700">{article.readTime} минути четене</p>
                   </div>
                 </div>
               </header>
@@ -599,13 +599,13 @@ function MagazineTemplate({ article }: { article: Article }) {
                   Съдържание
                 </h3>
                 <nav className="space-y-2">
-                  <a href="#" className="block text-sm text-gray-600 hover:text-green-600 transition-colors">
+                  <a href="#" className="block text-sm text-black hover:text-green-600 transition-colors">
                     Принцип 1: Интензитет
                   </a>
-                  <a href="#" className="block text-sm text-gray-600 hover:text-green-600 transition-colors">
+                  <a href="#" className="block text-sm text-black hover:text-green-600 transition-colors">
                     Принцип 2: Идентичност
                   </a>
-                  <a href="#" className="block text-sm text-gray-600 hover:text-green-600 transition-colors">
+                  <a href="#" className="block text-sm text-black hover:text-green-600 transition-colors">
                     Принцип 3: Дисциплина
                   </a>
                 </nav>
@@ -620,7 +620,7 @@ function MagazineTemplate({ article }: { article: Article }) {
                   {article.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-block px-3 py-1 text-xs font-medium bg-white text-gray-600 border border-gray-200 rounded hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors cursor-pointer"
+                      className="inline-block px-3 py-1 text-xs font-medium bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 hover:border-green-300 hover:text-green-800 transition-colors cursor-pointer"
                     >
                       {tag}
                     </span>

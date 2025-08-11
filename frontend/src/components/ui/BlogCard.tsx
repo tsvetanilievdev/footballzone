@@ -19,7 +19,7 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
   const { day, month } = formatDate(article.publishedAt)
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-lg transition-shadow duration-300">
+    <article className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-lg transition-shadow duration-300">
       {/* Image with Date Badge */}
       <div className="relative">
         <NextImage
@@ -55,14 +55,14 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
 
       {/* Content */}
       <div className="p-4 sm:p-5">
-        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300 leading-tight line-clamp-2">
+        <h2 className="text-lg font-bold text-black mb-2 group-hover:text-green-600 transition-colors duration-300 leading-tight line-clamp-2">
           <Link href={`/read/${article.slug}`}>
             {article.title}
           </Link>
-        </h3>
+        </h2>
 
         {/* Meta Info */}
-        <div className="flex items-center space-x-3 text-sm text-gray-500 mb-3">
+        <div className="flex items-center space-x-3 text-sm text-black mb-3">
           <div className="flex items-center space-x-1">
             <UserIcon className="w-4 h-4" />
             <span className="text-green-600">{article.author.name}</span>
@@ -74,7 +74,7 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
         </div>
 
         {/* Excerpt */}
-        <p className="text-gray-600 leading-relaxed mb-4 text-sm line-clamp-3">
+        <p className="text-black leading-relaxed mb-4 text-sm line-clamp-3">
           {article.excerpt}
         </p>
 
@@ -85,9 +85,9 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
               <span className="text-sm text-green-600 font-medium">Uncategorized</span>
             </div>
             <div className="mt-1">
-              <span className="text-xs text-gray-500">Tags: </span>
+              <span className="text-xs text-green-700 font-medium">Tags: </span>
               {article.tags.slice(0, 3).map((tag, index) => (
-                <span key={tag} className="text-xs text-gray-500">
+                <span key={tag} className="text-xs text-green-700">
                   {tag}
                   {index < Math.min(article.tags.length, 3) - 1 && ', '}
                 </span>
@@ -100,12 +100,12 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
         <div className="pt-3 border-t border-gray-100">
           <Link
             href={`/read/${article.slug}`}
-            className="inline-block px-6 py-2.5 bg-gray-100 text-gray-700 font-medium text-xs rounded hover:bg-green-100 hover:text-green-700 transition-colors duration-300 uppercase tracking-wide"
+            className="inline-block px-6 py-2.5 bg-green-100 text-green-800 font-medium text-xs rounded hover:bg-green-200 hover:text-green-900 transition-colors duration-300 uppercase tracking-wide"
           >
             READ MORE
           </Link>
         </div>
       </div>
-    </div>
+    </article>
   )
 } 

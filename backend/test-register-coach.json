@@ -1,0 +1,7 @@
+{
+  "email": "coach@example.com",
+  "password": "CoachPassword123!",
+  "name": "Test Coach",
+  "role": "COACH",
+  "acceptTerms": true
+}

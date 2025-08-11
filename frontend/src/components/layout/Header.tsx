@@ -126,7 +126,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex lg:items-center lg:gap-4">
+            <nav className="hidden lg:flex lg:items-center lg:gap-4" aria-label="Главна навигация">
               {navigation.map((item) => {
                 const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
                 const Icon = item.icon
@@ -269,7 +269,7 @@ export default function Header() {
 
               {/* Mobile navigation */}
               <div className="flex-1 overflow-y-auto py-6">
-                <nav className="px-4 space-y-2">
+               <nav className="px-4 space-y-2" aria-label="Мобилна навигация">
                   {navigation.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
                     const Icon = item.icon

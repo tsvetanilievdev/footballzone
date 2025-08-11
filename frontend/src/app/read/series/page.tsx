@@ -113,7 +113,7 @@ export default function SeriesPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Все още няма налични поредици
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-black mb-6">
                   Работим усилено върху създаването на интересни тематични поредици за вас.
                 </p>
                 <Link 
@@ -134,7 +134,7 @@ export default function SeriesPage() {
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Защо да четете нашите поредици?
               </h2>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              <p className="text-lg text-black max-w-3xl mx-auto">
                 Всяка поредица е внимателно планирана да ви предостави цялостни знания по дадена тема
               </p>
             </div>
@@ -147,7 +147,7 @@ export default function SeriesPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Структурирано обучение
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-black">
                   Всяка поредица следва логическа последователност от основи към напреднали техники
                 </p>
               </div>
@@ -159,7 +159,7 @@ export default function SeriesPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Дълбочинен анализ
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-black">
                   Детайлни обяснения, примери от практиката и научно обосновани методи
                 </p>
               </div>
@@ -171,7 +171,7 @@ export default function SeriesPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Практично приложение
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-black">
                   Конкретни съвети и упражнения, които можете да приложите веднага
                 </p>
               </div>

@@ -115,11 +115,14 @@ export const searchArticles = async (req: Request, res: Response, next: NextFunc
 
 export const createArticle = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // This will be implemented when authentication is added
-    const articleData = req.body
-    // const authorId = req.user.id
+    if (!req.user) {
+      throw new Error('Authentication required')
+    }
 
-    const article = await articleService.createArticle(articleData)
+    const articleData = req.body
+    const authorId = req.user.userId
+
+    const article = await articleService.createArticle(articleData, authorId)
 
     res.status(201).json({
       success: true,
@@ -133,11 +136,16 @@ export const createArticle = async (req: Request, res: Response, next: NextFunct
 
 export const updateArticle = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // This will be implemented when authentication is added
+    if (!req.user) {
+      throw new Error('Authentication required')
+    }
+
     const { id } = req.params
     const updateData = req.body
+    const userId = req.user.userId
+    const userRole = req.user.role
 
-    const article = await articleService.updateArticle(id, updateData)
+    const article = await articleService.updateArticle(id, updateData, userId, userRole)
 
     res.json({
       success: true,
@@ -151,15 +159,17 @@ export const updateArticle = async (req: Request, res: Response, next: NextFunct
 
 export const deleteArticle = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // This will be implemented when authentication is added
+    if (!req.user) {
+      throw new Error('Authentication required')
+    }
+
     const { id } = req.params
+    const userId = req.user.userId
+    const userRole = req.user.role
 
-    await articleService.deleteArticle(id)
+    const result = await articleService.deleteArticle(id, userId, userRole)
 
-    res.json({
-      success: true,
-      message: 'Article deleted successfully'
-    })
+    res.json(result)
   } catch (error) {
     next(error)
   }
@@ -185,7 +195,7 @@ export const trackView = async (req: Request, res: Response, next: NextFunction)
     if (referrer) trackData.referrer = referrer
     if (userAgent) trackData.deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop'
     if (ipAddress) trackData.ipAddress = ipAddress
-    if (req.user?.id) trackData.userId = req.user.id
+    if (req.user?.userId) trackData.userId = req.user.userId
 
     await articleService.trackArticleView(trackData)
 

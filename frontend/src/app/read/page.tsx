@@ -4,8 +4,9 @@ import { useState, useMemo } from 'react'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import BlogCard from '@/components/ui/BlogCard'
-import BlogSidebar from '@/components/ui/BlogSidebar'
+
 import SearchAndCategories from '@/components/ui/SearchAndCategories'
+import ReadZoneSidebar from '@/components/ui/ReadZoneSidebar'
 import { Article } from '@/types'
 import Link from 'next/link'
 import NextImage from 'next/image'
@@ -47,6 +48,7 @@ export default function ReadZonePage() {
       <Header />
       
       {/* Hero Section - Reduced height */}
+      <main id="main" role="main">
       <section className="relative bg-black text-white pt-16">
         {/* Background Image */}
         <div className="absolute inset-0">
@@ -81,20 +83,14 @@ export default function ReadZonePage() {
         selectedCategory={selectedCategory}
       />
 
-      {/* Main Content - Adjusted spacing */}
+      {/* Main Content - With sidebar */}
       <section className="py-6 lg:py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            
-            {/* Sidebar - Moved to left side */}
-            <div className="lg:col-span-4 xl:col-span-3 order-2 lg:order-1">
-              <BlogSidebar />
-            </div>
-
-            {/* Main Content - Moved to right side */}
-            <div className="lg:col-span-8 xl:col-span-9 order-1 lg:order-2">
+            {/* Main Content */}
+            <div className="lg:col-span-8">
               {/* Blog Posts Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {filteredArticles.length > 0 ? (
                   filteredArticles.map((article, index) => (
                     <BlogCard 
@@ -106,14 +102,14 @@ export default function ReadZonePage() {
                   ))
                 ) : (
                   <div className="col-span-full text-center py-12">
-                    <p className="text-gray-500 text-lg">Няма намерени статии, които да отговарят на критериите.</p>
+                    <p className="text-black text-lg">Няма намерени статии, които да отговарят на критериите.</p>
                   </div>
                 )}
               </div>
 
               {/* Pagination */}
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <button className="px-2 py-1 text-gray-500 hover:text-gray-700 transition-colors">
+                <button className="px-2 py-1 text-green-700 hover:text-green-900 transition-colors">
                   «
                 </button>
                 
@@ -121,30 +117,40 @@ export default function ReadZonePage() {
                   1
                 </button>
                 
-                <button className="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
                   2
                 </button>
                 
-                <button className="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
                   3
                 </button>
                 
-                <button className="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
                   4
                 </button>
                 
-                <button className="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
                   5
                 </button>
                 
-                <button className="px-2 py-1 text-gray-500 hover:text-gray-700 transition-colors">
+                <button className="px-2 py-1 text-green-700 hover:text-green-900 transition-colors">
                   »
                 </button>
               </div>
             </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-4">
+              <ReadZoneSidebar 
+                onSearchChange={handleSearchChange}
+                onCategoryChange={handleCategoryChange}
+              />
+            </div>
           </div>
         </div>
       </section>
+
+      </main>
 
       <Footer />
     </div>

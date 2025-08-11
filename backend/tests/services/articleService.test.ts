@@ -27,7 +27,7 @@ describe('Article Service', () => {
     testTemplate = await prisma.articleTemplate.create({
       data: {
         name: 'Test Template',
-        category: 'TACTICS',
+        category: 'coach', // Use valid TemplateCategory
         settings: {}
       }
     })

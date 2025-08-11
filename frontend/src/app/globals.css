@@ -182,22 +182,12 @@ p {
   font-weight: 500;
 }
 
-/* Global text visibility improvements */
+/* Global text visibility improvements - DISABLED to prevent gray text override */
 .text-muted {
-  color: #4b5563 !important;
+  color: #000000 !important; /* Changed to black */
 }
 
-.text-gray-500 {
-  color: #4b5563 !important;
-}
-
-.text-gray-600 {
-  color: #374151 !important;
-}
-
-.text-gray-700 {
-  color: #1f2937 !important;
-}
+/* Gray text classes are now handled by Tailwind - no global overrides */
 
 /* Zone-specific utility classes */
 .gradient-read {
@@ -246,9 +236,7 @@ p {
   -webkit-text-fill-color: transparent;
 }
 
-.text-gray-400 {
-  color: #6b7280 !important;
-}
+/* .text-gray-400 removed - using Tailwind defaults */
 
 /* Custom overrides */
 .grid.grid-cols-3 > div:first-child h3 {

@@ -292,33 +292,203 @@ export const searchArticles = async (filters: SearchFilters) => {
   }
 }
 
-export const createArticle = async (_articleData: any) => {
+export const createArticle = async (articleData: any, authorId: string) => {
   try {
-    // This will be implemented when authentication is added
-    throw new AppError('Not implemented yet', 501)
-  } catch (error) {
+    const { zones, ...articleFields } = articleData
+    
+    // Generate slug if not provided
+    if (!articleFields.slug) {
+      articleFields.slug = articleFields.title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-')      // Replace spaces with hyphens
+        .replace(/-+/g, '-')       // Replace multiple hyphens with single
+        .trim()
+    }
+
+    // Create article with zones using transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the article
+      const article = await tx.article.create({
+        data: {
+          ...articleFields,
+          authorId,
+          publishedAt: articleFields.status === 'PUBLISHED' ? new Date() : null
+        }
+      })
+
+      // Create zone associations
+      if (zones && zones.length > 0) {
+        await tx.articleZone.createMany({
+          data: zones.map((zone: any) => ({
+            articleId: article.id,
+            zone: zone.zone,
+            visible: zone.visible ?? true,
+            requiresSubscription: zone.requiresSubscription ?? false,
+            freeAfterDate: zone.freeAfterDate ? new Date(zone.freeAfterDate) : null
+          }))
+        })
+      }
+
+      // Return article with zones
+      return await tx.article.findUnique({
+        where: { id: article.id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          },
+          zones: true,
+          series: true
+        }
+      })
+    })
+
+    return result
+  } catch (error: any) {
     console.error('Error creating article:', error)
-    throw error
+    if (error.code === 'P2002') {
+      throw new AppError('Article with this slug already exists', 409)
+    }
+    throw new AppError('Failed to create article', 500)
   }
 }
 
-export const updateArticle = async (_id: string, _updateData: any) => {
+export const updateArticle = async (id: string, updateData: any, userId: string, userRole: string) => {
   try {
-    // This will be implemented when authentication is added
-    throw new AppError('Not implemented yet', 501)
-  } catch (error) {
+    // First verify the article exists and check permissions
+    const existingArticle = await prisma.article.findUnique({
+      where: { id },
+      include: { author: true }
+    })
+
+    if (!existingArticle) {
+      throw new AppError('Article not found', 404)
+    }
+
+    // Check if user can modify this article
+    const canModify = userRole === 'ADMIN' || existingArticle.authorId === userId
+    if (!canModify) {
+      throw new AppError('You can only modify your own articles', 403)
+    }
+
+    const { zones, ...articleFields } = updateData
+
+    // Update article with zones using transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update the article
+      const updatedArticle = await tx.article.update({
+        where: { id },
+        data: {
+          ...articleFields,
+          publishedAt: articleFields.status === 'PUBLISHED' && !existingArticle.publishedAt 
+            ? new Date() 
+            : existingArticle.publishedAt
+        }
+      })
+
+      // Update zones if provided
+      if (zones && zones.length > 0) {
+        // Delete existing zones
+        await tx.articleZone.deleteMany({
+          where: { articleId: id }
+        })
+
+        // Create new zones
+        await tx.articleZone.createMany({
+          data: zones.map((zone: any) => ({
+            articleId: id,
+            zone: zone.zone,
+            visible: zone.visible ?? true,
+            requiresSubscription: zone.requiresSubscription ?? false,
+            freeAfterDate: zone.freeAfterDate ? new Date(zone.freeAfterDate) : null
+          }))
+        })
+      }
+
+      // Return updated article with relations
+      return await tx.article.findUnique({
+        where: { id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          },
+          zones: true,
+          series: true
+        }
+      })
+    })
+
+    return result
+  } catch (error: any) {
     console.error('Error updating article:', error)
-    throw error
+    if (error instanceof AppError) {
+      throw error
+    }
+    if (error.code === 'P2002') {
+      throw new AppError('Article with this slug already exists', 409)
+    }
+    throw new AppError('Failed to update article', 500)
   }
 }
 
-export const deleteArticle = async (_id: string) => {
+export const deleteArticle = async (id: string, userId: string, userRole: string) => {
   try {
-    // This will be implemented when authentication is added
-    throw new AppError('Not implemented yet', 501)
-  } catch (error) {
+    // First verify the article exists and check permissions
+    const existingArticle = await prisma.article.findUnique({
+      where: { id },
+      include: { 
+        author: true,
+        zones: true,
+        views: true
+      }
+    })
+
+    if (!existingArticle) {
+      throw new AppError('Article not found', 404)
+    }
+
+    // Check if user can delete this article (only ADMIN can delete any article)
+    const canDelete = userRole === 'ADMIN' || existingArticle.authorId === userId
+    if (!canDelete) {
+      throw new AppError('Only administrators can delete articles', 403)
+    }
+
+    // Delete article and related data using transaction
+    await prisma.$transaction(async (tx) => {
+      // Delete related data first (due to foreign key constraints)
+      await tx.articleZone.deleteMany({ where: { articleId: id } })
+      await tx.articleView.deleteMany({ where: { articleId: id } })
+      await tx.userActivity.deleteMany({ where: { resourceId: id } })
+      
+      // Delete the article
+      await tx.article.delete({ where: { id } })
+    })
+
+    return { 
+      success: true, 
+      message: 'Article deleted successfully',
+      deletedArticle: {
+        id: existingArticle.id,
+        title: existingArticle.title,
+        slug: existingArticle.slug
+      }
+    }
+  } catch (error: any) {
     console.error('Error deleting article:', error)
-    throw error
+    if (error instanceof AppError) {
+      throw error
+    }
+    throw new AppError('Failed to delete article', 500)
   }
 }
 

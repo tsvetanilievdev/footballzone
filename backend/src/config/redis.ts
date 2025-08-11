@@ -10,89 +10,211 @@ const redisConfig = {
 }
 
 class RedisClient {
-  public client: Redis
+  public client: Redis | null
+  private isConnected: boolean = false
+  private connectionTimeout: NodeJS.Timeout | null = null
   
   constructor() {
-    this.client = new Redis(redisConfig)
-    this.setupEventHandlers()
+    this.client = null
+    this.initializeRedis()
+  }
+
+  private async initializeRedis() {
+    try {
+      this.client = new Redis(redisConfig)
+      this.setupEventHandlers()
+
+      // Test connection with timeout
+      this.connectionTimeout = setTimeout(() => {
+        console.warn('⚠️  Redis connection timeout - running without cache')
+        this.isConnected = false
+      }, 5000)
+
+      // Test connection
+      await this.client.ping()
+      
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout)
+        this.connectionTimeout = null
+      }
+      
+      this.isConnected = true
+      console.log('✅ Redis connected and ready')
+    } catch (error: any) {
+      console.warn('⚠️  Redis unavailable - running without cache:', error?.message || error)
+      this.isConnected = false
+      if (this.client) {
+        this.client.disconnect()
+        this.client = null
+      }
+    }
   }
 
   private setupEventHandlers() {
+    if (!this.client) return
+
     this.client.on('connect', () => {
       console.log('✅ Redis connected')
+      this.isConnected = true
     })
 
     this.client.on('error', (error) => {
-      console.error('❌ Redis error:', error)
+      console.warn('⚠️  Redis error - falling back to no cache:', error.message)
+      this.isConnected = false
     })
 
     this.client.on('ready', () => {
       console.log('🚀 Redis ready')
+      this.isConnected = true
+    })
+
+    this.client.on('close', () => {
+      console.warn('⚠️  Redis connection closed')
+      this.isConnected = false
     })
   }
 
-  // Cache helpers
+  // Cache helpers with fallback
   async get(key: string): Promise<string | null> {
-    return await this.client.get(key)
+    if (!this.isConnected || !this.client) {
+      return null
+    }
+    
+    try {
+      return await this.client.get(key)
+    } catch (error: any) {
+      console.warn(`Redis get failed for key ${key}:`, error?.message || error)
+      return null
+    }
   }
 
   async set(key: string, value: string, ttl?: number): Promise<void> {
-    if (ttl) {
-      await this.client.setex(key, ttl, value)
-    } else {
-      await this.client.set(key, value)
+    if (!this.isConnected || !this.client) {
+      return
+    }
+    
+    try {
+      if (ttl) {
+        await this.client.setex(key, ttl, value)
+      } else {
+        await this.client.set(key, value)
+      }
+    } catch (error: any) {
+      console.warn(`Redis set failed for key ${key}:`, error?.message || error)
     }
   }
 
   async setJson(key: string, value: any, ttl?: number): Promise<void> {
-    const jsonValue = JSON.stringify(value)
-    await this.set(key, jsonValue, ttl)
+    if (!this.isConnected || !this.client) {
+      return
+    }
+    
+    try {
+      const jsonValue = JSON.stringify(value)
+      await this.set(key, jsonValue, ttl)
+    } catch (error: any) {
+      console.warn(`Redis setJson failed for key ${key}:`, error?.message || error)
+    }
   }
 
   async getJson<T>(key: string): Promise<T | null> {
-    const value = await this.get(key)
-    if (!value) return null
+    if (!this.isConnected || !this.client) {
+      return null
+    }
     
     try {
+      const value = await this.get(key)
+      if (!value) return null
+      
       return JSON.parse(value) as T
-    } catch {
+    } catch (error: any) {
+      console.warn(`Redis getJson failed for key ${key}:`, error?.message || error)
       return null
     }
   }
 
   async del(key: string): Promise<void> {
-    await this.client.del(key)
+    if (!this.isConnected || !this.client) {
+      return
+    }
+    
+    try {
+      await this.client.del(key)
+    } catch (error: any) {
+      console.warn(`Redis del failed for key ${key}:`, error?.message || error)
+    }
   }
 
   async exists(key: string): Promise<boolean> {
-    const result = await this.client.exists(key)
-    return result === 1
+    if (!this.isConnected || !this.client) {
+      return false
+    }
+    
+    try {
+      const result = await this.client.exists(key)
+      return result === 1
+    } catch (error: any) {
+      console.warn(`Redis exists failed for key ${key}:`, error?.message || error)
+      return false
+    }
   }
 
   // Pattern-based deletion
   async delPattern(pattern: string): Promise<void> {
-    const keys = await this.client.keys(pattern)
-    if (keys.length > 0) {
-      await this.client.del(...keys)
+    if (!this.isConnected || !this.client) {
+      return
+    }
+    
+    try {
+      const keys = await this.client.keys(pattern)
+      if (keys.length > 0) {
+        await this.client.del(...keys)
+      }
+    } catch (error: any) {
+      console.warn(`Redis delPattern failed for pattern ${pattern}:`, error?.message || error)
     }
   }
 
   // Rate limiting helper
   async rateLimit(key: string, limit: number, window: number): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
-    const current = await this.client.incr(key)
-    
-    if (current === 1) {
-      await this.client.expire(key, window)
+    if (!this.isConnected || !this.client) {
+      // When Redis is not available, allow all requests
+      return {
+        allowed: true,
+        remaining: limit,
+        resetTime: Date.now() + (window * 1000)
+      }
     }
+    
+    try {
+      const current = await this.client.incr(key)
+      
+      if (current === 1) {
+        await this.client.expire(key, window)
+      }
 
-    const ttl = await this.client.ttl(key)
-    const resetTime = Date.now() + (ttl * 1000)
-    
-    return {
-      allowed: current <= limit,
-      remaining: Math.max(0, limit - current),
-      resetTime
+      const ttl = await this.client.ttl(key)
+      const resetTime = Date.now() + (ttl * 1000)
+      
+      return {
+        allowed: current <= limit,
+        remaining: Math.max(0, limit - current),
+        resetTime
+      }
+    } catch (error: any) {
+      console.warn(`Redis rateLimit failed for key ${key}:`, error?.message || error)
+      // Fallback to allowing the request
+      return {
+        allowed: true,
+        remaining: limit,
+        resetTime: Date.now() + (window * 1000)
+      }
     }
+  }
+
+  // Health check method
+  isHealthy(): boolean {
+    return this.isConnected
   }
 }
 
@@ -102,11 +224,15 @@ export default redis
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  await redis.client.quit()
+  if (redis.client && redis.isHealthy()) {
+    await redis.client.quit()
+  }
   process.exit(0)
 })
 
 process.on('SIGTERM', async () => {
-  await redis.client.quit()
+  if (redis.client && redis.isHealthy()) {
+    await redis.client.quit()
+  }
   process.exit(0)
 })

@@ -59,6 +59,7 @@ export default function SearchAndCategories({
               value={searchTerm}
               onChange={handleSearchChange}
               className="block w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+              aria-label="Search"
               placeholder="Търсете статии..."
             />
           </div>
@@ -75,7 +76,7 @@ export default function SearchAndCategories({
                     border border-gray-200 hover:border-green-500
                     ${selectedCategory === category.slug
                       ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white text-gray-700 hover:bg-green-50 hover:text-green-700'
+                      : 'bg-white text-gray-900 hover:bg-green-50 hover:text-green-700'
                     }
                   `}
                 >

@@ -16,15 +16,11 @@ async function connectDatabase() {
   }
 }
 
-// Test Redis connection
+// Test Redis connection - not used anymore with fallback
 async function _connectRedis() {
-  try {
-    await redis.client.ping()
-    console.log('✅ Redis connected successfully')
-  } catch (error) {
-    console.error('❌ Redis connection failed:', error)
-    // Don't exit - Redis is not critical for basic functionality
-  }
+  // Redis connection is now handled automatically in redis.ts with fallback
+  // This function is kept for future explicit connection testing if needed
+  console.log('Redis connection handled automatically with fallback mechanism')
 }
 
 async function startServer() {
@@ -52,8 +48,13 @@ async function startServer() {
         await prisma.$disconnect()
         console.log('Database disconnected')
         
-        await redis.client.quit()
-        console.log('Redis disconnected')
+        // Safe Redis disconnect with null check
+        if (redis.client && redis.isHealthy()) {
+          await redis.client.quit()
+          console.log('Redis disconnected')
+        } else {
+          console.log('Redis was not connected - skipping disconnect')
+        }
         
         console.log('Graceful shutdown completed')
         process.exit(0)

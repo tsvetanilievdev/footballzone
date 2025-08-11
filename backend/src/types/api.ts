@@ -1,4 +1,5 @@
 // API Request/Response Types for FootballZone Backend
+import type { JWTPayload } from '@/utils/jwt'
 
 export interface ArticleFilters {
   page: number
@@ -90,11 +91,7 @@ export interface ArticleUpdateData extends Partial<ArticleCreateData> {
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string
-        email: string
-        role: string
-      }
+      user?: JWTPayload
       correlationId: string
     }
   }

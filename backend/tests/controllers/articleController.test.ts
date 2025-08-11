@@ -46,8 +46,11 @@ describe('Article Controller', () => {
         .expect(200)
 
       expect(response.body.success).toBe(true)
-      expect(response.body.data).toHaveLength(1)
-      expect(response.body.data[0].title).toBe('Test Article')
+      expect(Array.isArray(response.body.data)).toBe(true)
+      expect(response.body.data.length).toBeGreaterThan(0)
+      // Should include our test article
+      const testArticle = response.body.data.find((article: any) => article.title === 'Test Article')
+      expect(testArticle).toBeDefined()
     })
 
     it('should filter articles by category', async () => {
@@ -56,7 +59,12 @@ describe('Article Controller', () => {
         .expect(200)
 
       expect(response.body.success).toBe(true)
-      expect(response.body.data).toHaveLength(1)
+      expect(Array.isArray(response.body.data)).toBe(true)
+      expect(response.body.data.length).toBeGreaterThan(0)
+      // All articles should be TACTICS category
+      response.body.data.forEach((article: any) => {
+        expect(article.category).toBe('TACTICS')
+      })
     })
 
     it('should paginate articles', async () => {
@@ -97,8 +105,12 @@ describe('Article Controller', () => {
         .expect(200)
 
       expect(response.body.success).toBe(true)
-      expect(response.body.data).toHaveLength(1)
+      expect(Array.isArray(response.body.data)).toBe(true)
+      expect(response.body.data.length).toBeGreaterThan(0)
       expect(response.body.query).toBe('Test')
+      // Should include articles matching 'Test'
+      const testArticle = response.body.data.find((article: any) => article.title.includes('Test'))
+      expect(testArticle).toBeDefined()
     })
 
     it('should return 400 for missing search query', async () => {

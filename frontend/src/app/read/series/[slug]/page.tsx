@@ -50,7 +50,7 @@ export default function SeriesDetailPage() {
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
                 Поредицата не е намерена
               </h1>
-              <p className="text-gray-600 mb-6">
+              <p className="text-black mb-6">
                 Съжаляваме, но поредицата която търсите не съществува.
               </p>
               <Link 
@@ -174,7 +174,7 @@ export default function SeriesDetailPage() {
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Статии в поредицата ({series.articleCount})
               </h2>
-              <p className="text-gray-600">
+              <p className="text-black">
                 Препоръчваме да четете статиите в дадения ред за най-добро разбиране на темата.
               </p>
             </div>
@@ -214,7 +214,7 @@ export default function SeriesDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <Link 
                 href="/read/series"
-                className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors group"
+                className="inline-flex items-center text-green-700 hover:text-green-900 transition-colors group"
               >
                 <ArrowLeftIcon className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                 Назад към всички поредици
@@ -222,7 +222,7 @@ export default function SeriesDetailPage() {
               
               <Link 
                 href="/read"
-                className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center px-6 py-3 border border-green-300 text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-colors"
               >
                 Прегледай всички статии
               </Link>

@@ -3,11 +3,13 @@ import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
 import morgan from 'morgan'
+import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
 
 import env, { getAllowedOrigins } from '@/config/environment'
 import { errorHandler, notFound } from '@/middleware/errorHandler'
 import { requestLogger } from '@/middleware/requestLogger'
+import { setupSwagger } from '@/config/swagger'
 import apiRoutes from '@/routes'
 
 const app = express()
@@ -60,6 +62,9 @@ const limiter = rateLimit({
 
 app.use('/api', limiter)
 
+// Cookie parsing middleware
+app.use(cookieParser())
+
 // Body parsing middleware
 app.use(express.json({ 
   limit: `${env.MAX_FILE_SIZE}b`,
@@ -94,6 +99,11 @@ app.get('/health', (_req, res) => {
 
 // API routes
 app.use(`/api/${env.API_VERSION}`, apiRoutes)
+
+// Swagger API documentation
+if (env.NODE_ENV !== 'production') {
+  setupSwagger(app)
+}
 
 // Catch 404
 app.use('*', notFound)
