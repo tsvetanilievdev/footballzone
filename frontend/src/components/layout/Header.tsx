@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
 import { 
   Bars3Icon, 
   XMarkIcon, 
@@ -12,9 +13,23 @@ import {
   AcademicCapIcon,
   UserGroupIcon,
   PlayCircleIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  ChevronDownIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+
+const getRoleDisplayName = (role: string) => {
+  const roleNames: Record<string, string> = {
+    'FREE': 'Безплатен',
+    'PLAYER': 'Играч', 
+    'COACH': 'Треньор',
+    'PARENT': 'Родител',
+    'ADMIN': 'Администратор'
+  }
+  return roleNames[role] || role
+}
 
 const navigation = [
   { 
@@ -70,7 +85,10 @@ const navigation = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const pathname = usePathname()
+  const { user, isAuthenticated, logout } = useAuth()
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,6 +112,20 @@ export default function Header() {
       document.body.style.overflow = 'unset'
     }
   }, [mobileMenuOpen])
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   return (
     <>
@@ -157,8 +189,8 @@ export default function Header() {
                 )
               })}
               
-              {/* Admin link */}
-              {(pathname === '/' || isAdmin) && (
+              {/* Admin link - only show for admin users */}
+              {isAuthenticated && user && user.role === 'ADMIN' && (pathname === '/' || isAdmin) && (
                 <Link
                   href="/admin"
                   className="group relative ml-4 pl-4 border-l border-gray-300"
@@ -189,21 +221,105 @@ export default function Header() {
                 <MagnifyingGlassIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               </button>
 
-              {/* Login buttons - desktop */}
+              {/* Auth buttons - desktop */}
               <div className="hidden lg:flex lg:items-center lg:gap-3">
-                <Link 
-                  href="/auth/login"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black text-gray-900 hover:text-gray-900 bg-white hover:bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  <UserIcon className="w-4 h-4" />
-                  Вход
-                </Link>
-                <Link 
-                  href="/auth/register"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black text-white bg-gradient-to-r from-green-600 to-blue-700 hover:from-green-700 hover:to-blue-800 shadow-xl shadow-green-500/30 hover:shadow-2xl hover:shadow-green-500/50 transition-all duration-300 hover:scale-105"
-                >
-                  Регистрация
-                </Link>
+                {isAuthenticated && user ? (
+                  <div className="relative" ref={profileDropdownRef}>
+                    <button 
+                      onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200"
+                    >
+                      {/* Avatar placeholder */}
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">
+                          {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium">{user.name}</div>
+                        <div className="text-xs text-gray-500">{getRoleDisplayName(user.role)}</div>
+                      </div>
+                      <ChevronDownIcon className={cn(
+                        "w-4 h-4 transition-transform duration-200",
+                        profileDropdownOpen ? "rotate-180" : ""
+                      )} />
+                    </button>
+
+                    {/* Profile Dropdown */}
+                    {profileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                        {/* User Info Header */}
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">
+                                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                              <div className="text-xs text-gray-400">{getRoleDisplayName(user.role)}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dropdown Menu Items */}
+                        <div className="py-2">
+                          <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+                            <UserIcon className="w-4 h-4" />
+                            Моят профил (скоро)
+                          </div>
+                          
+                          <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+                            <Cog6ToothIcon className="w-4 h-4" />
+                            Настройки (скоро)
+                          </div>
+
+                          {user.role === 'ADMIN' && (
+                            <Link 
+                              href="/admin"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                            >
+                              <Cog6ToothIcon className="w-4 h-4" />
+                              Админ панел
+                            </Link>
+                          )}
+
+                          <div className="border-t border-gray-100 my-2"></div>
+                          
+                          <button 
+                            onClick={() => {
+                              logout()
+                              setProfileDropdownOpen(false)
+                            }}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200 w-full text-left"
+                          >
+                            <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                            Изход
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Link 
+                      href="/auth/login"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black text-gray-900 hover:text-gray-900 bg-white hover:bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    >
+                      <UserIcon className="w-4 h-4" />
+                      Вход
+                    </Link>
+                    <Link 
+                      href="/auth/register"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black text-white bg-gradient-to-r from-green-600 to-blue-700 hover:from-green-700 hover:to-blue-800 shadow-xl shadow-green-500/30 hover:shadow-2xl hover:shadow-green-500/50 transition-all duration-300 hover:scale-105"
+                    >
+                      Регистрация
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Mobile menu button */}
@@ -315,8 +431,8 @@ export default function Header() {
                     )
                   })}
                   
-                  {/* Admin link - mobile */}
-                  {(pathname === '/' || isAdmin) && (
+                  {/* Admin link - mobile - only show for admin users */}
+                  {isAuthenticated && user && user.role === 'ADMIN' && (pathname === '/' || isAdmin) && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
@@ -356,21 +472,45 @@ export default function Header() {
 
               {/* Mobile menu footer */}
               <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 space-y-3">
-                <Link 
-                  href="/auth/login" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-3 w-full px-6 py-3.5 rounded-2xl font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 group"
-                >
-                  <UserIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  Вход
-                </Link>
-                <Link 
-                  href="/auth/register" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-3 w-full px-6 py-3.5 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 hover:scale-105"
-                >
-                  Регистрация
-                </Link>
+                {isAuthenticated && user ? (
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-gray-700">
+                        Добре дошли, {user.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Роля: {getRoleDisplayName(user.role)}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        logout()
+                        setMobileMenuOpen(false)
+                      }}
+                      className="flex items-center justify-center gap-3 w-full px-6 py-3.5 rounded-2xl font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    >
+                      Изход
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Link 
+                      href="/auth/login" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-3 w-full px-6 py-3.5 rounded-2xl font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 group"
+                    >
+                      <UserIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      Вход
+                    </Link>
+                    <Link 
+                      href="/auth/register" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-3 w-full px-6 py-3.5 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 hover:scale-105"
+                    >
+                      Регистрация
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

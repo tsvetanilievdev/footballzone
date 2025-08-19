@@ -1,31 +1,34 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
 import { EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/hooks/useAuth'
+import { RegisterRequest } from '@/types/auth'
 
-type UserRole = 'player' | 'coach' | 'parent'
+type UserRole = 'PLAYER' | 'COACH' | 'PARENT'
 
 const roleOptions = [
   {
-    id: 'player' as UserRole,
+    id: 'PLAYER' as UserRole,
     name: 'Играч',
     description: 'Достъп до тренировки, техники и фитнес програми',
     icon: '🏃',
     color: 'purple'
   },
   {
-    id: 'coach' as UserRole,
+    id: 'COACH' as UserRole,
     name: 'Треньор',
     description: 'Тактики, психология и треньорски материали',
     icon: '⚽',
     color: 'green'
   },
   {
-    id: 'parent' as UserRole,
+    id: 'PARENT' as UserRole,
     name: 'Родител',
     description: 'Съвети за родители на млади спортисти',
     icon: '👨‍👩‍👧‍👦',
@@ -44,9 +47,12 @@ export default function RegisterPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [subscribeNewsletter, setSubscribeNewsletter] = useState(true)
+  const [error, setError] = useState('')
+  
+  const { register, isLoading } = useAuth()
+  const router = useRouter()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -55,30 +61,38 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     
     if (!selectedRole) {
-      alert('Моля, изберете роля')
+      setError('Моля, изберете роля')
       return
     }
     
     if (formData.password !== formData.confirmPassword) {
-      alert('Паролите не съвпадат')
+      setError('Паролите не съвпадат')
       return
     }
     
     if (!agreeToTerms) {
-      alert('Моля, приемете условията за ползване')
+      setError('Моля, приемете условията за ползване')
       return
     }
 
-    setIsLoading(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      // Handle registration logic here
-      // TODO: Implement actual registration logic here
-    }, 2000)
+    try {
+      const registerData: RegisterRequest = {
+        email: formData.email,
+        password: formData.password,
+        name: `${formData.firstName} ${formData.lastName}`,
+        role: selectedRole,
+        acceptTerms: agreeToTerms,
+        subscribeNewsletter: subscribeNewsletter
+      }
+      
+      await register(registerData)
+      router.push('/') // Redirect to home page after successful registration
+    } catch (err: any) {
+      setError(err.message || 'Възникна грешка при създаването на акаунта')
+    }
   }
 
   const handleSocialRegister = () => {
@@ -199,6 +213,13 @@ export default function RegisterPage() {
                 })}
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
 
             {/* Registration Form */}
             <form className="space-y-6" onSubmit={handleSubmit}>

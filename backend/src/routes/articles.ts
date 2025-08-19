@@ -177,9 +177,79 @@ router.get('/search', articleController.searchArticles)
 router.get('/:slug', articleController.getArticleBySlug)
 
 // View tracking route (public for analytics)
+/**
+ * @swagger
+ * /articles/{id}/track-view:
+ *   post:
+ *     summary: Track article view for analytics
+ *     tags: [Articles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Article ID
+ *         example: 254fd880-35d5-42cb-bbb9-700df0f38c30
+ *     responses:
+ *       200:
+ *         description: View tracked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: View tracked successfully
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.post('/:id/track-view', articleController.trackView)
 
 // Protected routes - require authentication and authorization
+
+/**
+ * @swagger
+ * /articles:
+ *   post:
+ *     summary: Create a new article
+ *     tags: [Articles]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ArticleCreate'
+ *     responses:
+ *       201:
+ *         description: Article created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Article created successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Article'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ */
 router.post('/', 
   authenticate, 
   authorize([UserRole.ADMIN, UserRole.COACH]), 
@@ -187,6 +257,122 @@ router.post('/',
   articleController.createArticle
 )
 
+/**
+ * @swagger
+ * /articles/{id}:
+ *   put:
+ *     summary: Update an existing article
+ *     tags: [Articles]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Article ID to update
+ *         example: 254fd880-35d5-42cb-bbb9-700df0f38c30
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 255
+ *                 example: Обновено заглавие на статията
+ *               slug:
+ *                 type: string
+ *                 pattern: '^[a-z0-9-]+$'
+ *                 example: obnoveno-zaglavie-statia
+ *               excerpt:
+ *                 type: string
+ *                 maxLength: 500
+ *                 example: Обновено описание
+ *               content:
+ *                 type: string
+ *                 minLength: 10
+ *                 example: Обновено съдържание на статията...
+ *               category:
+ *                 type: string
+ *                 enum: [TACTICS, TRAINING, PSYCHOLOGY, NUTRITION, TECHNIQUE, FITNESS, NEWS, INTERVIEWS, ANALYSIS, YOUTH, CONDITIONING, PERIODIZATION, MANAGEMENT]
+ *                 example: TACTICS
+ *               subcategory:
+ *                 type: string
+ *                 maxLength: 100
+ *                 example: Advanced Tactics
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: [тактика, обновена, съвременен футбол]
+ *               readTime:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 240
+ *                 example: 12
+ *               isPremium:
+ *                 type: boolean
+ *                 example: true
+ *               status:
+ *                 type: string
+ *                 enum: [DRAFT, PUBLISHED, ARCHIVED, REVIEW]
+ *                 example: PUBLISHED
+ *               featuredImageUrl:
+ *                 type: string
+ *                 format: uri
+ *                 example: https://example.com/new-image.jpg
+ *               seoTitle:
+ *                 type: string
+ *                 maxLength: 255
+ *                 example: Ново SEO заглавие
+ *               seoDescription:
+ *                 type: string
+ *                 maxLength: 320
+ *                 example: Ново SEO описание
+ *               zones:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 5
+ *                 items:
+ *                   $ref: '#/components/schemas/ArticleZone'
+ *                 example:
+ *                   - zone: coach
+ *                     visible: true
+ *                     requiresSubscription: true
+ *                   - zone: read
+ *                     visible: true
+ *                     requiresSubscription: false
+ *     responses:
+ *       200:
+ *         description: Article updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Article updated successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Article'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.put('/:id', 
   authenticate, 
   authorize([UserRole.ADMIN, UserRole.COACH]), 
@@ -194,6 +380,44 @@ router.put('/:id',
   articleController.updateArticle
 )
 
+/**
+ * @swagger
+ * /articles/{id}:
+ *   delete:
+ *     summary: Delete an article
+ *     tags: [Articles]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Article ID to delete
+ *         example: 254fd880-35d5-42cb-bbb9-700df0f38c30
+ *     responses:
+ *       200:
+ *         description: Article deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Article deleted successfully
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
 router.delete('/:id', 
   authenticate, 
   authorize([UserRole.ADMIN]), 

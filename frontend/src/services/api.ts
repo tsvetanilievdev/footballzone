@@ -1,6 +1,9 @@
-// API Service for Admin Panel
+import { AuthResponse, RegisterRequest, TokenResponse, User } from '@/types/auth';
+import { apiClient } from '@/utils/api-client';
+
+// API Service for Admin Panel and Authentication
 class ApiService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
   private token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
 
   private async request(endpoint: string, options: RequestInit = {}) {
@@ -27,107 +30,95 @@ class ApiService {
   }
 
   // Articles API
-  async getArticles() {
-    return this.request('/articles');
+  async getArticles(params?: { page?: number; limit?: number; zone?: string; search?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.zone) searchParams.append('zone', params.zone);
+    if (params?.search) searchParams.append('q', params.search);
+    
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient.get(`/articles${query}`);
   }
 
-  async getArticle(id: string) {
-    return this.request(`/articles/${id}`);
+  async getArticle(slug: string) {
+    return apiClient.get(`/articles/${slug}`);
+  }
+
+  async searchArticles(query: string, params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams({ q: query });
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    
+    return apiClient.get(`/articles/search?${searchParams.toString()}`);
   }
 
   async createArticle(articleData: unknown) {
-    return this.request('/articles', {
-      method: 'POST',
-      body: JSON.stringify(articleData),
-    });
+    return apiClient.post('/articles', articleData);
   }
 
   async updateArticle(id: string, articleData: unknown) {
-    return this.request(`/articles/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(articleData),
-    });
+    return apiClient.put(`/articles/${id}`, articleData);
   }
 
   async deleteArticle(id: string) {
-    return this.request(`/articles/${id}`, {
-      method: 'DELETE',
-    });
+    return apiClient.delete(`/articles/${id}`);
   }
 
   // Templates API
   async getTemplates(category?: string) {
     const endpoint = category ? `/templates?category=${category}` : '/templates';
-    return this.request(endpoint);
+    return apiClient.get(endpoint);
   }
 
   async getTemplate(id: string) {
-    return this.request(`/templates/${id}`);
+    return apiClient.get(`/templates/${id}`);
   }
 
   // Media API
   async uploadMedia(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const url = `${this.baseUrl}/media/upload`;
-    const headers: HeadersInit = {};
-
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+    return apiClient.upload('/media/upload', file);
   }
 
   async deleteMedia(id: string) {
-    return this.request(`/media/${id}`, {
-      method: 'DELETE',
-    });
+    return apiClient.delete(`/media/${id}`);
   }
 
   // Categories API
   async getCategories() {
-    return this.request('/categories');
+    return apiClient.get('/categories');
   }
 
   async createCategory(categoryData: unknown) {
-    return this.request('/categories', {
-      method: 'POST',
-      body: JSON.stringify(categoryData),
-    });
+    return apiClient.post('/categories', categoryData);
   }
 
-  // Auth API
-  async login(credentials: { email: string; password: string }) {
-    const response = await this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
+  // Authentication API Methods
+  async login(email: string, password: string): Promise<AuthResponse> {
+    return apiClient.post('/auth/login', { email, password }, { skipAuth: true });
+  }
 
-    if (response.token && typeof window !== 'undefined') {
-      localStorage.setItem('admin_token', response.token);
-      this.token = response.token;
-    }
+  async register(userData: RegisterRequest): Promise<AuthResponse> {
+    return apiClient.post('/auth/register', userData, { skipAuth: true });
+  }
 
-    return response;
+  async refreshToken(): Promise<TokenResponse> {
+    return apiClient.post('/auth/refresh', {}, { skipAuth: true });
+  }
+
+  async getCurrentUser(): Promise<User> {
+    return apiClient.get('/auth/profile');
   }
 
   async logout() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('admin_token');
+    try {
+      await apiClient.post('/auth/logout');
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin_token');
+      }
+      this.token = null;
     }
-    this.token = null;
   }
 
   // Utility methods

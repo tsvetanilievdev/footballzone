@@ -34,6 +34,16 @@ app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = getAllowedOrigins()
     
+    // In development, allow all localhost origins and no origin (curl, Postman, etc)
+    if (env.NODE_ENV === 'development') {
+      if (!origin || 
+          origin.startsWith('http://localhost:') || 
+          origin.startsWith('http://127.0.0.1:') ||
+          allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+    }
+    
     // Allow requests with no origin (mobile apps, curl, etc)
     if (!origin) return callback(null, true)
     
@@ -45,7 +55,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }))
 
 // Rate limiting
