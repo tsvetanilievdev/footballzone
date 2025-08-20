@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { BookOpenIcon, CalendarIcon } from '@heroicons/react/24/outline'
 import { Series } from '@/types'
+import { formatDateBG } from '@/utils/dateUtils'
 
 interface SeriesListProps {
   series: Series[]
@@ -36,13 +37,6 @@ interface SeriesCardProps {
 }
 
 function SeriesCard({ series }: SeriesCardProps) {
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('bg-BG', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    }).format(date)
-  }
 
   return (
     <Link href={`/read/series/${series.slug}`}>
@@ -85,7 +79,7 @@ function SeriesCard({ series }: SeriesCardProps) {
             
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-4 h-4" />
-              <span>Обновено: {formatDate(series.lastUpdated)}</span>
+              <span>Обновено: {formatDateBG(series.lastUpdated)}</span>
             </div>
           </div>
 

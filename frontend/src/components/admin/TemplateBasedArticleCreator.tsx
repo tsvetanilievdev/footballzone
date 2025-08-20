@@ -27,6 +27,7 @@ export default function TemplateBasedArticleCreator({
   const [contentMode, setContentMode] = useState<'rich' | 'template' | 'custom' | 'preview'>('rich')
   const [articleData, setArticleData] = useState({
     title: '',
+    slug: '',
     excerpt: '',
     content: '',
     template: '',
@@ -35,7 +36,8 @@ export default function TemplateBasedArticleCreator({
     tags: [] as string[],
     featuredImage: '',
     isPremium: false,
-    status: 'draft' as 'draft' | 'published'
+    status: 'draft' as 'draft' | 'published',
+    zones: [] as Array<{zone: string, visible: boolean, requiresSubscription: boolean}>
   })
 
   const handleInputChange = (field: string, value: string | boolean | string[]) => {
@@ -65,15 +67,38 @@ export default function TemplateBasedArticleCreator({
   }
 
   const handleSave = () => {
-    if (!articleData.title || !articleData.content) {
-      alert('Моля, попълнете заглавието и съдържанието')
+    // Валидация на задължителни полета според backend схемата
+    if (!articleData.title || articleData.title.length < 3) {
+      alert('Заглавието е задължително и трябва да съдържа поне 3 символа')
       return
     }
+    if (!articleData.content || articleData.content.length < 10) {
+      alert('Съдържанието е задължително и трябва да съдържа поне 10 символа')
+      return
+    }
+    if (!articleData.category) {
+      alert('Категорията е задължителна')
+      return
+    }
+    if (articleData.zones.length === 0) {
+      alert('Трябва да изберете поне една зона за статията')
+      return
+    }
+    if (articleData.slug && articleData.slug.length < 3) {
+      alert('Slug-ът трябва да съдържа поне 3 символа')
+      return
+    }
+
+    // Генериране на slug ако не е зададен
+    const generatedSlug = articleData.slug || articleData.title.toLowerCase()
+      .replace(/[^a-zA-Z0-9\s-]/g, '') // Премахва специални символи
+      .replace(/\s+/g, '-') // Заменя интервалите с тирета
+      .replace(/^-+|-+$/g, '') // Премахва тиретата в началото и края
 
     const newArticle: Article = {
       id: Date.now().toString(),
       title: articleData.title,
-      slug: articleData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      slug: generatedSlug,
       excerpt: articleData.excerpt,
       content: articleData.content,
       template: articleTemplates.find(t => t.id === articleData.template) || articleTemplates[0],
@@ -263,7 +288,28 @@ export default function TemplateBasedArticleCreator({
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Въведете заглавие на статията..."
+                  required
+                  minLength={3}
+                  maxLength={255}
                 />
+                <p className="text-xs text-gray-500 mt-1">Минимум 3 символа, максимум 255</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Slug (URL адрес)
+                </label>
+                <input
+                  type="text"
+                  value={articleData.slug}
+                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="url-friendly-ime-na-statiata"
+                  minLength={3}
+                  maxLength={255}
+                  pattern="[a-z0-9-]+"
+                />
+                <p className="text-xs text-gray-500 mt-1">Оставете празно за автоматично генериране. Само малки букви, цифри и тирета.</p>
               </div>
 
               <div>
@@ -276,23 +322,36 @@ export default function TemplateBasedArticleCreator({
                   rows={3}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Кратко описание на статията..."
+                  maxLength={500}
                 />
+                <p className="text-xs text-gray-500 mt-1">Максимум 500 символа</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Категория
+                  Категория *
                 </label>
                 <select
                   value={articleData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
                 >
                   <option value="">Изберете категория</option>
-                  <option value="read">Read Zone</option>
-                  <option value="coach">Coach Zone</option>
-                  <option value="player">Player Zone</option>
-                  <option value="parent">Parent Zone</option>
+                  <option value="TACTICS">Тактика</option>
+                  <option value="TECHNIQUE">Техника</option>
+                  <option value="FITNESS">Фитнес</option>
+                  <option value="PSYCHOLOGY">Психология</option>
+                  <option value="NUTRITION">Хранене</option>
+                  <option value="INJURY_PREVENTION">Превенция на травми</option>
+                  <option value="COACHING">Треньорство</option>
+                  <option value="YOUTH_DEVELOPMENT">Юношеско развитие</option>
+                  <option value="EQUIPMENT">Екипировка</option>
+                  <option value="RULES">Правила</option>
+                  <option value="NEWS">Новини</option>
+                  <option value="INTERVIEWS">Интервюта</option>
+                  <option value="ANALYSIS">Анализи</option>
+                  <option value="OTHER">Други</option>
                 </select>
               </div>
 
@@ -306,7 +365,9 @@ export default function TemplateBasedArticleCreator({
                   onChange={(e) => handleInputChange('subcategory', e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Подкатегория (по желание)..."
+                  maxLength={100}
                 />
+                <p className="text-xs text-gray-500 mt-1">Максимум 100 символа</p>
               </div>
             </div>
           </div>
@@ -346,6 +407,40 @@ export default function TemplateBasedArticleCreator({
                   <option value="published">Публикувана</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* Zone Selection */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Зони *</h3>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">Изберете в кои зони да се показва статията:</p>
+              {['READ', 'coach', 'player', 'parent'].map(zone => {
+                const isSelected = articleData.zones.some(z => z.zone === zone.toUpperCase())
+                return (
+                  <div key={zone} className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id={`zone-${zone}`}
+                      checked={isSelected}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          handleInputChange('zones', [
+                            ...articleData.zones,
+                            { zone: zone.toUpperCase(), visible: true, requiresSubscription: false }
+                          ])
+                        } else {
+                          handleInputChange('zones', articleData.zones.filter(z => z.zone !== zone.toUpperCase()))
+                        }
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor={`zone-${zone}`} className="text-sm font-medium text-gray-700 capitalize">
+                      {zone} Zone
+                    </label>
+                  </div>
+                )
+              })}
             </div>
           </div>
 

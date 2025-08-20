@@ -8,6 +8,10 @@ import CoachHero from '@/components/zones/CoachHero'
 import CategorySelector from '@/components/zones/CategorySelector'
 import SubCategorySelector from '@/components/zones/SubCategorySelector'
 import CoachArticleCard from '@/components/zones/CoachArticleCard'
+import { useArticlesByZone } from '@/hooks/api/useArticles'
+import { ArticleListSkeleton, InlineLoading } from '@/components/ui/LoadingSpinner'
+import { ApiErrorDisplay, NoArticlesFound } from '@/components/ui/EmptyState'
+import Pagination from '@/components/ui/Pagination'
 
 
 
@@ -85,30 +89,41 @@ const coachCategories = [
   }
 ]
 
-// Use articles from central data instead
-// import { coachZoneArticles } from '@/data/articles'
-
-// Sample coach articles - temporary empty until data migration
-const coachArticles: Article[] = []
-
 export default function CoachZonePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 12
 
   const selectedCategoryData = selectedCategory 
     ? coachCategories.find(cat => cat.id === selectedCategory)
     : null
 
+  // Fetch coach articles from API
+  const { 
+    data: articlesResponse, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useArticlesByZone('COACH', {
+    page: currentPage,
+    limit: itemsPerPage,
+    category: selectedCategory || undefined,
+  })
+
+  const articles = articlesResponse?.data || []
+  const pagination = articlesResponse?.pagination || { page: 1, total: 0, pages: 1 }
+
+  // Filter articles by subcategory if selected
   const filteredArticles = useMemo(() => {
     if (!selectedCategory) return []
     
-    return coachArticles.filter(article => {
-      const matchesCategory = article.category === selectedCategory
-      const matchesSubcategory = !selectedSubcategory || true // Simplified for now
-      
-      return matchesCategory && matchesSubcategory
+    return articles.filter(article => {
+      const matchesSubcategory = !selectedSubcategory || true // TODO: implement subcategory filtering when backend supports it
+      return matchesSubcategory
     })
-  }, [selectedCategory, selectedSubcategory])
+  }, [articles, selectedCategory, selectedSubcategory])
 
   const handleCategorySelect = (categoryId: string) => {
     if (selectedCategory === categoryId) {
@@ -117,6 +132,7 @@ export default function CoachZonePage() {
     } else {
       setSelectedCategory(categoryId)
       setSelectedSubcategory(null)
+      setCurrentPage(1) // Reset pagination when changing category
     }
   }
 
@@ -125,7 +141,13 @@ export default function CoachZonePage() {
       setSelectedSubcategory(null)
     } else {
       setSelectedSubcategory(subcategoryId)
+      setCurrentPage(1) // Reset pagination when changing subcategory
     }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -169,7 +191,7 @@ export default function CoachZonePage() {
       )}
 
       {/* Articles Display */}
-      {filteredArticles.length > 0 && (
+      {selectedCategory && (
         <section className="py-8 lg:py-12 animate-fade-in-up">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
@@ -179,24 +201,65 @@ export default function CoachZonePage() {
                   ` - ${selectedCategoryData.subcategories.find(sub => sub.id === selectedSubcategory)?.name}`
                 }
               </h3>
-              <p className="text-gray-600">
-                {filteredArticles.length} статии намерени
-              </p>
+              {!isLoading && (
+                <p className="text-gray-600">
+                  {filteredArticles.length} статии намерени
+                </p>
+              )}
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article, index) => (
-                <div
-                  key={article.id}
-                  className="animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300"
-                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
-                >
-                                    <CoachArticleCard
-                    article={article as unknown as import('@/types').Article}
-                  />
-                </div>
-              ))}
-            </div>
+
+            {/* Loading State */}
+            {isLoading && (
+              <ArticleListSkeleton count={6} />
+            )}
+
+            {/* Error State */}
+            {isError && (
+              <ApiErrorDisplay 
+                error={error} 
+                onRetry={() => refetch()} 
+              />
+            )}
+
+            {/* Articles Grid */}
+            {!isLoading && !isError && (
+              <>
+                {filteredArticles.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                      {filteredArticles.map((article, index) => (
+                        <div
+                          key={article.id}
+                          className="animate-fade-in-up hover:-translate-y-2 hover:scale-105 transition-all duration-300"
+                          style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                        >
+                          <CoachArticleCard
+                            article={article as unknown as import('@/types').Article}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {pagination.pages > 1 && (
+                      <div className="flex flex-col items-center gap-4">
+                        <Pagination
+                          currentPage={pagination.page}
+                          totalPages={pagination.pages}
+                          onPageChange={handlePageChange}
+                          className="mb-4"
+                        />
+                        <p className="text-sm text-gray-600 text-center">
+                          Показва статии {((pagination.page - 1) * itemsPerPage) + 1}-{Math.min(pagination.page * itemsPerPage, pagination.total)} от {pagination.total}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <NoArticlesFound />
+                )}
+              </>
+            )}
           </div>
         </section>
       )}

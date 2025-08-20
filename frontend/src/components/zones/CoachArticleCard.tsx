@@ -3,17 +3,13 @@
 import Link from 'next/link'
 import { Article } from '@/types'
 import { UserIcon, ClockIcon, LockClosedIcon, StarIcon } from '@heroicons/react/24/outline'
+import { formatDate } from '@/utils/dateUtils'
 
 interface CoachArticleCardProps {
   article: Article
 }
 
 export default function CoachArticleCard({ article }: CoachArticleCardProps) {
-  const formatDate = (date: Date) => {
-    const day = date.getDate()
-    const month = date.toLocaleString('bg-BG', { month: 'short' })
-    return { day, month }
-  }
 
   const { day, month } = formatDate(article.publishedAt)
 

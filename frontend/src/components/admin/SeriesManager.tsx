@@ -11,6 +11,7 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/Button'
+import { formatDateShortBG } from '@/utils/dateUtils'
 
 interface SeriesItem {
   id: string
@@ -128,13 +129,6 @@ export default function SeriesManager({
     }
   }
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('bg-BG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   const getProgressPercent = (current: number, total: number) => {
     return Math.round((current / total) * 100)
@@ -279,7 +273,7 @@ export default function SeriesManager({
               <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                 <div className="flex items-center">
                   <CalendarIcon className="w-3 h-3 mr-1" />
-                  <span>Обновена {formatDate(seriesItem.lastUpdated)}</span>
+                  <span>Обновена {formatDateShortBG(seriesItem.lastUpdated)}</span>
                 </div>
                 <div className="flex items-center">
                   <UserGroupIcon className="w-3 h-3 mr-1" />

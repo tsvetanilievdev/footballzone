@@ -2,6 +2,7 @@ import Link from 'next/link'
 import NextImage from 'next/image'
 import { Article } from '@/types'
 import { UserIcon, ChatBubbleLeftIcon, CameraIcon, PlayIcon } from '@heroicons/react/24/outline'
+import { formatDate } from '@/utils/dateUtils'
 
 interface BlogCardProps {
   article: Article
@@ -10,12 +11,6 @@ interface BlogCardProps {
 }
 
 export default function BlogCard({ article, showVideo = false, showPhoto = false }: BlogCardProps) {
-  const formatDate = (date: Date) => {
-    const day = date.getDate()
-    const month = date.toLocaleString('en', { month: 'short' })
-    return { day, month }
-  }
-
   const { day, month } = formatDate(article.publishedAt)
 
   return (

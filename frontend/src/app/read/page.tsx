@@ -4,43 +4,52 @@ import { useState, useMemo } from 'react'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import BlogCard from '@/components/ui/BlogCard'
-
 import SearchAndCategories from '@/components/ui/SearchAndCategories'
 import ReadZoneSidebar from '@/components/ui/ReadZoneSidebar'
+import { useArticlesByZone } from '@/hooks/api/useArticles'
 import { Article } from '@/types'
-import Link from 'next/link'
+import { ArticleListSkeleton, InlineLoading } from '@/components/ui/LoadingSpinner'
+import { ApiErrorDisplay, NoArticlesFound } from '@/components/ui/EmptyState'
+import Pagination from '@/components/ui/Pagination'
 import NextImage from 'next/image'
-import { BookOpenIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
-import { getReadZoneArticles } from '@/data/articles'
-import AdminEditButton from '@/components/admin/AdminEditButton'
-
-
-// Получаваме статиите от централизирания файл
-const readArticles: Article[] = getReadZoneArticles()
 
 export default function ReadZonePage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 12
 
-  const filteredArticles = useMemo(() => {
-    return readArticles.filter(article => {
-      const matchesSearch = searchTerm === '' || 
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      
-      const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory
-      
-      return matchesSearch && matchesCategory
-    })
-  }, [searchTerm, selectedCategory])
+  // Fetch articles from API
+  const { 
+    data: articlesResponse, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useArticlesByZone('READ', {
+    page: currentPage,
+    limit: itemsPerPage,
+    category: selectedCategory !== 'all' ? selectedCategory : undefined,
+    search: searchTerm || undefined
+  })
+
+  const articles = articlesResponse?.data || []
+  const pagination = articlesResponse?.pagination || { page: 1, total: 0, pages: 1 }
 
   const handleSearchChange = (newSearchTerm: string) => {
     setSearchTerm(newSearchTerm)
+    setCurrentPage(1) // Reset to first page when searching
   }
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category)
+    setCurrentPage(1) // Reset to first page when changing category
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -89,54 +98,55 @@ export default function ReadZonePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             {/* Main Content */}
             <div className="lg:col-span-8">
-              {/* Blog Posts Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {filteredArticles.length > 0 ? (
-                  filteredArticles.map((article, index) => (
-                    <BlogCard 
-                      key={article.id} 
-                      article={article}
-                      showVideo={index % 4 === 1}
-                      showPhoto={index % 5 === 0}
-                    />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-black text-lg">Няма намерени статии, които да отговарят на критериите.</p>
-                  </div>
-                )}
-              </div>
+              {/* Loading State */}
+              {isLoading && (
+                <ArticleListSkeleton count={6} />
+              )}
 
-              {/* Pagination */}
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <button className="px-2 py-1 text-green-700 hover:text-green-900 transition-colors">
-                  «
-                </button>
-                
-                <button className="px-3 py-1 bg-green-600 text-white font-medium rounded shadow hover:bg-green-700 transition-colors">
-                  1
-                </button>
-                
-                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
-                  2
-                </button>
-                
-                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
-                  3
-                </button>
-                
-                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
-                  4
-                </button>
-                
-                <button className="px-3 py-1 text-green-700 hover:text-green-900 border border-green-200 rounded hover:bg-green-50 transition-colors">
-                  5
-                </button>
-                
-                <button className="px-2 py-1 text-green-700 hover:text-green-900 transition-colors">
-                  »
-                </button>
-              </div>
+              {/* Error State */}
+              {isError && (
+                <ApiErrorDisplay 
+                  error={error} 
+                  onRetry={() => refetch()} 
+                />
+              )}
+
+              {/* Articles Grid */}
+              {!isLoading && !isError && (
+                <>
+                  {articles.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        {articles.map((article, index) => (
+                          <BlogCard 
+                            key={article.id} 
+                            article={article}
+                            showVideo={index % 4 === 1}
+                            showPhoto={index % 5 === 0}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Pagination */}
+                      {pagination.pages > 1 && (
+                        <div className="flex flex-col items-center gap-4">
+                          <Pagination
+                            currentPage={pagination.page}
+                            totalPages={pagination.pages}
+                            onPageChange={handlePageChange}
+                            className="mb-4"
+                          />
+                          <p className="text-sm text-gray-600 text-center">
+                            Показва статии {((pagination.page - 1) * itemsPerPage) + 1}-{Math.min(pagination.page * itemsPerPage, pagination.total)} от {pagination.total}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <NoArticlesFound />
+                  )}
+                </>
+              )}
             </div>
 
             {/* Sidebar */}

@@ -1,6 +1,9 @@
 import { Router } from 'express'
 import articlesRouter from './articles'
 import authRouter from './auth'
+import adminRouter from './admin'
+import templatesRouter from './templates'
+import mediaRouter from './media'
 // import usersRouter from './users'
 // import zonesRouter from './zones'
 
@@ -18,6 +21,9 @@ router.get('/health', (_req, res) => {
 // Mount route modules
 router.use('/articles', articlesRouter)
 router.use('/auth', authRouter)
+router.use('/admin', adminRouter)
+router.use('/templates', templatesRouter)
+router.use('/media', mediaRouter)
 // router.use('/users', usersRouter)  
 // router.use('/zones', zonesRouter)
 
@@ -31,6 +37,9 @@ router.get('/', (_req, res) => {
       health: '/health',
       articles: '/articles',
       auth: '/auth',
+      admin: '/admin',
+      templates: '/templates',
+      media: '/media',
       // users: '/users',
       // zones: '/zones',
     },

@@ -8,6 +8,7 @@ import { Series, Article } from '@/types'
 import Link from 'next/link'
 import { ArrowLeftIcon, BookOpenIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
+import { formatDateBG } from '@/utils/dateUtils'
 
 // Импортираме статиите
 import { allArticles } from '@/data/articles'
@@ -68,13 +69,6 @@ export default function SeriesDetailPage() {
     )
   }
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('bg-BG', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    }).format(date)
-  }
 
   const totalReadTime = series.articles.reduce((sum, article) => sum + article.readTime, 0)
 
@@ -148,7 +142,7 @@ export default function SeriesDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="w-5 h-5" />
-                  <span>Обновено: {formatDate(series.lastUpdated)}</span>
+                  <span>Обновено: {formatDateBG(series.lastUpdated)}</span>
                 </div>
               </div>
 

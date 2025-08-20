@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -22,39 +22,90 @@ import Link from 'next/link'
 import Image from 'next/image'
 import PremiumCTA from '@/components/ui/PremiumCTA'
 import AdminEditButton from '@/components/admin/AdminEditButton'
-
-// Импортираме статиите от централизирания файл
-import { allArticles, findArticleBySlug } from '@/data/articles'
-
-// Импортираме статиите от централизирания файл - вече не е нужен export
-
-// Функцията findArticleBySlug се импортира от data/articles
-
-// Fallback статия ако не се намери
-const defaultArticle: Article = allArticles[0]
+import { useArticle, useTrackArticleView } from '@/hooks/api/useArticles'
+import { ArticleDetailSkeleton } from '@/components/ui/LoadingSpinner'
+import { ApiErrorDisplay } from '@/components/ui/EmptyState'
 
 export default function ArticleTemplatePage() {
   const params = useParams()
-  const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern' | 'magazine' | null>(null)
-
-  // Взема статията по slug от URL параметъра
+  const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern' | 'magazine' | null>('classic') // Default to classic template
+  
+  // Get slug from URL params
   const slug = params.slug as string
-  const article = findArticleBySlug(slug) || defaultArticle
+  
+  // Fetch article from API
+  const { data: article, isLoading, isError, error, refetch } = useArticle(slug)
+  
+  // Track article view
+  const trackView = useTrackArticleView()
+  
+  // Track view when article loads
+  useEffect(() => {
+    if (article?.id) {
+      trackView.mutate({
+        articleId: article.id,
+        metadata: { source: 'read-zone', template: selectedTemplate }
+      })
+    }
+  }, [article?.id, selectedTemplate, trackView])
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="pt-16">
+          <ArticleDetailSkeleton />
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  // Error state
+  if (isError || !article) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="pt-16 py-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-8">
+              <Link
+                href="/read"
+                className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5 mr-2" />
+                Назад към Read Zone
+              </Link>
+            </div>
+            <ApiErrorDisplay 
+              error={error} 
+              onRetry={() => refetch()} 
+            />
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  // Show article with selected template (default to classic)
   if (selectedTemplate) {
     return (
       <div className="min-h-screen bg-gray-50">
+        <AdminEditButton article={article} />
         <Header />
         <div className="pt-16">
           {selectedTemplate === 'classic' && <ClassicTemplate article={article} />}
           {selectedTemplate === 'modern' && <ModernTemplate article={article} />}
           {selectedTemplate === 'magazine' && <MagazineTemplate article={article} />}
           
-          {/* Back to templates button */}
+          {/* Template selection button */}
           <div className="fixed bottom-6 right-6 z-50">
             <button
               onClick={() => setSelectedTemplate(null)}
               className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+              title="Избери различен темплейт"
             >
               <ArrowLeftIcon className="w-6 h-6" />
             </button>

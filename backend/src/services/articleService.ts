@@ -70,9 +70,25 @@ export const getArticles = async (filters: ArticleFilters) => {
 
   // Zone filtering
   if (zone) {
+    // Map zone parameter to correct enum values
+    const zoneMapping: { [key: string]: string } = {
+      'READ': 'READ',
+      'read': 'READ',
+      'COACH': 'coach',
+      'coach': 'coach',
+      'PLAYER': 'player',
+      'player': 'player',
+      'PARENT': 'parent',
+      'parent': 'parent',
+      'SERIES': 'series',
+      'series': 'series'
+    }
+    
+    const mappedZone = zoneMapping[zone] || zone
+    
     where.zones = {
       some: {
-        zone: zone.toLowerCase() as ZoneType,
+        zone: mappedZone as ZoneType,
         visible: true
       }
     }

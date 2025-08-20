@@ -24,6 +24,7 @@ import {
   Youtube
 } from 'lucide-react'
 import { Article, Series } from '@/types'
+import { formatDateShortBG } from '@/utils/dateUtils'
 
 interface ReadZoneSidebarProps {
   currentArticle?: Article
@@ -227,13 +228,6 @@ export default function ReadZoneSidebar({
     onAuthorFilterChange?.(author)
   }
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('bg-BG', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).format(date)
-  }
 
   return (
     <aside className="w-full lg:w-80 space-y-6">
@@ -360,7 +354,7 @@ export default function ReadZoneSidebar({
                         {article.title}
                       </h4>
                       <p className="text-green-700 text-xs mt-1">
-                        {article.author.name} • {formatDate(article.publishedAt)}
+                        {article.author.name} • {formatDateShortBG(article.publishedAt)}
                       </p>
                     </div>
                   </div>
@@ -508,7 +502,7 @@ export default function ReadZoneSidebar({
                       {seriesItem.name}
                     </h4>
                     <p className="text-green-700 text-xs mt-1">
-                      {seriesItem.articleCount} статии • {formatDate(seriesItem.lastUpdated)}
+                      {seriesItem.articleCount} статии • {formatDateShortBG(seriesItem.lastUpdated)}
                     </p>
                   </div>
                 </div>

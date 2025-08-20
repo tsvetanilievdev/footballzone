@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState } from 'react'
 import Header from '@/components/layout/Header'
 import {
@@ -22,99 +24,36 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Article } from '@/types'
 import EnhancedArticleEditor from '@/components/admin/EnhancedArticleEditor'
+import { formatDateShortBG } from '@/utils/dateUtils'
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
 import ArticleOrderManager from '@/components/admin/ArticleOrderManager'
 import EnhancedMediaManager from '@/components/admin/EnhancedMediaManager'
 import TemplateManager from '@/components/admin/TemplateManager'
 import { getActiveTemplates, convertToLegacyTemplate } from '@/data/templates'
+import { useAdminArticles, useAdminArticleStats, useAdminUsers, useAdminUserStats } from '@/hooks/api/useAdmin'
+import { useCreateArticle, useUpdateArticle, useDeleteArticle } from '@/hooks/api/useArticles'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import MediaUploadForm from '@/components/admin/MediaUploadForm'
+import MediaGallery from '@/components/admin/MediaGallery'
 
 // Types
 interface AdminArticle {
   id: string
   title: string
-  author: string
+  author: {
+    name: string
+    email?: string
+  }
   category: string
   zone: string
   status: string
-  views: number
+  viewCount: number
   publishedAt: string | null
   isPremium: boolean
+  createdAt: string
+  updatedAt: string
 }
-
-// Mock data
-const mockStats = {
-  totalArticles: 127,
-  totalUsers: 1543,
-  totalViews: 45623,
-  premiumUsers: 89,
-  monthlyGrowth: 12.5
-}
-
-const mockArticles: AdminArticle[] = [
-  {
-    id: '1',
-    title: 'Тактическа схема 4-3-3 в модерния футбол',
-    author: 'Спортен Анализатор',
-    category: 'Тактика',
-    zone: 'Coach',
-    status: 'published',
-    views: 1234,
-    publishedAt: '2024-01-15',
-    isPremium: true
-  },
-  {
-    id: '2',
-    title: 'Тренировъчен план за младежи U15',
-    author: 'Треньор Петров',
-    category: 'Тренировки',
-    zone: 'Coach',
-    status: 'draft',
-    views: 0,
-    publishedAt: null,
-    isPremium: false
-  },
-  {
-    id: '3',
-    title: 'Хранене на младия футболист',
-    author: 'Д-р Иванова',
-    category: 'Здраве',
-    zone: 'Parent',
-    status: 'published',
-    views: 892,
-    publishedAt: '2024-01-10',
-    isPremium: false
-  }
-]
-
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Георги Петров',
-    email: 'georgi@example.com',
-    role: 'Coach Premium',
-    registeredAt: '2024-01-01',
-    lastActive: '2024-01-16',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Мария Иванова',
-    email: 'maria@example.com',
-    role: 'Parent Free',
-    registeredAt: '2024-01-05',
-    lastActive: '2024-01-15',
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'Стефан Димитров',
-    email: 'stefan@example.com',
-    role: 'Player Premium',
-    registeredAt: '2024-01-03',
-    lastActive: '2024-01-14',
-    status: 'inactive'
-  }
-]
 
 const mockCategories = [
   { id: '1', name: 'Тактика', count: 23, color: 'green' },
@@ -148,13 +87,38 @@ export default function AdminPage() {
     { id: 'settings', name: 'Настройки', icon: CogIcon }
   ]
 
-  const handleSaveArticle = (articleData: unknown) => {
-    console.log('Saving article:', articleData)
-    // Here you would typically save to your backend
-    setShowArticleEditor(false)
-    setEditingArticle(null)
-    setHasUnsavedChanges(false)
-    // Refresh articles list
+  // Mutations for article operations
+  const createArticleMutation = useCreateArticle()
+  const updateArticleMutation = useUpdateArticle()
+  const deleteArticleMutation = useDeleteArticle()
+
+  const handleSaveArticle = async (articleData: any) => {
+    try {
+      if (editingArticle) {
+        await updateArticleMutation.mutateAsync({
+          id: editingArticle.id,
+          data: articleData
+        })
+      } else {
+        await createArticleMutation.mutateAsync(articleData)
+      }
+      setShowArticleEditor(false)
+      setEditingArticle(null)
+      setHasUnsavedChanges(false)
+    } catch (error) {
+      console.error('Error saving article:', error)
+      // Handle error (show toast, etc.)
+    }
+  }
+
+  const handleDeleteArticle = async (articleId: string) => {
+    if (confirm('Сигурни ли сте, че искате да изтриете тази статия?')) {
+      try {
+        await deleteArticleMutation.mutateAsync(articleId)
+      } catch (error) {
+        console.error('Error deleting article:', error)
+      }
+    }
   }
 
   const handleCancelEdit = () => {
@@ -264,12 +228,12 @@ export default function AdminPage() {
               />
             ) : (
               <>
-                {activeTab === 'dashboard' && <DashboardTab stats={mockStats} onCreateArticle={handleCreateArticle} onSetActiveTab={handleTabChange} />}
-                {activeTab === 'articles' && <ArticlesTab articles={mockArticles} onEditArticle={handleEditArticle} onCreateArticle={handleCreateArticle} />}
+                {activeTab === 'dashboard' && <DashboardTab onCreateArticle={handleCreateArticle} onSetActiveTab={handleTabChange} />}
+                {activeTab === 'articles' && <ArticlesTab onEditArticle={handleEditArticle} onCreateArticle={handleCreateArticle} onDeleteArticle={handleDeleteArticle} />}
                 {activeTab === 'analytics' && <AnalyticsDashboard />}
                 {activeTab === 'ordering' && <ArticleOrderTab />}
                 {activeTab === 'series' && <SeriesTab />}
-                {activeTab === 'users' && <UsersTab users={mockUsers} />}
+                {activeTab === 'users' && <UsersTab />}
                 {activeTab === 'categories' && <CategoriesTab categories={mockCategories} />}
                 {activeTab === 'media' && <EnhancedMediaTab />}
                 {activeTab === 'templates' && <TemplatesTab />}
@@ -330,16 +294,42 @@ export default function AdminPage() {
   )
 }
 
-// Dashboard Tab
+// Dashboard Tab with Real Data
 function DashboardTab({ 
-  stats, 
   onCreateArticle, 
   onSetActiveTab 
 }: { 
-  stats: typeof mockStats
   onCreateArticle: () => void
   onSetActiveTab: (tab: ActiveTab) => void
 }) {
+  const { data: articleStats, isLoading: statsLoading, error: statsError } = useAdminArticleStats()
+  const { data: userStats, isLoading: userStatsLoading } = useAdminUserStats()
+
+  if (statsLoading || userStatsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (statsError) {
+    return (
+      <ErrorBoundary 
+        error={statsError} 
+        resetError={() => window.location.reload()}
+      />
+    )
+  }
+
+  const stats = {
+    totalArticles: articleStats?.data?.totalArticles || 0,
+    totalUsers: userStats?.data?.totalUsers || 0,
+    totalViews: articleStats?.data?.totalViews || 0,
+    premiumUsers: userStats?.data?.premiumUsers || 0,
+    monthlyGrowth: userStats?.data?.monthlyGrowth || 0
+  }
+
   return (
     <div>
       <div className="mb-8">
@@ -359,7 +349,7 @@ function DashboardTab({
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">+8</span>
+            <span className="text-green-600 font-medium">+{articleStats?.data?.monthlyNew || 0}</span>
             <span className="text-[#000000] ml-1">този месец</span>
           </div>
         </div>
@@ -374,7 +364,7 @@ function DashboardTab({
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">+{stats.monthlyGrowth}%</span>
+            <span className="text-green-600 font-medium">+{stats.monthlyGrowth.toFixed(1)}%</span>
             <span className="text-[#000000] ml-1">растеж</span>
           </div>
         </div>
@@ -389,7 +379,7 @@ function DashboardTab({
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">+2.4k</span>
+            <span className="text-green-600 font-medium">+{articleStats?.data?.weeklyViews || 0}</span>
             <span className="text-[#000000] ml-1">тази седмица</span>
           </div>
         </div>
@@ -404,7 +394,7 @@ function DashboardTab({
           </div>
           <div className="flex items-center mt-4 text-sm">
             <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">+15</span>
+            <span className="text-green-600 font-medium">+{userStats?.data?.newPremiumUsers || 0}</span>
             <span className="text-[#000000] ml-1">нови абонати</span>
           </div>
         </div>
@@ -472,16 +462,53 @@ function DashboardTab({
   )
 }
 
-// Articles Tab
+// Articles Tab with Real Data
 function ArticlesTab({ 
-  articles, 
   onEditArticle, 
-  onCreateArticle 
+  onCreateArticle,
+  onDeleteArticle
 }: { 
-  articles: typeof mockArticles
   onEditArticle: (article: AdminArticle) => void
   onCreateArticle: () => void
+  onDeleteArticle: (articleId: string) => void
 }) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [filters, setFilters] = useState({
+    zone: '',
+    status: '',
+    category: ''
+  })
+
+  const { data: articlesData, isLoading, error } = useAdminArticles({
+    page: currentPage,
+    limit: 10,
+    ...filters
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <ErrorBoundary 
+        error={error} 
+        resetError={() => window.location.reload()}
+      />
+    )
+  }
+
+  const articles = articlesData?.data?.data || []
+  const totalPages = articlesData?.data?.totalPages || 1
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+    setCurrentPage(1) // Reset to first page when filtering
+  }
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -501,24 +528,40 @@ function ArticlesTab({
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-green-100">
         <div className="flex items-center space-x-4">
-          <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-            <option>Всички зони</option>
-            <option>Coach Zone</option>
-            <option>Player Zone</option>
-            <option>Parent Zone</option>
-            <option>Read Zone</option>
+          <select 
+            value={filters.zone}
+            onChange={(e) => handleFilterChange('zone', e.target.value)}
+            className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Всички зони</option>
+            <option value="coach">Coach Zone</option>
+            <option value="player">Player Zone</option>
+            <option value="parent">Parent Zone</option>
+            <option value="read">Read Zone</option>
           </select>
-          <select className="border border-green-2 00 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-            <option>Всички статуси</option>
-            <option>Публикувано</option>
-            <option>Чернова</option>
-            <option>На ревизия</option>
+          <select 
+            value={filters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Всички статуси</option>
+            <option value="PUBLISHED">Публикувано</option>
+            <option value="DRAFT">Чернова</option>
+            <option value="REVIEW">На ревизия</option>
+            <option value="ARCHIVED">Архивирано</option>
           </select>
-          <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-            <option>Всички категории</option>
-            <option>Тактика</option>
-            <option>Тренировки</option>
-            <option>Психология</option>
+          <select 
+            value={filters.category}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
+            className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Всички категории</option>
+            <option value="TACTICS">Тактика</option>
+            <option value="TRAINING">Тренировки</option>
+            <option value="PSYCHOLOGY">Психология</option>
+            <option value="NUTRITION">Хранене</option>
+            <option value="TECHNIQUE">Техника</option>
+            <option value="FITNESS">Фитнес</option>
           </select>
         </div>
       </div>
@@ -572,7 +615,7 @@ function ArticlesTab({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000]">
-                  {article.author}
+                  {typeof article.author === 'string' ? article.author : article.author.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -595,7 +638,7 @@ function ArticlesTab({
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000]">
-                  {article.views.toLocaleString()}
+                  {(article.viewCount || 0).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
                   {article.publishedAt || '-'}
@@ -611,7 +654,10 @@ function ArticlesTab({
                     >
                       <PencilIcon className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
+                    <button 
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => onDeleteArticle(article.id)}
+                    >
                       <TrashIcon className="w-4 h-4" />
                     </button>
                   </div>
@@ -621,12 +667,78 @@ function ArticlesTab({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Страница {currentPage} от {totalPages}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm bg-white border border-green-200 rounded-lg disabled:opacity-50 hover:bg-green-50"
+            >
+              Предишна
+            </button>
+            <span className="text-sm text-gray-700">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm bg-white border border-green-200 rounded-lg disabled:opacity-50 hover:bg-green-50"
+            >
+              Следваща
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// Users Tab
-function UsersTab({ users }: { users: typeof mockUsers }) {
+// Users Tab with Real Data
+function UsersTab() {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [filters, setFilters] = useState({
+    role: '',
+    status: '',
+    searchTerm: ''
+  })
+
+  const { data: usersData, isLoading, error } = useAdminUsers({
+    page: currentPage,
+    limit: 10,
+    ...filters
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <ErrorBoundary 
+        error={error} 
+        resetError={() => window.location.reload()}
+      />
+    )
+  }
+
+  const users = usersData?.data?.data || []
+  const totalPages = usersData?.data?.totalPages || 1
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+    setCurrentPage(1)
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -638,6 +750,41 @@ function UsersTab({ users }: { users: typeof mockUsers }) {
           <PlusIcon className="w-4 h-4 mr-2" />
           Нов потребител
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-green-100">
+        <div className="flex items-center space-x-4">
+          <input
+            type="text"
+            placeholder="Търси по име или email..."
+            value={filters.searchTerm}
+            onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+            className="flex-1 border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          />
+          <select 
+            value={filters.role}
+            onChange={(e) => handleFilterChange('role', e.target.value)}
+            className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Всички роли</option>
+            <option value="ADMIN">Админ</option>
+            <option value="COACH">Треньор</option>
+            <option value="PLAYER">Играч</option>
+            <option value="PARENT">Родител</option>
+            <option value="FREE">Безплатен</option>
+          </select>
+          <select 
+            value={filters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Всички статуси</option>
+            <option value="active">Активен</option>
+            <option value="inactive">Неактивен</option>
+            <option value="banned">Блокиран</option>
+          </select>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-green-100 overflow-hidden">
@@ -669,28 +816,28 @@ function UsersTab({ users }: { users: typeof mockUsers }) {
               <tr key={user.id} className="hover:bg-green-50 transition-colors">
                 <td className="px-6 py-4">
                   <div>
-                    <div className="text-sm font-medium text-[#000000]">{user.name}</div>
+                    <div className="text-sm font-medium text-[#000000]">{user.firstName} {user.lastName}</div>
                     <div className="text-sm text-[#166534]">{user.email}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.role.includes('Premium') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-50 text-green-800'
+                    user.subscription?.type === 'PREMIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-50 text-green-800'
                   }`}>
-                    {user.role}
+                    {user.role} {user.subscription?.type === 'PREMIUM' && 'Premium'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
-                  {user.registeredAt}
+                  {new Date(user.createdAt).toLocaleDateString('bg-BG')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
-                  {user.lastActive}
+                  {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('bg-BG') : 'Никога'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {user.status === 'active' ? 'Активен' : 'Неактивен'}
+                    {user.isActive ? 'Активен' : 'Неактивен'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -708,6 +855,34 @@ function UsersTab({ users }: { users: typeof mockUsers }) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination for Users */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Страница {currentPage} от {totalPages}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm bg-white border border-green-200 rounded-lg disabled:opacity-50 hover:bg-green-50"
+            >
+              Предишна
+            </button>
+            <span className="text-sm text-gray-700">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm bg-white border border-green-200 rounded-lg disabled:opacity-50 hover:bg-green-50"
+            >
+              Следваща
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1019,7 +1194,36 @@ function CategoriesTab({}: { categories: typeof mockCategories }) {
 
 // Enhanced Media Tab
 function EnhancedMediaTab() {
-  return <EnhancedMediaManager />
+  const [showUpload, setShowUpload] = useState(false)
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-[#000000]">Медия управление</h1>
+          <p className="text-[#166534] mt-2">Качване и управление на медийни файлове</p>
+        </div>
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => setShowUpload(true)}
+        >
+          <PlusIcon className="w-4 h-4 mr-2" />
+          Качи файлове
+        </Button>
+      </div>
+
+      {showUpload ? (
+        <div className="bg-white rounded-lg border border-green-100 p-6 mb-8">
+          <MediaUploadForm 
+            onUploadComplete={() => setShowUpload(false)}
+            onCancel={() => setShowUpload(false)}
+          />
+        </div>
+      ) : (
+        <MediaGallery />
+      )}
+    </div>
+  )
 }
 
 // Templates Tab
@@ -1367,13 +1571,6 @@ function SeriesTab() {
     }
   }
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('bg-BG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   const getProgressPercent = (current: number, total: number) => {
     return Math.round((current / total) * 100)
@@ -1639,7 +1836,7 @@ function SeriesTab() {
 
               {/* Footer */}
               <div className="flex justify-between items-center text-xs text-[#166534] border-t pt-3">
-                <span>Обновено: {formatDate(series.lastUpdated)}</span>
+                <span>Обновено: {formatDateShortBG(series.lastUpdated)}</span>
                 <button className="text-blue-600 hover:text-blue-800 font-medium">
                   Виж статии →
                 </button>

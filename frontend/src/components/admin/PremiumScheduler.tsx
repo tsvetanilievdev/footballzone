@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { CalendarIcon, ClockIcon, LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/outline'
+import { formatDateBG } from '@/utils/dateUtils'
 
 interface PremiumSchedulerProps {
   isPremium: boolean
@@ -65,15 +66,6 @@ export default function PremiumScheduler({
     }
   }
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('bg-BG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   const getStatusColor = () => {
     if (!isPremium) return 'text-green-600'
@@ -92,7 +84,7 @@ export default function PremiumScheduler({
     if (scheduleType === 'permanent') return 'Завинаги премиум'
     if (scheduleType === 'scheduled' && releaseDate) {
       const releaseDateTime = new Date(`${releaseDate}T${releaseTime}`)
-      return `Премиум до ${formatDate(releaseDateTime)}`
+      return `Премиум до ${formatDateBG(releaseDateTime)}`
     }
     return 'Премиум статия'
   }
@@ -253,7 +245,7 @@ export default function PremiumScheduler({
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="font-medium">От {formatDate(new Date(`${releaseDate}T${releaseTime}`))}:</span>
+              <span className="font-medium">От {formatDateBG(new Date(`${releaseDate}T${releaseTime}`))}:</span>
               <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                 Безплатно съдържание
               </span>
