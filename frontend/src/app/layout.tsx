@@ -1,3 +1,12 @@
+/**
+ * FootballZone.bg Frontend Application
+ * Copyright (c) 2024 FootballZone.bg - All Rights Reserved
+ * 
+ * This software is proprietary and confidential.
+ * No part of this software may be reproduced, distributed, or transmitted
+ * without the prior written permission of the copyright holder.
+ */
+
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'

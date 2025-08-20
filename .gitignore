@@ -177,4 +177,6 @@ CLAUDE.md
 *.md
 !README.md
 !backend/README.md
+!COPYRIGHT.md
+!package.json
 .claude/

@@ -278,4 +278,10 @@ Common HTTP status codes:
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is proprietary software. All rights reserved.
+
+Copyright (c) 2024 FootballZone.bg
+
+No part of this software may be reproduced, distributed, or transmitted without the prior written permission of the copyright holder.
+
+For licensing inquiries, please contact: admin@footballzone.bg

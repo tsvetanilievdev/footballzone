@@ -1,3 +1,12 @@
+/**
+ * FootballZone.bg Backend Server
+ * Copyright (c) 2024 FootballZone.bg - All Rights Reserved
+ * 
+ * This software is proprietary and confidential.
+ * No part of this software may be reproduced, distributed, or transmitted
+ * without the prior written permission of the copyright holder.
+ */
+
 import app from './app'
 import env from '@/config/environment'
 import prisma from '@/config/database'

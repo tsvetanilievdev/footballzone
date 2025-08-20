@@ -1,6 +1,6 @@
 # FootballZone.bg - Bulgarian Football Education Platform
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: All Rights Reserved](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
@@ -274,7 +274,15 @@ We welcome contributions from the community! Please see our [Development Guide](
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
+This project is proprietary software. All rights reserved.
+
+Copyright (c) 2024 FootballZone.bg
+
+No part of this software may be reproduced, distributed, or transmitted without the prior written permission of the copyright holder.
+
+For licensing inquiries, please contact: admin@footballzone.bg
+
+See the [LICENSE](LICENSE) file for full details.
 
 ---
 

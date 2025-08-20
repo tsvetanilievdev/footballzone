@@ -15,8 +15,8 @@ const options: swaggerJSDoc.Options = {
         email: 'support@footballzone.bg',
       },
       license: {
-        name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT',
+        name: 'All Rights Reserved',
+        url: 'https://footballzone.bg/license',
       },
     },
     servers: [
