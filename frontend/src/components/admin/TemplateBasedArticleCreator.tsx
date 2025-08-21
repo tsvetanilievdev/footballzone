@@ -6,8 +6,8 @@ import {
   EyeIcon, 
   EyeSlashIcon, 
   SparklesIcon,
-  TemplateIcon,
-  CustomIcon,
+  RectangleGroupIcon as TemplateIcon,
+  CogIcon as CustomIcon,
   EyeIcon as PreviewIcon
 } from '@heroicons/react/24/outline'
 import RichTextEditor from './RichTextEditor'

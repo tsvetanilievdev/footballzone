@@ -5,19 +5,20 @@ import {
   BoldIcon,
   ItalicIcon,
   UnderlineIcon,
-  AlignLeftIcon,
-  AlignCenterIcon,
-  AlignRightIcon,
   ListBulletIcon,
-  ListNumberedIcon,
   LinkIcon,
   PhotoIcon,
   ArrowUturnLeftIcon,
-  ArrowUturnRightIcon,
-  FontBoldIcon,
-  FontItalicIcon,
-  HeadingIcon,
-  QuoteIcon
+  ArrowUturnRightIcon
+} from '@heroicons/react/24/outline'
+
+// Using available icons as replacements for missing ones
+import {
+  Bars3Icon as AlignLeftIcon,
+  Bars3CenterLeftIcon as AlignCenterIcon, 
+  Bars3BottomRightIcon as AlignRightIcon,
+  ListBulletIcon as ListNumberedIcon,
+  ChatBubbleLeftRightIcon as QuoteIcon
 } from '@heroicons/react/24/outline'
 
 interface RichTextEditorProps {

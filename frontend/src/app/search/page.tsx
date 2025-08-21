@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import {
@@ -22,7 +22,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDateShortBG } from '@/utils/dateUtils'
 import type { ArticleZone } from '@/types/articles'
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
@@ -489,5 +489,13 @@ function SearchResultCard({ article, searchQuery }: { article: any; searchQuery:
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <SearchPageContent />
+    </Suspense>
   )
 }
