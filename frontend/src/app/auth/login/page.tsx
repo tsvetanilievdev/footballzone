@@ -8,6 +8,8 @@ import Footer from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/hooks/useAuth'
+import FormErrors from '@/components/ui/FormErrors'
+import { ParsedValidationError, parseValidationErrors, ErrorContext } from '@/utils/errorUtils'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -15,6 +17,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<ParsedValidationError[]>([])
   
   const { login, isLoading } = useAuth()
   const router = useRouter()
@@ -22,12 +25,25 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setValidationErrors([])
     
     try {
       await login(email, password)
       router.push('/') // Redirect to home page after successful login
     } catch (err: any) {
-      setError(err.message || 'Възникна грешка при влизането')
+      if (err.validationErrors && err.validationErrors.length > 0) {
+        setValidationErrors(err.validationErrors)
+      } else {
+        // Parse error message using the error utils
+        const errorMessage = err.message || 'Възникна грешка при влизането'
+        const parsedErrors = parseValidationErrors(errorMessage, { form: 'login' })
+        
+        if (parsedErrors.length > 0) {
+          setValidationErrors(parsedErrors)
+        } else {
+          setError(errorMessage)
+        }
+      }
     }
   }
 
@@ -93,11 +109,19 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error Message */}
+            {/* Error Messages */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
+            )}
+            
+            {validationErrors.length > 0 && (
+              <FormErrors 
+                errors={validationErrors} 
+                showFieldNames={true}
+                groupByType={false}
+              />
             )}
 
             {/* Email Login Form */}

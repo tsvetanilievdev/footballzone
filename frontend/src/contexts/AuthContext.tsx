@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthContextType, RegisterRequest } from '@/types/auth';
 import { apiClient } from '@/utils/api-client';
+import { parseValidationErrors, createStructuredError, ErrorContext } from '@/utils/errorUtils';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -61,7 +62,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(userData);
     } catch (error: any) {
       console.error('Login failed:', error);
-      throw new Error(error.message || 'Грешка при влизане в акаунта');
+      
+      const context: ErrorContext = { form: 'login', action: 'login' };
+      const validationErrors = parseValidationErrors(error.message || 'Грешка при влизане в акаунта', context);
+      
+      throw createStructuredError(
+        error.message || 'Грешка при влизане в акаунта',
+        validationErrors,
+        error
+      );
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +89,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(newUser);
     } catch (error: any) {
       console.error('Registration failed:', error);
-      throw new Error(error.message || 'Грешка при създаване на акаунта');
+      
+      const context: ErrorContext = { form: 'registration', action: 'register' };
+      const validationErrors = parseValidationErrors(error.message || 'Грешка при създаване на акаунта', context);
+      
+      throw createStructuredError(
+        error.message || 'Грешка при създаване на акаунта',
+        validationErrors,
+        error
+      );
     } finally {
       setIsLoading(false);
     }

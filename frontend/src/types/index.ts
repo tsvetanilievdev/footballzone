@@ -24,6 +24,7 @@ export interface Article {
   excerpt: string
   content: string
   featuredImage: string
+  featuredImageUrl?: string // Backend uses this field name
   author: {
     name: string
     avatar?: string
@@ -69,7 +70,7 @@ export interface Article {
     part?: number
     totalParts?: number
   }
-  template: ArticleTemplate
+  template: ArticleTemplate | null
   // New fields for advanced management
   order?: number // Manual ordering
   isFeatured?: boolean // Featured/pinned articles

@@ -10,7 +10,8 @@ import SubCategorySelector from '@/components/zones/SubCategorySelector'
 import CoachArticleCard from '@/components/zones/CoachArticleCard'
 import { useArticlesByZone } from '@/hooks/api/useArticles'
 import { ArticleListSkeleton, InlineLoading } from '@/components/ui/LoadingSpinner'
-import { ApiErrorDisplay, NoArticlesFound } from '@/components/ui/EmptyState'
+import { NoArticlesFound } from '@/components/ui/EmptyState'
+import { ApiErrorDisplay } from '@/components/ui/ErrorBoundary'
 import Pagination from '@/components/ui/Pagination'
 
 

@@ -12,7 +12,7 @@ const path = require('path');
 
 const LICENSE_HEADER = `/**
  * FootballZone.bg
- * Copyright (c) 2024 FootballZone.bg - All Rights Reserved
+ * Copyright (c) 2025 FootballZone.bg - All Rights Reserved
  * 
  * This software is proprietary and confidential.
  * No part of this software may be reproduced, distributed, or transmitted

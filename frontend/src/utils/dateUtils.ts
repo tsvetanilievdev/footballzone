@@ -112,3 +112,60 @@ export const parseDate = (date: Date | string): Date => {
   
   return dateObj
 }
+
+/**
+ * Safe date formatter that handles invalid dates gracefully
+ * @param date - Date object, ISO string, or any date value
+ * @param options - Intl.DateTimeFormat options
+ * @returns Formatted date string or fallback
+ */
+export const safeFormatDate = (
+  date: any, 
+  options: Intl.DateTimeFormatOptions = {},
+  locale: string = 'bg-BG'
+): string => {
+  try {
+    const dateObj = parseDate(date)
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      ...options
+    }).format(dateObj)
+  } catch (error) {
+    console.warn('Date formatting error:', error, 'for date:', date)
+    return 'Неизвестна дата'
+  }
+}
+
+/**
+ * Safe conversion to datetime-local input format
+ * @param date - Date object, ISO string, or any date value
+ * @returns datetime-local string or empty string if invalid
+ */
+export const toDateTimeLocalValue = (date: any): string => {
+  try {
+    if (!date) return ''
+    const dateObj = parseDate(date)
+    return dateObj.toISOString().slice(0, 16)
+  } catch (error) {
+    console.warn('Error converting to datetime-local:', error, 'for date:', date)
+    return ''
+  }
+}
+
+/**
+ * Safe conversion to date input format
+ * @param date - Date object, ISO string, or any date value
+ * @returns date string (YYYY-MM-DD) or empty string if invalid
+ */
+export const toDateInputValue = (date: any): string => {
+  try {
+    if (!date) return ''
+    const dateObj = parseDate(date)
+    return dateObj.toISOString().split('T')[0]
+  } catch (error) {
+    console.warn('Error converting to date input:', error, 'for date:', date)
+    return ''
+  }
+}

@@ -252,5 +252,4 @@ export function NoConnection({ onRetry }: { onRetry?: () => void }) {
   )
 }
 
-export { ApiErrorDisplay, NetworkErrorDisplay }
 export default EmptyState

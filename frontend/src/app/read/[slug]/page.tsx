@@ -24,7 +24,8 @@ import PremiumCTA from '@/components/ui/PremiumCTA'
 import AdminEditButton from '@/components/admin/AdminEditButton'
 import { useArticle, useTrackArticleView } from '@/hooks/api/useArticles'
 import { ArticleDetailSkeleton } from '@/components/ui/LoadingSpinner'
-import { ApiErrorDisplay } from '@/components/ui/EmptyState'
+import { ApiErrorDisplay } from '@/components/ui/ErrorBoundary'
+import { safeFormatDate } from '@/utils/dateUtils'
 
 export default function ArticleTemplatePage() {
   const params = useParams()
@@ -151,7 +152,7 @@ export default function ArticleTemplatePage() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-300">
               <div className="relative">
                 <Image
-                  src={article.featuredImage}
+                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
                   alt="Classic Template"
                   width={400}
                   height={192}
@@ -194,7 +195,7 @@ export default function ArticleTemplatePage() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-300">
               <div className="relative">
                 <Image
-                  src={article.featuredImage}
+                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
                   alt="Modern Template"
                   width={400}
                   height={192}
@@ -236,7 +237,7 @@ export default function ArticleTemplatePage() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-300">
               <div className="relative">
                 <Image
-                  src={article.featuredImage}
+                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
                   alt="Magazine Template"
                   width={400}
                   height={192}
@@ -361,11 +362,11 @@ function ClassicTemplate({ article }: { article: Article }) {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-black mb-6">
                   <div className="flex items-center">
                     <UserIcon className="w-4 h-4 mr-2" />
-                    <span>{article.author.name}</span>
+                    <span>{article.author?.name || 'Анонимен автор'}</span>
                   </div>
                   <div className="flex items-center">
                     <CalendarIcon className="w-4 h-4 mr-2" />
-                    <span>{new Intl.DateTimeFormat('bg-BG').format(article.publishedAt)}</span>
+                    <span>{safeFormatDate(article.publishedAt)}</span>
                   </div>
                   <div className="flex items-center">
                     <ClockIcon className="w-4 h-4 mr-2" />
@@ -377,7 +378,7 @@ function ClassicTemplate({ article }: { article: Article }) {
               {/* Featured Image */}
               <div className="mb-8">
                 <Image
-                  src={article.featuredImage}
+                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
                   alt={article.title}
                   width={800}
                   height={320}
@@ -399,9 +400,10 @@ function ClassicTemplate({ article }: { article: Article }) {
               />
               
               {/* Tags */}
-              <div className="mt-8 pt-8 border-t">
-                <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag) => (
+              {article.tags && article.tags.length > 0 && (
+                <div className="mt-8 pt-8 border-t">
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags.map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 hover:bg-green-200 transition-colors cursor-pointer"
@@ -409,9 +411,10 @@ function ClassicTemplate({ article }: { article: Article }) {
                       <TagIcon className="w-3 h-3 mr-1" />
                       {tag}
                     </span>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </article>
           </div>
           
@@ -452,7 +455,7 @@ function ModernTemplate({ article }: { article: Article }) {
       {/* Hero Section */}
       <div className="relative h-96 lg:h-[500px]">
         <Image
-          src={article.featuredImage}
+          src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
           alt={article.title}
           fill
           className="object-cover"
@@ -476,7 +479,7 @@ function ModernTemplate({ article }: { article: Article }) {
                 <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
                   <UserIcon className="w-5 h-5" />
                 </div>
-                <span className="font-medium">{article.author.name}</span>
+                <span className="font-medium">{article.author?.name || 'Анонимен автор'}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <ClockIcon className="w-4 h-4" />
@@ -543,19 +546,21 @@ function ModernTemplate({ article }: { article: Article }) {
           />
           
           {/* Tags */}
-          <div className="mt-12 pt-8 border-t">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Тагове</h3>
-            <div className="flex flex-wrap gap-3">
-              {article.tags.map((tag) => (
+          {article.tags && article.tags.length > 0 && (
+            <div className="mt-12 pt-8 border-t">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Тагове</h3>
+              <div className="flex flex-wrap gap-3">
+                {article.tags.map((tag) => (
                 <span
                   key={tag}
                   className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-green-100 text-green-800 hover:bg-green-200 transition-colors cursor-pointer font-medium"
                 >
                   {tag}
                 </span>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </article>
       </div>
     </div>
@@ -593,22 +598,22 @@ function MagazineTemplate({ article }: { article: Article }) {
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold text-lg">
-                        {article.author.name.charAt(0)}
+                        {(article.author?.name || 'А').charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{article.author.name}</p>
+                      <p className="font-semibold text-gray-900">{article.author?.name || 'Анонимен автор'}</p>
                       <p className="text-sm text-green-700">Автор</p>
                     </div>
                   </div>
                   
                   <div className="text-right">
                     <p className="text-sm text-green-700">
-                      {new Intl.DateTimeFormat('bg-BG', {
+                      {safeFormatDate(article.publishedAt, {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
-                      }).format(article.publishedAt)}
+                      })}
                     </p>
                     <p className="text-sm text-green-700">{article.readTime} минути четене</p>
                   </div>
@@ -618,7 +623,7 @@ function MagazineTemplate({ article }: { article: Article }) {
               {/* Featured Image */}
               <div className="mb-12">
                 <Image
-                  src={article.featuredImage}
+                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
                   alt={article.title}
                   width={1200}
                   height={384}
@@ -663,21 +668,23 @@ function MagazineTemplate({ article }: { article: Article }) {
               </div>
               
               {/* Tags */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">
-                  Тагове
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag) => (
+              {article.tags && article.tags.length > 0 && (
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">
+                    Тагове
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags.map((tag) => (
                     <span
                       key={tag}
                       className="inline-block px-3 py-1 text-xs font-medium bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 hover:border-green-300 hover:text-green-800 transition-colors cursor-pointer"
                     >
                       {tag}
                     </span>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               
               {/* Newsletter */}
               <div className="bg-green-600 text-white p-6 rounded-lg">

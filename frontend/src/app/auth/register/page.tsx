@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/hooks/useAuth'
 import { RegisterRequest } from '@/types/auth'
+import FormErrors from '@/components/ui/FormErrors'
+import PasswordRequirements, { isPasswordValid } from '@/components/ui/PasswordRequirements'
+import { ParsedValidationError } from '@/utils/errorUtils'
 
 type UserRole = 'PLAYER' | 'COACH' | 'PARENT'
 
@@ -50,6 +53,8 @@ export default function RegisterPage() {
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [subscribeNewsletter, setSubscribeNewsletter] = useState(true)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<ParsedValidationError[]>([])
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
   
   const { register, isLoading } = useAuth()
   const router = useRouter()
@@ -62,6 +67,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setValidationErrors([])
     
     if (!selectedRole) {
       setError('Моля, изберете роля')
@@ -91,7 +97,11 @@ export default function RegisterPage() {
       await register(registerData)
       router.push('/') // Redirect to home page after successful registration
     } catch (err: any) {
-      setError(err.message || 'Възникна грешка при създаването на акаунта')
+      if (err.validationErrors && err.validationErrors.length > 0) {
+        setValidationErrors(err.validationErrors)
+      } else {
+        setError(err.message || 'Възникна грешка при създаването на акаунта')
+      }
     }
   }
 
@@ -214,11 +224,19 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Error Message */}
+            {/* Error Messages */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
+            )}
+            
+            {validationErrors.length > 0 && (
+              <FormErrors 
+                errors={validationErrors} 
+                showFieldNames={true}
+                groupByType={false}
+              />
             )}
 
             {/* Registration Form */}
@@ -286,6 +304,7 @@ export default function RegisterPage() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
+                    onFocus={() => setShowPasswordRequirements(true)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 pr-12"
                     placeholder="Минимум 8 символа"
                   />
@@ -301,6 +320,12 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
+                
+                {/* Password Requirements */}
+                <PasswordRequirements 
+                  password={formData.password} 
+                  show={showPasswordRequirements && formData.password.length > 0}
+                />
               </div>
 
               <div>
@@ -373,7 +398,7 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                disabled={isLoading || !selectedRole || !agreeToTerms}
+                disabled={isLoading || !selectedRole || !agreeToTerms || !isPasswordValid(formData.password)}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
