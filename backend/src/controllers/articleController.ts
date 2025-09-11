@@ -179,7 +179,7 @@ export const trackView = async (req: Request, res: Response, next: NextFunction)
   try {
     const { id } = req.params
     const { duration, completionPercent } = req.body
-    const sessionId = req.correlationId
+    const sessionId = req.correlationId || 'anonymous'
     const userAgent = req.get('User-Agent')
     const ipAddress = req.ip
 
@@ -195,7 +195,7 @@ export const trackView = async (req: Request, res: Response, next: NextFunction)
     if (referrer) trackData.referrer = referrer
     if (userAgent) trackData.deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop'
     if (ipAddress) trackData.ipAddress = ipAddress
-    if (req.user?.userId) trackData.userId = req.user.userId
+    if (req.user?.id) trackData.userId = req.user.id
 
     await articleService.trackArticleView(trackData)
 

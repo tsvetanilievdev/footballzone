@@ -87,12 +87,17 @@ export interface ArticleUpdateData extends Partial<ArticleCreateData> {
   id: string
 }
 
+// Extended User interface for request
+export interface AuthenticatedUser extends JWTPayload {
+  id?: string // for backward compatibility
+}
+
 // Extended Request interface for custom properties
 declare global {
   namespace Express {
     interface Request {
-      user?: JWTPayload
-      correlationId: string
+      user?: AuthenticatedUser
+      correlationId?: string
     }
   }
 }

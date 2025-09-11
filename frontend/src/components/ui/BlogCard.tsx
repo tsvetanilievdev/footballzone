@@ -18,7 +18,7 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
       {/* Image with Date Badge */}
       <div className="relative">
         <NextImage
-          src={article.featuredImage || '/placeholder-article.jpg'}
+          src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
           alt={article.title}
           width={400}
           height={208}

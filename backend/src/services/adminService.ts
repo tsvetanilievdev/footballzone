@@ -526,13 +526,13 @@ export class AdminService {
   /**
    * Perform bulk operations on articles
    */
-  async bulkArticleOperation(operation: string, articleIds: string[], data?: any) {
+  async bulkArticleOperation(operation: string, articleIds: string[], _data?: any) {
     try {
       let affected = 0
-      let failed = 0
+      const failed = 0
 
       switch (operation) {
-        case 'publish':
+        case 'publish': {
           const publishResult = await db.article.updateMany({
             where: {
               id: {
@@ -546,8 +546,9 @@ export class AdminService {
           })
           affected = publishResult.count
           break
+        }
 
-        case 'draft':
+        case 'draft': {
           const draftResult = await db.article.updateMany({
             where: {
               id: {
@@ -561,8 +562,9 @@ export class AdminService {
           })
           affected = draftResult.count
           break
+        }
 
-        case 'archive':
+        case 'archive': {
           const archiveResult = await db.article.updateMany({
             where: {
               id: {
@@ -575,8 +577,9 @@ export class AdminService {
           })
           affected = archiveResult.count
           break
+        }
 
-        case 'delete':
+        case 'delete': {
           const deleteResult = await db.article.deleteMany({
             where: {
               id: {
@@ -586,8 +589,9 @@ export class AdminService {
           })
           affected = deleteResult.count
           break
+        }
 
-        case 'feature':
+        case 'feature': {
           const featureResult = await db.article.updateMany({
             where: {
               id: {
@@ -600,8 +604,9 @@ export class AdminService {
           })
           affected = featureResult.count
           break
+        }
 
-        case 'unfeature':
+        case 'unfeature': {
           const unfeatureResult = await db.article.updateMany({
             where: {
               id: {
@@ -614,6 +619,7 @@ export class AdminService {
           })
           affected = unfeatureResult.count
           break
+        }
 
         default:
           throw new Error(`Unknown operation: ${operation}`)
@@ -765,22 +771,17 @@ export class AdminService {
    * Get admin settings
    */
   async getSettings() {
-    try {
-      // For now, return default settings
-      // In a real app, these would be stored in a settings table
-      return {
-        siteName: 'FootballZone.bg',
-        maintenanceMode: false,
-        registrationEnabled: true,
-        emailNotifications: true,
-        maxFileUploadSize: 50, // MB
-        allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
-        cacheEnabled: true,
-        analyticsEnabled: true
-      }
-    } catch (error) {
-      console.error('Error getting settings:', error)
-      throw new Error('Failed to get settings')
+    // For now, return default settings
+    // In a real app, these would be stored in a settings table
+    return {
+      siteName: 'FootballZone.bg',
+      maintenanceMode: false,
+      registrationEnabled: true,
+      emailNotifications: true,
+      maxFileUploadSize: 50, // MB
+      allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
+      cacheEnabled: true,
+      analyticsEnabled: true
     }
   }
 

@@ -266,15 +266,23 @@ export default function Header() {
 
                         {/* Dropdown Menu Items */}
                         <div className="py-2">
-                          <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+                          <Link 
+                            href="/profile"
+                            onClick={() => setProfileDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                          >
                             <UserIcon className="w-4 h-4" />
-                            Моят профил (скоро)
-                          </div>
+                            Моят профил
+                          </Link>
                           
-                          <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+                          <Link 
+                            href="/settings"
+                            onClick={() => setProfileDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                          >
                             <Cog6ToothIcon className="w-4 h-4" />
-                            Настройки (скоро)
-                          </div>
+                            Настройки
+                          </Link>
 
                           {user.role === 'ADMIN' && (
                             <Link 

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { AdminService } from '../services/adminService'
-import db from '@/config/database'
 
 const adminService = new AdminService()
 

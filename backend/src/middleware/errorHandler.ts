@@ -58,21 +58,25 @@ export const errorHandler = (
   // Prisma errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     switch (error.code) {
-      case 'P2002':
+      case 'P2002': {
         // Unique constraint violation
         const field = (error.meta?.target as string[])?.join(', ') || 'field'
         err = new AppError(`${field} already exists`, 409)
         break
-      case 'P2025':
+      }
+      case 'P2025': {
         // Record not found
         err = new AppError('Record not found', 404)
         break
-      case 'P2003':
+      }
+      case 'P2003': {
         // Foreign key constraint violation
         err = new AppError('Related record not found', 400)
         break
-      default:
+      }
+      default: {
         err = new AppError('Database error', 500)
+      }
     }
   }
 
@@ -116,4 +120,11 @@ export const errorHandler = (
   }
 
   res.status(statusCode).json(response)
+}
+
+// Async handler wrapper to catch async errors
+export const asyncHandler = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }
 }

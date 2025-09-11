@@ -2,7 +2,7 @@ import prisma from '@/config/database'
 import { jwtService, JWTPayload } from '@/utils/jwt'
 import { passwordService } from '@/utils/password'
 import { AppError } from '@/middleware/errorHandler'
-import { UserRole, User } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -263,7 +263,7 @@ export class AuthService {
       }
     })
 
-    const { passwordHash, loginAttempts, lockedUntil, ...userWithoutSensitive } = user
+    const { passwordHash: _passwordHash, loginAttempts: _loginAttempts, lockedUntil: _lockedUntil, ...userWithoutSensitive } = user
 
     return {
       user: userWithoutSensitive,

@@ -1,0 +1,660 @@
+import { Resend } from 'resend'
+import redis from '@/config/redis'
+import prisma from '@/config/database'
+import env from '@/config/environment'
+
+interface EmailTemplate {
+  id: string
+  name: string
+  subject: string
+  htmlContent: string
+  textContent?: string
+  variables: string[]
+  category: EmailCategory
+}
+
+interface EmailJob {
+  id: string
+  to: string
+  templateId: string
+  variables: Record<string, any>
+  scheduledFor?: Date
+  priority: 'low' | 'normal' | 'high'
+  category: EmailCategory
+  userId?: string
+}
+
+interface EmailAnalytics {
+  sent: number
+  delivered: number
+  opened: number
+  clicked: number
+  bounced: number
+  complained: number
+  unsubscribed: number
+}
+
+type EmailCategory = 'welcome' | 'newsletter' | 'notification' | 'premium' | 'system' | 'marketing'
+
+export class EmailService {
+  private readonly resend: Resend
+  private readonly QUEUE_PREFIX = 'email_queue:'
+  private readonly ANALYTICS_PREFIX = 'email_analytics:'
+  
+  constructor() {
+    this.resend = new Resend(env.RESEND_API_KEY || 'test_key')
+  }
+
+  // Email Templates
+  private readonly templates: Record<string, EmailTemplate> = {
+    welcome: {
+      id: 'welcome',
+      name: 'Welcome Email',
+      subject: 'Добре дошли в FootballZone.bg! ⚽',
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">Добре дошли в FootballZone.bg!</h1>
+            <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Българската платформа за футболно образование</p>
+          </div>
+          
+          <div style="padding: 40px 20px;">
+            <h2 style="color: #1e3a8a; margin-top: 0;">Здравей {{userName}}!</h2>
+            <p style="color: #374151; line-height: 1.6; font-size: 16px;">
+              Радваме се, че се присъедини към нашата общност на футболните ентусиасти!
+            </p>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #1e3a8a; margin-top: 0;">Какво те очаква:</h3>
+              <ul style="color: #374151; line-height: 1.6;">
+                <li>🎯 Тактически анализи от професионални треньори</li>
+                <li>💪 Тренировъчни програми за всички нива</li>
+                <li>🧠 Психологически съвети за футболисти</li>
+                <li>📊 Аналитика и статистики</li>
+                <li>👥 Активна общност от футболни експерти</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{{dashboardUrl}}" style="display: inline-block; background: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Започни разглеждането
+              </a>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; text-align: center; margin-top: 40px;">
+              Ако имаш въпроси, не се колебай да <a href="mailto:support@footballzone.bg" style="color: #1e3a8a;">се свържеш с нас</a>.
+            </p>
+          </div>
+        </div>
+      `,
+      textContent: `
+        Добре дошли в FootballZone.bg!
+        
+        Здравей {{userName}}!
+        
+        Радваме се, че се присъедини към нашата общност на футболните ентусиасти!
+        
+        Какво те очаква:
+        - Тактически анализи от професионални треньори
+        - Тренировъчни програми за всички нива
+        - Психологически съвети за футболисти
+        - Аналитика и статистики
+        - Активна общност от футболни експерти
+        
+        Започни разглеждането: {{dashboardUrl}}
+        
+        Ако имаш въпроси, пиши ни на: support@footballzone.bg
+      `,
+      variables: ['userName', 'dashboardUrl'],
+      category: 'welcome'
+    },
+
+    new_article: {
+      id: 'new_article',
+      name: 'New Article Notification',
+      subject: 'Нова статия: {{articleTitle}}',
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1e3a8a; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">FootballZone.bg</h1>
+          </div>
+          
+          <div style="padding: 30px 20px;">
+            <h2 style="color: #1e3a8a; margin-top: 0;">Нова статия в {{categoryName}}</h2>
+            
+            <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin: 20px 0;">
+              {{#if articleImage}}
+              <img src="{{articleImage}}" alt="{{articleTitle}}" style="width: 100%; height: 200px; object-fit: cover;">
+              {{/if}}
+              
+              <div style="padding: 20px;">
+                <h3 style="color: #111827; margin: 0 0 10px 0;">{{articleTitle}}</h3>
+                <p style="color: #6b7280; margin: 0 0 15px 0;">{{articleExcerpt}}</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; color: #9ca3af; font-size: 14px;">
+                  <span>от {{authorName}}</span>
+                  <span>{{readTime}} мин четене</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{{articleUrl}}" style="display: inline-block; background: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Прочети статията
+              </a>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 40px;">
+              Можеш да <a href="{{unsubscribeUrl}}" style="color: #1e3a8a;">се отпишеш</a> от тези известия по всяко време.
+            </p>
+          </div>
+        </div>
+      `,
+      variables: ['articleTitle', 'categoryName', 'articleImage', 'articleExcerpt', 'authorName', 'readTime', 'articleUrl', 'unsubscribeUrl'],
+      category: 'notification'
+    },
+
+    premium_released: {
+      id: 'premium_released',
+      name: 'Premium Content Released',
+      subject: 'Безплатно достъпна: {{articleTitle}}',
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Премиум статия сега е безплатна!</h1>
+          </div>
+          
+          <div style="padding: 30px 20px;">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Радостна новина! Статията, която си чакал, сега е достъпна безплатно за всички:
+            </p>
+            
+            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 20px; margin: 20px 0;">
+              <h3 style="color: #991b1b; margin: 0 0 10px 0;">{{articleTitle}}</h3>
+              <p style="color: #7f1d1d; margin: 0;">{{articleExcerpt}}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{{articleUrl}}" style="display: inline-block; background: #dc2626; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Прочети сега
+              </a>
+            </div>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h4 style="color: #1e3a8a; margin: 0 0 10px 0;">Искаш ли достъп до всички премиум статии?</h4>
+              <p style="color: #374151; margin: 0 0 15px 0; font-size: 14px;">
+                С премиум абонамент получаваш незабавен достъп до всички професионални материали.
+              </p>
+              <a href="{{premiumUrl}}" style="color: #1e3a8a; font-weight: bold; text-decoration: none;">
+                Разгледай плановете →
+              </a>
+            </div>
+          </div>
+        </div>
+      `,
+      variables: ['articleTitle', 'articleExcerpt', 'articleUrl', 'premiumUrl'],
+      category: 'premium'
+    },
+
+    series_completed: {
+      id: 'series_completed',
+      name: 'Series Completion',
+      subject: 'Поздравления! Завърши серията "{{seriesName}}"',
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏆 Поздравления!</h1>
+            <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Завърши серията успешно</p>
+          </div>
+          
+          <div style="padding: 40px 20px;">
+            <h2 style="color: #059669; margin-top: 0;">"{{seriesName}}"</h2>
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Браво, {{userName}}! Завърши всички {{articleCount}} статии от тази серия.
+              Това показва твоята отдаденост към развитието в футбола.
+            </p>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #059669; margin: 0 0 15px 0;">Твоите постижения:</h3>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                <div style="text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: #059669;">{{articleCount}}</div>
+                  <div style="color: #065f46; font-size: 14px;">статии прочетени</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: #059669;">{{totalReadTime}}</div>
+                  <div style="color: #065f46; font-size: 14px;">минути обучение</div>
+                </div>
+              </div>
+            </div>
+            
+            {{#if recommendedSeries}}
+            <h3 style="color: #1e3a8a;">Препоръчани следващи серии:</h3>
+            <div style="margin: 20px 0;">
+              {{#each recommendedSeries}}
+              <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin: 10px 0;">
+                <h4 style="margin: 0 0 5px 0; color: #111827;">{{name}}</h4>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">{{description}}</p>
+              </div>
+              {{/each}}
+            </div>
+            {{/if}}
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{{dashboardUrl}}" style="display: inline-block; background: #059669; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Продължи обучението
+              </a>
+            </div>
+          </div>
+        </div>
+      `,
+      variables: ['seriesName', 'userName', 'articleCount', 'totalReadTime', 'recommendedSeries', 'dashboardUrl'],
+      category: 'notification'
+    },
+
+    password_reset: {
+      id: 'password_reset',
+      name: 'Password Reset',
+      subject: 'Нулиране на паролата за FootballZone.bg',
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1e3a8a; padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Нулиране на паролата</h1>
+          </div>
+          
+          <div style="padding: 40px 20px;">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Получихме заявка за нулиране на паролата за твоя акаунт в FootballZone.bg.
+            </p>
+            
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
+              <p style="color: #92400e; margin: 0; font-weight: bold;">
+                Ако не ти си направил тази заявка, моля игнорирай този имейл.
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{{resetUrl}}" style="display: inline-block; background: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Нулирай паролата
+              </a>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; text-align: center;">
+              Този линк е валиден в продължение на 1 час.<br>
+              Ако не можеш да кликнеш върху бутона, копирай този линк:<br>
+              <span style="word-break: break-all;">{{resetUrl}}</span>
+            </p>
+          </div>
+        </div>
+      `,
+      variables: ['resetUrl'],
+      category: 'system'
+    }
+  }
+
+  // Send individual email
+  async sendEmail(
+    to: string, 
+    templateId: string, 
+    variables: Record<string, any> = {},
+    options: {
+      scheduledFor?: Date
+      priority?: 'low' | 'normal' | 'high'
+      userId?: string
+    } = {}
+  ): Promise<string> {
+    const template = this.templates[templateId]
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`)
+    }
+
+    // Check if user has unsubscribed from this category
+    if (options.userId && await this.isUnsubscribed(options.userId, template.category)) {
+      console.log(`User ${options.userId} is unsubscribed from ${template.category} emails`)
+      return 'unsubscribed'
+    }
+
+    const emailJob: EmailJob = {
+      id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      to,
+      templateId,
+      variables,
+      scheduledFor: options.scheduledFor,
+      priority: options.priority || 'normal',
+      category: template.category,
+      userId: options.userId
+    }
+
+    if (options.scheduledFor && options.scheduledFor > new Date()) {
+      // Schedule for later
+      await this.scheduleEmail(emailJob)
+      return emailJob.id
+    } else {
+      // Send immediately
+      return await this.processEmail(emailJob)
+    }
+  }
+
+  // Send bulk emails (with rate limiting)
+  async sendBulkEmails(
+    recipients: Array<{
+      email: string
+      variables: Record<string, any>
+      userId?: string
+    }>,
+    templateId: string,
+    options: {
+      batchSize?: number
+      delayBetweenBatches?: number
+      priority?: 'low' | 'normal' | 'high'
+    } = {}
+  ): Promise<{ sent: number; failed: number; errors: string[] }> {
+    const batchSize = options.batchSize || 100
+    const delay = options.delayBetweenBatches || 1000 // 1 second between batches
+    const results = { sent: 0, failed: 0, errors: [] as string[] }
+
+    // Process in batches to avoid rate limiting
+    for (let i = 0; i < recipients.length; i += batchSize) {
+      const batch = recipients.slice(i, i + batchSize)
+      
+      const batchPromises = batch.map(async recipient => {
+        try {
+          await this.sendEmail(recipient.email, templateId, recipient.variables, {
+            priority: options.priority,
+            userId: recipient.userId
+          })
+          results.sent++
+        } catch (error) {
+          results.failed++
+          results.errors.push(`${recipient.email}: ${error}`)
+        }
+      })
+
+      await Promise.all(batchPromises)
+
+      // Delay between batches (except for the last batch)
+      if (i + batchSize < recipients.length) {
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+
+    return results
+  }
+
+  // Process scheduled emails (called by cron job)
+  async processScheduledEmails(): Promise<{ processed: number; errors: string[] }> {
+    const now = new Date()
+    const errors: string[] = []
+    let processed = 0
+
+    try {
+      // Get scheduled emails that are due
+      const scheduledEmails = await redis.zrangebyscore(
+        `${this.QUEUE_PREFIX}scheduled`,
+        0,
+        now.getTime(),
+        'WITHSCORES',
+        'LIMIT',
+        '0',
+        '100' // Process up to 100 at a time
+      )
+
+      for (let i = 0; i < scheduledEmails.length; i += 2) {
+        const emailData = scheduledEmails[i]
+        const score = scheduledEmails[i + 1]
+
+        try {
+          const emailJob: EmailJob = JSON.parse(emailData)
+          await this.processEmail(emailJob)
+          
+          // Remove from scheduled queue
+          await redis.zrem(`${this.QUEUE_PREFIX}scheduled`, emailData)
+          processed++
+          
+        } catch (error) {
+          errors.push(`Failed to process scheduled email: ${error}`)
+          console.error('Scheduled email processing error:', error)
+        }
+      }
+
+    } catch (error) {
+      errors.push(`Failed to fetch scheduled emails: ${error}`)
+      console.error('Scheduled emails fetch error:', error)
+    }
+
+    return { processed, errors }
+  }
+
+  // Get email analytics
+  async getEmailAnalytics(
+    category?: EmailCategory,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<EmailAnalytics & { byCategory: Record<EmailCategory, EmailAnalytics> }> {
+    const dateKey = startDate && endDate ? 
+      `:${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}` : 
+      ''
+    
+    const getStats = async (cat?: string) => {
+      const key = `${this.ANALYTICS_PREFIX}${cat || 'total'}${dateKey}`
+      const stats = await redis.hmget(
+        key,
+        'sent', 'delivered', 'opened', 'clicked', 'bounced', 'complained', 'unsubscribed'
+      )
+
+      return {
+        sent: parseInt(stats[0] || '0'),
+        delivered: parseInt(stats[1] || '0'),
+        opened: parseInt(stats[2] || '0'),
+        clicked: parseInt(stats[3] || '0'),
+        bounced: parseInt(stats[4] || '0'),
+        complained: parseInt(stats[5] || '0'),
+        unsubscribed: parseInt(stats[6] || '0')
+      }
+    }
+
+    const totalStats = await getStats(category)
+    
+    // Get stats by category
+    const categories: EmailCategory[] = ['welcome', 'newsletter', 'notification', 'premium', 'system', 'marketing']
+    const byCategory: Record<EmailCategory, EmailAnalytics> = {} as any
+
+    for (const cat of categories) {
+      byCategory[cat] = await getStats(cat)
+    }
+
+    return {
+      ...totalStats,
+      byCategory
+    }
+  }
+
+  // Manage user email preferences
+  async updateEmailPreferences(
+    userId: string,
+    preferences: {
+      newsletter?: boolean
+      notifications?: boolean
+      premium?: boolean
+      marketing?: boolean
+    }
+  ): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        emailNotifications: preferences.notifications ?? true
+      }
+    })
+
+    // Store detailed preferences in Redis
+    const prefKey = `email_preferences:${userId}`
+    await redis.hmset(prefKey,
+      'newsletter', preferences.newsletter ? '1' : '0',
+      'notifications', preferences.notifications ? '1' : '0',
+      'premium', preferences.premium ? '1' : '0',
+      'marketing', preferences.marketing ? '1' : '0',
+      'updated_at', new Date().toISOString()
+    )
+
+    await redis.expire(prefKey, 30 * 24 * 60 * 60) // 30 days
+  }
+
+  // Unsubscribe user from specific category
+  async unsubscribe(userId: string, category: EmailCategory): Promise<void> {
+    const unsubKey = `unsubscribed:${userId}`
+    await redis.sadd(unsubKey, category)
+    await redis.expire(unsubKey, 365 * 24 * 60 * 60) // 1 year
+
+    // Track unsubscribe analytics
+    await this.trackEmailEvent('unsubscribed', category)
+  }
+
+  // Check if user is unsubscribed
+  async isUnsubscribed(userId: string, category: EmailCategory): Promise<boolean> {
+    const unsubKey = `unsubscribed:${userId}`
+    return await redis.sismember(unsubKey, category) === 1
+  }
+
+  // Get email templates
+  getTemplates(): EmailTemplate[] {
+    return Object.values(this.templates)
+  }
+
+  // Update email template
+  updateTemplate(templateId: string, updates: Partial<EmailTemplate>): void {
+    if (this.templates[templateId]) {
+      this.templates[templateId] = { ...this.templates[templateId], ...updates }
+    }
+  }
+
+  // Private helper methods
+  private async scheduleEmail(emailJob: EmailJob): Promise<void> {
+    const scheduleTime = emailJob.scheduledFor!.getTime()
+    await redis.zadd(`${this.QUEUE_PREFIX}scheduled`, scheduleTime, JSON.stringify(emailJob))
+  }
+
+  private async processEmail(emailJob: EmailJob): Promise<string> {
+    const template = this.templates[emailJob.templateId]
+    const subject = this.renderTemplate(template.subject, emailJob.variables)
+    const htmlContent = this.renderTemplate(template.htmlContent, emailJob.variables)
+    const textContent = template.textContent ? this.renderTemplate(template.textContent, emailJob.variables) : undefined
+
+    try {
+      // Add unsubscribe link if not system email
+      const unsubscribeUrl = emailJob.userId && emailJob.category !== 'system' ?
+        `${env.FRONTEND_URL}/unsubscribe?token=${this.generateUnsubscribeToken(emailJob.userId, emailJob.category)}` :
+        undefined
+
+      const finalVariables = { ...emailJob.variables, unsubscribeUrl }
+      const finalHtml = this.renderTemplate(htmlContent, finalVariables)
+      const finalText = textContent ? this.renderTemplate(textContent, finalVariables) : undefined
+
+      const emailData: any = {
+        from: env.FROM_EMAIL || 'FootballZone.bg <noreply@footballzone.bg>',
+        to: emailJob.to,
+        subject,
+        html: finalHtml,
+        headers: {
+          'List-Unsubscribe': unsubscribeUrl ? `<${unsubscribeUrl}>` : undefined
+        }
+      }
+
+      // Only add text if it exists
+      if (finalText) {
+        emailData.text = finalText
+      }
+
+      const { data, error } = await this.resend.emails.send(emailData)
+      
+      if (error) {
+        throw new Error(`Resend error: ${JSON.stringify(error)}`)
+      }
+
+      // Track analytics
+      await this.trackEmailEvent('sent', emailJob.category)
+      
+      console.log(`Email sent successfully: ${emailJob.id} to ${emailJob.to}`)
+      return data?.id || emailJob.id
+
+    } catch (error) {
+      console.error(`Failed to send email ${emailJob.id}:`, error)
+      throw error
+    }
+  }
+
+  private renderTemplate(template: string, variables: Record<string, any>): string {
+    let rendered = template
+
+    // Simple variable substitution ({{variable}})
+    Object.entries(variables).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g')
+      rendered = rendered.replace(regex, String(value || ''))
+    })
+
+    // Handle conditional blocks ({{#if condition}})
+    rendered = rendered.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, condition, content) => {
+      return variables[condition] ? content : ''
+    })
+
+    // Handle loops ({{#each array}})
+    rendered = rendered.replace(/{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g, (match, arrayName, content) => {
+      const array = variables[arrayName]
+      if (Array.isArray(array)) {
+        return array.map(item => {
+          let itemContent = content
+          Object.entries(item).forEach(([key, value]) => {
+            const regex = new RegExp(`{{${key}}}`, 'g')
+            itemContent = itemContent.replace(regex, String(value || ''))
+          })
+          return itemContent
+        }).join('')
+      }
+      return ''
+    })
+
+    return rendered
+  }
+
+  private async trackEmailEvent(event: string, category: EmailCategory): Promise<void> {
+    const today = new Date().toISOString().split('T')[0]
+    const keys = [
+      `${this.ANALYTICS_PREFIX}total:${today}`,
+      `${this.ANALYTICS_PREFIX}${category}:${today}`,
+      `${this.ANALYTICS_PREFIX}total`,
+      `${this.ANALYTICS_PREFIX}${category}`
+    ]
+
+    for (const key of keys) {
+      await redis.hincrby(key, event, 1)
+      await redis.expire(key, 90 * 24 * 60 * 60) // 90 days
+    }
+  }
+
+  private generateUnsubscribeToken(userId: string, category: EmailCategory): string {
+    const jwt = require('jsonwebtoken')
+    return jwt.sign(
+      { userId, category, type: 'unsubscribe' },
+      env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '30d' }
+    )
+  }
+}
+
+export const emailService = new EmailService()
+
+// Process scheduled emails every minute
+if (env.NODE_ENV !== 'test') {
+  setInterval(async () => {
+    try {
+      const results = await emailService.processScheduledEmails()
+      if (results.processed > 0) {
+        console.log(`Processed ${results.processed} scheduled emails`)
+      }
+      if (results.errors.length > 0) {
+        console.error('Scheduled email errors:', results.errors)
+      }
+    } catch (error) {
+      console.error('Scheduled email processing failed:', error)
+    }
+  }, 60 * 1000) // Every minute
+}

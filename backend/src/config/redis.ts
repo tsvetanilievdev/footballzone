@@ -212,6 +212,163 @@ class RedisClient {
     }
   }
 
+  // Additional Redis methods needed by services
+  async zrangebyscore(key: string, min: number, max: number, ...args: any[]): Promise<string[]> {
+    if (!this.isConnected || !this.client) {
+      return []
+    }
+    
+    try {
+      return await this.client.zrangebyscore(key, min, max, ...args) as string[]
+    } catch (error: any) {
+      console.warn(`Redis zrangebyscore failed for key ${key}:`, error?.message || error)
+      return []
+    }
+  }
+
+  async zrem(key: string, ...members: string[]): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 0
+    }
+    
+    try {
+      return await this.client.zrem(key, ...members)
+    } catch (error: any) {
+      console.warn(`Redis zrem failed for key ${key}:`, error?.message || error)
+      return 0
+    }
+  }
+
+  async hmget(key: string, ...fields: string[]): Promise<(string | null)[]> {
+    if (!this.isConnected || !this.client) {
+      return fields.map(() => null)
+    }
+    
+    try {
+      return await this.client.hmget(key, ...fields)
+    } catch (error: any) {
+      console.warn(`Redis hmget failed for key ${key}:`, error?.message || error)
+      return fields.map(() => null)
+    }
+  }
+
+  async hmset(key: string, ...args: (string | number)[]): Promise<'OK'> {
+    if (!this.isConnected || !this.client) {
+      return 'OK'
+    }
+    
+    try {
+      return await this.client.hmset(key, ...args)
+    } catch (error: any) {
+      console.warn(`Redis hmset failed for key ${key}:`, error?.message || error)
+      return 'OK'
+    }
+  }
+
+  async expire(key: string, seconds: number): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 0
+    }
+    
+    try {
+      return await this.client.expire(key, seconds)
+    } catch (error: any) {
+      console.warn(`Redis expire failed for key ${key}:`, error?.message || error)
+      return 0
+    }
+  }
+
+  async sadd(key: string, ...members: string[]): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 0
+    }
+    
+    try {
+      return await this.client.sadd(key, ...members)
+    } catch (error: any) {
+      console.warn(`Redis sadd failed for key ${key}:`, error?.message || error)
+      return 0
+    }
+  }
+
+  async sismember(key: string, member: string): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 0
+    }
+    
+    try {
+      return await this.client.sismember(key, member)
+    } catch (error: any) {
+      console.warn(`Redis sismember failed for key ${key}:`, error?.message || error)
+      return 0
+    }
+  }
+
+  async zadd(key: string, ...args: (string | number)[]): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 0
+    }
+    
+    try {
+      return await this.client.zadd(key, ...args)
+    } catch (error: any) {
+      console.warn(`Redis zadd failed for key ${key}:`, error?.message || error)
+      return 0
+    }
+  }
+
+  async hincrby(key: string, field: string, increment: number): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 0
+    }
+    
+    try {
+      return await this.client.hincrby(key, field, increment)
+    } catch (error: any) {
+      console.warn(`Redis hincrby failed for key ${key}:`, error?.message || error)
+      return 0
+    }
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    if (!this.isConnected || !this.client) {
+      return []
+    }
+    
+    try {
+      return await this.client.smembers(key)
+    } catch (error: any) {
+      console.warn(`Redis smembers failed for key ${key}:`, error?.message || error)
+      return []
+    }
+  }
+
+  async incr(key: string): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return 1
+    }
+    
+    try {
+      return await this.client.incr(key)
+    } catch (error: any) {
+      console.warn(`Redis incr failed for key ${key}:`, error?.message || error)
+      return 1
+    }
+  }
+
+  async ttl(key: string): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      return -1
+    }
+    
+    try {
+      return await this.client.ttl(key)
+    } catch (error: any) {
+      console.warn(`Redis ttl failed for key ${key}:`, error?.message || error)
+      return -1
+    }
+  }
+
   // Health check method
   isHealthy(): boolean {
     return this.isConnected

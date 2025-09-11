@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { jwtService, JWTPayload } from '@/utils/jwt'
+import { jwtService } from '@/utils/jwt'
 import { AppError } from '@/middleware/errorHandler'
 import { UserRole } from '@prisma/client'
 import prisma from '@/config/database'
@@ -45,6 +45,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     // Add user to request object
     req.user = {
       userId: user.id,
+      id: user.id, // for backward compatibility
       email: user.email,
       role: user.role,
       name: user.name
@@ -120,6 +121,7 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
         if (user && user.isActive) {
           req.user = {
             userId: user.id,
+            id: user.id, // for backward compatibility
             email: user.email,
             role: user.role,
             name: user.name

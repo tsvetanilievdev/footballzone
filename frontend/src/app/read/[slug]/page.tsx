@@ -379,7 +379,7 @@ function ClassicTemplate({ article }: { article: Article }) {
               <div className="mb-8">
                 <Image
                   src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
-                  alt={article.title}
+                  alt={article.title || 'Статия от FootballZone.bg'}
                   width={800}
                   height={320}
                   className="w-full h-64 lg:h-80 object-cover rounded-lg shadow-lg"
@@ -456,7 +456,7 @@ function ModernTemplate({ article }: { article: Article }) {
       <div className="relative h-96 lg:h-[500px]">
         <Image
           src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
-          alt={article.title}
+          alt={article.title || 'Статия от FootballZone.bg'}
           fill
           className="object-cover"
         />
@@ -624,7 +624,7 @@ function MagazineTemplate({ article }: { article: Article }) {
               <div className="mb-12">
                 <Image
                   src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
-                  alt={article.title}
+                  alt={article.title || 'Статия от FootballZone.bg'}
                   width={1200}
                   height={384}
                   className="w-full h-96 object-cover rounded-none shadow-2xl"
