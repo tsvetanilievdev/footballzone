@@ -174,6 +174,7 @@ router.get('/search', articleController.searchArticles)
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
+router.get('/by-id/:id', articleController.getArticleById)
 router.get('/:slug', articleController.getArticleBySlug)
 
 // View tracking route (public for analytics)

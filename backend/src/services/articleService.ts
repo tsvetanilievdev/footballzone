@@ -228,6 +228,68 @@ export const getArticleBySlug = async (slug: string) => {
   }
 }
 
+export const getArticleById = async (id: string) => {
+  try {
+    // Check cache first
+    const cacheKey = `article:id:${id}`
+    const cached = await redis.getJson(cacheKey)
+    
+    if (cached) {
+      return cached
+    }
+
+    const article = await prisma.article.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true
+          }
+        },
+        series: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true
+          }
+        },
+        zones: true,
+        template: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            settings: true
+          }
+        }
+      }
+    })
+
+    if (!article) {
+      throw new AppError('Article not found', 404)
+    }
+
+    // Cache the result for 10 minutes
+    await redis.setJson(cacheKey, article, 600)
+
+    // Update view count asynchronously (don't await)
+    prisma.article.update({
+      where: { id: article.id },
+      data: { viewCount: { increment: 1 } }
+    }).catch(console.error)
+
+    return article
+  } catch (error) {
+    console.error('Error fetching article by ID:', error)
+    if (error instanceof AppError) throw error
+    throw new AppError('Failed to fetch article', 500)
+  }
+}
+
 export const searchArticles = async (filters: SearchFilters) => {
   const { query, page, limit, zone, category } = filters
 

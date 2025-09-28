@@ -7,6 +7,7 @@ import BlogCard from '@/components/ui/BlogCard'
 import SearchAndCategories from '@/components/ui/SearchAndCategories'
 import ReadZoneSidebar from '@/components/ui/ReadZoneSidebar'
 import { useArticlesByZone } from '@/hooks/api/useArticles'
+import { useTestQuery } from '@/hooks/useTestQuery'
 import { Article } from '@/types'
 import { ArticleListSkeleton, InlineLoading } from '@/components/ui/LoadingSpinner'
 import { NoArticlesFound } from '@/components/ui/EmptyState'
@@ -19,6 +20,9 @@ export default function ReadZonePage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 12
+
+  // Test React Query with simple hook
+  const testQuery = useTestQuery()
 
   // Fetch articles from API
   const { 

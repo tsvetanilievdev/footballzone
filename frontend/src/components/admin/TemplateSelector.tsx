@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { CheckIcon, CogIcon, EyeIcon, VideoCameraIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline'
-import { ArticleTemplate } from '@/types'
-import { getTemplatesByCategory } from '@/data/templates'
+// import { ArticleTemplate } from '@/types' // Using any[] for flexibility
+import { getTemplatesByCategory, getTemplatesByZone, getActiveTemplates, convertToLegacyTemplate } from '@/data/templates'
 
 interface TemplateSelectorProps {
   selectedTemplate: string
@@ -11,7 +11,7 @@ interface TemplateSelectorProps {
   category: string
   className?: string
   onTemplateConfig?: (templateId: string) => void
-  templatesOverride?: ArticleTemplate[]
+  templatesOverride?: any[]
   zone?: string
 }
 
@@ -24,7 +24,7 @@ export default function TemplateSelector({
   templatesOverride,
   zone
 }: TemplateSelectorProps) {
-  const [templates, setTemplates] = useState<ArticleTemplate[]>([])
+  const [templates, setTemplates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showDetails, setShowDetails] = useState<string | null>(null)
 
@@ -35,9 +35,27 @@ export default function TemplateSelector({
       setLoading(false)
       return
     }
-    const byZone = zone ? (getTemplatesByCategory as any) : null
-    // Заб.: legacy – ако zone е подаден, тук може да се използва getTemplatesByZone при нужда
-    const available = getTemplatesByCategory(category)
+
+    let available: any[] = []
+
+    if (zone) {
+      // Ако има множество зони (разделени със запетая)
+      const zones = zone.split(',').filter(z => z.trim())
+      if (zones.length > 1) {
+        // Събираме темплейти от всички зони
+        const allTemplates = getActiveTemplates()
+        available = allTemplates.filter(template =>
+          template.category === 'universal' || zones.some(z => template.category === z.trim())
+        )
+      } else {
+        // Единична зона
+        available = getTemplatesByZone(zone)
+      }
+    } else {
+      // Fallback към категория
+      available = getTemplatesByCategory(category)
+    }
+
     setTemplates(available)
     setLoading(false)
   }, [category, templatesOverride, zone])
@@ -56,15 +74,21 @@ export default function TemplateSelector({
     )
   }
 
-  const getFeatureIcons = (template: ArticleTemplate) => {
+  const getFeatureIcons = (template: any) => {
     const icons = []
-    if (template.settings.allowVideos) {
+
+    // Handle both old and new template structure
+    const hasVideos = template.settings?.allowVideos || template.mediaSettings?.video?.enabled
+    const hasImages = template.settings?.allowImages || template.mediaSettings?.gallery?.enabled || template.mediaSettings?.featuredImage?.required
+    const hasDownloads = template.settings?.allowDownloads || template.mediaSettings?.documents?.enabled
+
+    if (hasVideos) {
       icons.push(<VideoCameraIcon key="video" className="w-4 h-4" />)
     }
-    if (template.settings.allowImages) {
+    if (hasImages) {
       icons.push(<PhotoIcon key="photo" className="w-4 h-4" />)
     }
-    if (template.settings.allowDownloads) {
+    if (hasDownloads) {
       icons.push(<DocumentIcon key="doc" className="w-4 h-4" />)
     }
     return icons
@@ -101,6 +125,11 @@ export default function TemplateSelector({
         <p className="text-sm text-gray-600">
           Всеки темплейт има специфични настройки за съдържание и визуализация
         </p>
+        {zone && zone.includes(',') && (
+          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+            <strong>Показани темплейти за зони:</strong> {zone.split(',').map(z => z.trim()).join(', ')} + универсални
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -151,26 +180,27 @@ export default function TemplateSelector({
               {/* Template features */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>Дължина текст:</span>
+                  <span>Тип:</span>
                   <span className="capitalize font-medium">
-                    {template.settings.textLength === 'short' ? 'Кратък' :
-                     template.settings.textLength === 'medium' ? 'Среден' :
-                     template.settings.textLength === 'long' ? 'Дълъг' : 'Много дълъг'}
+                    {template.category === 'technical' ? 'Техническа' :
+                     template.category === 'interactive' ? 'Интерактивна' :
+                     template.category === 'editorial' ? 'Редакционна' :
+                     template.category === 'visual' ? 'Визуална' : template.category}
                   </span>
                 </div>
-                
-                {template.settings.allowVideos && (
+
+                {(template.settings?.allowVideos || template.mediaSettings?.video?.enabled) && (
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>Видео:</span>
-                    <span className="font-medium">до {template.settings.maxVideos || '∞'}</span>
+                    <span className="font-medium">до {template.settings?.maxVideos || template.mediaSettings?.video?.maxVideos || '∞'}</span>
                   </div>
                 )}
-                
-                {template.settings.allowImages && (
+
+                {(template.settings?.allowImages || template.mediaSettings?.gallery?.enabled) && (
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>Снимки:</span>
                     <span className="font-medium">
-                      {template.settings.imageLayout} / до {template.settings.maxImages || '∞'}
+                      {template.settings?.imageLayout || 'gallery'} / до {template.settings?.maxImages || template.mediaSettings?.gallery?.maxImages || '∞'}
                     </span>
                   </div>
                 )}
@@ -211,21 +241,21 @@ export default function TemplateSelector({
                 <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex justify-between">
                     <span>Layout:</span>
-                    <span className="font-medium">{template.settings.styling.layout}</span>
+                    <span className="font-medium">{template.settings?.styling?.layout || template.layout?.structure?.columns + ' колони'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Размер шрифт:</span>
-                    <span className="font-medium">{template.settings.styling.fontSize}</span>
+                    <span className="font-medium">{template.settings?.styling?.fontSize || template.style?.typography?.fontSize}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Разстояние:</span>
-                    <span className="font-medium">{template.settings.styling.spacing}</span>
+                    <span>Версия:</span>
+                    <span className="font-medium">{template.version || 'N/A'}</span>
                   </div>
-                  {template.settings.customSections && template.settings.customSections.length > 0 && (
+                  {template.settings?.customSections && template.settings.customSections.length > 0 && (
                     <div>
                       <span className="font-medium">Секции:</span>
                       <ul className="mt-1 space-y-1">
-                        {template.settings.customSections.map(section => (
+                        {template.settings.customSections.map((section: any) => (
                           <li key={section.id} className="flex justify-between">
                             <span>{section.name}</span>
                             <span className={section.required ? 'text-red-600' : 'text-gray-500'}>
@@ -257,21 +287,22 @@ export default function TemplateSelector({
               </p>
             </div>
             <div>
-              <span className="text-blue-700 font-medium">Дължина текст:</span>
+              <span className="text-blue-700 font-medium">Тип:</span>
               <p className="text-blue-600 mt-1 capitalize">
-                {templates.find(t => t.id === selectedTemplate)?.settings.textLength}
+                {templates.find(t => t.id === selectedTemplate)?.category}
               </p>
             </div>
             <div>
               <span className="text-blue-700 font-medium">Видео поддръжка:</span>
               <p className="text-blue-600 mt-1">
-                {templates.find(t => t.id === selectedTemplate)?.settings.allowVideos ? 'Да' : 'Не'}
+                {(templates.find(t => t.id === selectedTemplate)?.settings?.allowVideos ||
+                  templates.find(t => t.id === selectedTemplate)?.mediaSettings?.video?.enabled) ? 'Да' : 'Не'}
               </p>
             </div>
             <div>
-              <span className="text-blue-700 font-medium">Снимки layout:</span>
-              <p className="text-blue-600 mt-1 capitalize">
-                {templates.find(t => t.id === selectedTemplate)?.settings.imageLayout}
+              <span className="text-blue-700 font-medium">Версия:</span>
+              <p className="text-blue-600 mt-1">
+                {templates.find(t => t.id === selectedTemplate)?.version || 'N/A'}
               </p>
             </div>
           </div>

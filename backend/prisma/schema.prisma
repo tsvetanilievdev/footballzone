@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -141,43 +142,43 @@ enum ActivityResource {
 
 // Models
 model User {
-  id                        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                     String   @unique @db.VarChar(255)
-  passwordHash              String   @map("password_hash") @db.VarChar(255)
-  name                      String   @db.VarChar(100)
+  id                        String   @id @default(cuid())
+  email                     String   @unique
+  passwordHash              String   @map("password_hash")
+  name                      String
   role                      UserRole @default(FREE)
   avatarUrl                 String?  @map("avatar_url")
-  bio                       String?  @db.Text
-  
+  bio                       String?
+
   // Account status
   isActive                  Boolean  @default(true) @map("is_active")
   emailVerified             Boolean  @default(false) @map("email_verified")
   emailVerifiedAt           DateTime? @map("email_verified_at")
-  
+
   // Email verification
-  emailVerificationToken    String?  @map("email_verification_token") @db.VarChar(255)
+  emailVerificationToken    String?  @map("email_verification_token")
   emailVerificationExpires  DateTime? @map("email_verification_expires")
-  
+
   // Password reset
-  passwordResetToken        String?  @map("password_reset_token") @db.VarChar(255)
+  passwordResetToken        String?  @map("password_reset_token")
   passwordResetExpires      DateTime? @map("password_reset_expires")
-  
+
   // Security & login tracking
   lastLoginAt               DateTime? @map("last_login_at")
-  lastLoginIp               String?   @map("last_login_ip") @db.VarChar(45)
+  lastLoginIp               String?   @map("last_login_ip")
   loginAttempts             Int?      @default(0) @map("login_attempts")
   lockedUntil               DateTime? @map("locked_until")
-  
+
   // Terms and preferences
   acceptedTermsAt           DateTime? @map("accepted_terms_at")
   subscribeNewsletter       Boolean   @default(false) @map("subscribe_newsletter")
   emailNotifications        Boolean   @default(true) @map("email_notifications")
   pushNotifications         Boolean   @default(true) @map("push_notifications")
-  
+
   // Referral system
-  referredBy                String?   @map("referred_by") @db.Uuid
-  referralCode              String?   @unique @map("referral_code") @db.VarChar(20)
-  
+  referredBy                String?   @map("referred_by")
+  referralCode              String?   @unique @map("referral_code")
+
   // Timestamps
   createdAt                 DateTime @default(now()) @map("created_at")
   updatedAt                 DateTime @updatedAt @map("updated_at")
@@ -192,7 +193,7 @@ model User {
   templates                 ArticleTemplate[]
   refreshTokens             RefreshToken[]
   settings                  UserSettings?
-  
+
   // Self-referential for referrals
   referrer                  User?     @relation("UserReferrals", fields: [referredBy], references: [id])
   referrals                 User[]    @relation("UserReferrals")
@@ -201,17 +202,17 @@ model User {
 }
 
 model RefreshToken {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  token       String    @unique @db.Text
-  userId      String    @map("user_id") @db.Uuid
+  id          String    @id @default(cuid())
+  token       String    @unique
+  userId      String    @map("user_id")
   expiresAt   DateTime  @map("expires_at")
   isRevoked   Boolean   @default(false) @map("is_revoked")
-  
+
   // Device tracking
-  deviceName  String?   @map("device_name") @db.VarChar(100)
-  userAgent   String?   @map("user_agent") @db.Text
-  ipAddress   String?   @map("ip_address") @db.VarChar(45)
-  
+  deviceName  String?   @map("device_name")
+  userAgent   String?   @map("user_agent")
+  ipAddress   String?   @map("ip_address")
+
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
@@ -222,8 +223,8 @@ model RefreshToken {
 }
 
 model UserSettings {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                String    @unique @map("user_id") @db.Uuid
+  id                    String    @id @default(cuid())
+  userId                String    @unique @map("user_id")
   emailNotifications    Json      @default("{\"newArticles\": true, \"seriesUpdates\": true, \"premiumContent\": true, \"newsletter\": false, \"marketing\": false}") @map("email_notifications")
   pushNotifications     Json      @default("{\"browser\": false, \"mobile\": false}") @map("push_notifications")
   preferences           Json      @default("{\"language\": \"bg\", \"timezone\": \"Europe/Sofia\", \"theme\": \"light\"}") @map("preferences")
@@ -237,16 +238,16 @@ model UserSettings {
 }
 
 model Subscription {
-  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                  String             @map("user_id") @db.Uuid
-  planId                  String             @map("plan_id") @db.VarChar(50)
+  id                      String             @id @default(cuid())
+  userId                  String             @map("user_id")
+  planId                  String             @map("plan_id")
   status                  SubscriptionStatus
   currentPeriodStart      DateTime           @map("current_period_start")
   currentPeriodEnd        DateTime           @map("current_period_end")
   cancelAtPeriodEnd       Boolean            @default(false) @map("cancel_at_period_end")
   canceledAt              DateTime?          @map("canceled_at")
-  stripeSubscriptionId    String?            @map("stripe_subscription_id") @db.VarChar(255)
-  stripeCustomerId        String?            @map("stripe_customer_id") @db.VarChar(255)
+  stripeSubscriptionId    String?            @map("stripe_subscription_id")
+  stripeCustomerId        String?            @map("stripe_customer_id")
   createdAt               DateTime           @default(now()) @map("created_at")
   updatedAt               DateTime           @updatedAt @map("updated_at")
 
@@ -258,13 +259,13 @@ model Subscription {
 }
 
 model ArticleTemplate {
-  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String           @db.VarChar(100)
+  id          String           @id @default(cuid())
+  name        String
   description String?
   category    TemplateCategory
   settings    Json
   isDefault   Boolean          @default(false) @map("is_default")
-  createdBy   String?          @map("created_by") @db.Uuid
+  createdBy   String?          @map("created_by")
   createdAt   DateTime         @default(now()) @map("created_at")
 
   // Relations
@@ -275,9 +276,9 @@ model ArticleTemplate {
 }
 
 model ArticleSeries {
-  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                  String        @db.VarChar(255)
-  slug                  String        @unique @db.VarChar(255)
+  id                    String        @id @default(cuid())
+  name                  String
+  slug                  String        @unique
   description           String?
   coverImageUrl         String?       @map("cover_image_url")
   category              SeriesCategory
@@ -294,15 +295,15 @@ model ArticleSeries {
 }
 
 model Article {
-  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title                String          @db.VarChar(255)
-  slug                 String          @unique @db.VarChar(255)
+  id                   String          @id @default(cuid())
+  title                String
+  slug                 String          @unique
   excerpt              String?
   content              String
   featuredImageUrl     String?         @map("featured_image_url")
-  authorId             String?         @map("author_id") @db.Uuid
+  authorId             String?         @map("author_id")
   category             ArticleCategory
-  subcategory          String?         @db.VarChar(100)
+  subcategory          String?
   tags                 String[]        @default([])
   publishedAt          DateTime?       @map("published_at")
   readTime             Int             @default(5) @map("read_time")
@@ -312,11 +313,11 @@ model Article {
   viewCount            Int             @default(0) @map("view_count")
   isFeatured           Boolean         @default(false) @map("is_featured")
   customOrder          Int?            @map("custom_order")
-  templateId           String?         @map("template_id") @db.Uuid
-  seriesId             String?         @map("series_id") @db.Uuid
+  templateId           String?         @map("template_id")
+  seriesId             String?         @map("series_id")
   seriesPart           Int?            @map("series_part")
   status               ArticleStatus   @default(DRAFT)
-  seoTitle             String?         @map("seo_title") @db.VarChar(255)
+  seoTitle             String?         @map("seo_title")
   seoDescription       String?         @map("seo_description")
   createdAt            DateTime        @default(now()) @map("created_at")
   updatedAt            DateTime        @updatedAt @map("updated_at")
@@ -333,8 +334,8 @@ model Article {
 }
 
 model ArticleZone {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  articleId           String    @map("article_id") @db.Uuid
+  id                  String    @id @default(cuid())
+  articleId           String    @map("article_id")
   zone                ZoneType
   visible             Boolean   @default(true)
   requiresSubscription Boolean  @default(false) @map("requires_subscription")
@@ -348,18 +349,18 @@ model ArticleZone {
 }
 
 model Course {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title           String        @db.VarChar(255)
-  slug            String        @unique @db.VarChar(255)
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
   description     String?
   longDescription String?       @map("long_description")
   featuredImageUrl String?      @map("featured_image_url")
-  instructorId    String?       @map("instructor_id") @db.Uuid
+  instructorId    String?       @map("instructor_id")
   category        CourseCategory
   level           CourseLevel
-  duration        String?       @db.VarChar(50)
-  price           Decimal       @default(0) @db.Decimal(10, 2)
-  currency        String        @default("BGN") @db.VarChar(3)
+  duration        String?
+  price           Float         @default(0)
+  currency        String        @default("BGN")
   isPremium       Boolean       @default(true) @map("is_premium")
   isPopular       Boolean       @default(false) @map("is_popular")
   isBestseller    Boolean       @default(false) @map("is_bestseller")
@@ -381,9 +382,9 @@ model Course {
 }
 
 model CourseLesson {
-  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId        String     @map("course_id") @db.Uuid
-  title           String     @db.VarChar(255)
+  id              String     @id @default(cuid())
+  courseId        String     @map("course_id")
+  title           String
   description     String?
   content         String?
   lessonOrder     Int        @map("lesson_order")
@@ -401,21 +402,21 @@ model CourseLesson {
 }
 
 model MediaFile {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  filename      String    @db.VarChar(255)
-  originalName  String    @map("original_name") @db.VarChar(255)
+  id            String    @id @default(cuid())
+  filename      String
+  originalName  String    @map("original_name")
   filePath      String    @map("file_path")
   fileUrl       String    @map("file_url")
   fileType      MediaType @map("file_type")
   fileSize      Int       @map("file_size")
-  mimeType      String?   @map("mime_type") @db.VarChar(100)
+  mimeType      String?   @map("mime_type")
   width         Int?
   height        Int?
   duration      Int?
   thumbnailUrl  String?   @map("thumbnail_url")
   altText       String?   @map("alt_text")
   tags          String[]  @default([])
-  uploadedBy    String?   @map("uploaded_by") @db.Uuid
+  uploadedBy    String?   @map("uploaded_by")
   usageCount    Int       @default(0) @map("usage_count")
   createdAt     DateTime  @default(now()) @map("created_at")
 
@@ -426,16 +427,16 @@ model MediaFile {
 }
 
 model UserActivity {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String?           @map("user_id") @db.Uuid
-  sessionId    String?           @map("session_id") @db.VarChar(255)
+  id           String            @id @default(cuid())
+  userId       String?           @map("user_id")
+  sessionId    String?           @map("session_id")
   action       ActivityAction
   resourceType ActivityResource? @map("resource_type")
-  resourceId   String?           @map("resource_id") @db.Uuid
+  resourceId   String?           @map("resource_id")
   metadata     Json              @default("{}")
-  ipAddress    String?           @map("ip_address") @db.Inet
+  ipAddress    String?           @map("ip_address")
   userAgent    String?           @map("user_agent")
-  deviceType   String?           @map("device_type") @db.VarChar(50)
+  deviceType   String?           @map("device_type")
   createdAt    DateTime          @default(now()) @map("created_at")
 
   // Relations
@@ -446,15 +447,15 @@ model UserActivity {
 }
 
 model ArticleView {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  articleId         String   @map("article_id") @db.Uuid
-  userId            String?  @map("user_id") @db.Uuid
-  sessionId         String   @map("session_id") @db.VarChar(255)
+  id                String   @id @default(cuid())
+  articleId         String   @map("article_id")
+  userId            String?  @map("user_id")
+  sessionId         String   @map("session_id")
   viewDuration      Int?     @map("view_duration")
   completionPercent Int      @default(0) @map("completion_percent")
   referrer          String?
-  deviceType        String?  @map("device_type") @db.VarChar(50)
-  ipAddress         String?  @map("ip_address") @db.Inet
+  deviceType        String?  @map("device_type")
+  ipAddress         String?  @map("ip_address")
   createdAt         DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -465,17 +466,17 @@ model ArticleView {
 }
 
 model DailyAnalytics {
-  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  date                  DateTime          @db.Date
+  id                    String            @id @default(cuid())
+  date                  DateTime
   resourceType          ActivityResource  @map("resource_type")
-  resourceId            String?           @map("resource_id") @db.Uuid
+  resourceId            String?           @map("resource_id")
   totalViews            Int               @default(0) @map("total_views")
   uniqueViews           Int               @default(0) @map("unique_views")
   totalUsers            Int               @default(0) @map("total_users")
   newUsers              Int               @default(0) @map("new_users")
   avgSessionDuration    Int               @default(0) @map("avg_session_duration")
-  bounceRate            Decimal           @default(0) @map("bounce_rate") @db.Decimal(5, 2)
-  conversionRate        Decimal           @default(0) @map("conversion_rate") @db.Decimal(5, 2)
+  bounceRate            Float             @default(0) @map("bounce_rate")
+  conversionRate        Float             @default(0) @map("conversion_rate")
 
   @@unique([date, resourceType, resourceId])
   @@map("daily_analytics")

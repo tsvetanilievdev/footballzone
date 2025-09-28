@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import FormErrors from '@/components/ui/FormErrors'
 import PasswordRequirements from '@/components/ui/PasswordRequirements'
-import { parseValidationErrors, ErrorContext } from '@/utils/errorUtils'
+import { parseValidationErrors, ErrorContextEnum } from '@/utils/errorUtils'
 import { 
   UserIcon,
   LockClosedIcon,
@@ -162,14 +162,14 @@ export default function SettingsPage() {
       const data = await response.json()
       
       if (!response.ok) {
-        const parsedErrors = parseValidationErrors(data.error, ErrorContext.SETTINGS)
+        const parsedErrors = parseValidationErrors(data.error, ErrorContextEnum.SETTINGS)
         setErrors(parsedErrors)
       } else {
         setSuccessMessage('Профилът е обновен успешно!')
         // Update user context if needed
       }
     } catch (error: any) {
-      const parsedErrors = parseValidationErrors(error.message, ErrorContext.SETTINGS)
+      const parsedErrors = parseValidationErrors(error.message, ErrorContextEnum.SETTINGS)
       setErrors(parsedErrors)
     } finally {
       setIsSaving(false)
@@ -195,7 +195,7 @@ export default function SettingsPage() {
       const data = await response.json()
       
       if (!response.ok) {
-        const parsedErrors = parseValidationErrors(data.error, ErrorContext.AUTHENTICATION)
+        const parsedErrors = parseValidationErrors(data.error, ErrorContextEnum.AUTHENTICATION)
         setErrors(parsedErrors)
       } else {
         setSuccessMessage('Паролата е променена успешно!')
@@ -203,7 +203,7 @@ export default function SettingsPage() {
         setShowPasswordRequirements(false)
       }
     } catch (error: any) {
-      const parsedErrors = parseValidationErrors(error.message, ErrorContext.AUTHENTICATION)
+      const parsedErrors = parseValidationErrors(error.message, ErrorContextEnum.AUTHENTICATION)
       setErrors(parsedErrors)
     } finally {
       setIsSaving(false)
@@ -229,14 +229,14 @@ export default function SettingsPage() {
       const data = await response.json()
       
       if (!response.ok) {
-        const parsedErrors = parseValidationErrors(data.error, ErrorContext.SETTINGS)
+        const parsedErrors = parseValidationErrors(data.error, ErrorContextEnum.SETTINGS)
         setErrors(parsedErrors)
       } else {
         setSettings(data.settings)
         setSuccessMessage('Настройките са обновени успешно!')
       }
     } catch (error: any) {
-      const parsedErrors = parseValidationErrors(error.message, ErrorContext.SETTINGS)
+      const parsedErrors = parseValidationErrors(error.message, ErrorContextEnum.SETTINGS)
       setErrors(parsedErrors)
     } finally {
       setIsSaving(false)
@@ -330,7 +330,7 @@ export default function SettingsPage() {
 
         {/* Errors */}
         {errors.length > 0 && (
-          <FormErrors errors={errors} context={ErrorContext.SETTINGS} className="mb-6" />
+          <FormErrors errors={errors} context={ErrorContextEnum.SETTINGS} className="mb-6" />
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

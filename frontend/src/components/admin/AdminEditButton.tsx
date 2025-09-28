@@ -29,7 +29,7 @@ export default function AdminEditButton({
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
         {/* Edit Article Button */}
         <Link
-          href={`/admin/articles/edit/${article.id}`}
+          href={`/admin?edit=${article.id}`}
           className="group bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
           title="Редактирай статията"
         >

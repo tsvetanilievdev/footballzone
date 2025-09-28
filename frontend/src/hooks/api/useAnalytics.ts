@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import apiClient from '@/utils/api-client'
+import { apiService } from '@/services/api'
 
 // Types for analytics data
 export interface DashboardMetrics {
@@ -81,17 +81,19 @@ export interface PerformanceMetrics {
   }
 }
 
-// Dashboard metrics hook
-export const useDashboardMetrics = (dateRange?: string) => {
+// Dashboard metrics hook with time period support
+export const useDashboardMetrics = (params?: {
+  startDate?: string
+  endDate?: string
+  period?: 'day' | 'week' | 'month' | 'year'
+}) => {
   return useQuery({
-    queryKey: ['analytics', 'dashboard', dateRange],
-    queryFn: async () => {
-      const params = dateRange ? `?range=${dateRange}` : ''
-      const response = await apiClient.get<DashboardMetrics>(`/analytics/dashboard${params}`)
-      return response.data
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 30 * 1000, // 30 seconds for real-time updates
+    queryKey: ['analytics', 'dashboard', params],
+    queryFn: () => apiService.getAnalyticsDashboard(params),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
+    refetchOnWindowFocus: true,
+    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
   })
 }
 
@@ -99,38 +101,39 @@ export const useDashboardMetrics = (dateRange?: string) => {
 export const useRealtimeAnalytics = () => {
   return useQuery({
     queryKey: ['analytics', 'realtime'],
-    queryFn: async () => {
-      const response = await apiClient.get('/analytics/realtime')
-      return response.data
-    },
-    refetchInterval: 10 * 1000, // 10 seconds
-    staleTime: 5 * 1000, // 5 seconds
+    queryFn: () => apiService.getRealTimeAnalytics(),
+    staleTime: 30 * 1000,     // 30 seconds
+    gcTime: 5 * 60 * 1000,    // 5 minutes
+    refetchInterval: 30 * 1000, // Update every 30 seconds
+    refetchOnWindowFocus: true,
   })
 }
 
 // Article-specific analytics
-export const useArticleAnalytics = (articleId: string) => {
+export const useArticleAnalytics = (articleId: string, params?: {
+  startDate?: string
+  endDate?: string
+}) => {
   return useQuery({
-    queryKey: ['analytics', 'article', articleId],
-    queryFn: async () => {
-      const response = await apiClient.get<ArticleAnalytics>(`/analytics/articles/${articleId}/detailed`)
-      return response.data
-    },
-    enabled: !!articleId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    queryKey: ['analytics', 'articles', articleId, params],
+    queryFn: () => apiService.getArticleAnalytics(articleId, params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000,   // 30 minutes
+    enabled: !!articleId,     // Only fetch if articleId is provided
   })
 }
 
 // User activity analytics
-export const useUserActivity = (userId: string) => {
+export const useUserActivity = (userId: string, params?: {
+  startDate?: string
+  endDate?: string
+}) => {
   return useQuery({
-    queryKey: ['analytics', 'user', userId],
-    queryFn: async () => {
-      const response = await apiClient.get<UserActivity>(`/analytics/users/${userId}/activity`)
-      return response.data
-    },
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['analytics', 'users', userId, 'activity', params],
+    queryFn: () => apiService.getUserActivity(userId, params),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000,    // 1 hour
+    enabled: !!userId,         // Only fetch if userId is provided
   })
 }
 
@@ -138,80 +141,114 @@ export const useUserActivity = (userId: string) => {
 export const usePerformanceMetrics = () => {
   return useQuery({
     queryKey: ['analytics', 'performance'],
-    queryFn: async () => {
-      const response = await apiClient.get<PerformanceMetrics>('/analytics/performance')
-      return response.data
-    },
-    refetchInterval: 60 * 1000, // 1 minute
-    staleTime: 30 * 1000, // 30 seconds
+    queryFn: () => apiService.getPerformanceMetrics(),
+    staleTime: 1 * 60 * 1000, // 1 minute
+    gcTime: 10 * 60 * 1000,   // 10 minutes
+    refetchInterval: 2 * 60 * 1000, // Update every 2 minutes
   })
 }
 
 // Event tracking mutation
 export const useTrackEvent = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: async (eventData: {
-      event: string
-      userId?: string
-      articleId?: string
-      metadata?: Record<string, any>
-    }) => {
-      const response = await apiClient.post('/analytics/track', eventData)
-      return response.data
-    },
+    mutationFn: ({
+      action,
+      resourceType,
+      resourceId,
+      metadata
+    }: {
+      action: string
+      resourceType?: string
+      resourceId?: string
+      metadata?: any
+    }) => apiService.trackEvent(action, resourceType, resourceId, metadata),
     onSuccess: () => {
-      // Invalidate relevant queries to refresh data
+      // Invalidate analytics queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
+    // Silent mutation - don't show loading/error states to user
+    meta: {
+      silent: true
+    }
   })
 }
 
 // Advanced analytics query
-export const useAdvancedAnalytics = () => {
-  return useMutation({
-    mutationFn: async (query: {
-      metrics: string[]
-      filters: Record<string, any>
-      groupBy?: string[]
-      timeRange: {
-        start: string
-        end: string
-      }
-    }) => {
-      const response = await apiClient.post('/analytics/advanced', query)
-      return response.data
-    },
+export const useAdvancedAnalytics = (params: {
+  metric: 'user_retention' | 'content_performance' | 'engagement_funnel' | 'revenue_analytics'
+  groupBy?: string
+  startDate?: string
+  endDate?: string
+  filters?: Record<string, any>
+}) => {
+  return useQuery({
+    queryKey: ['analytics', 'advanced', params],
+    queryFn: () => apiService.getAdvancedAnalytics(params),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000,    // 1 hour
+    enabled: !!params.metric,  // Only fetch if metric is specified
   })
 }
 
 // Data export hook
 export const useExportAnalytics = () => {
   return useMutation({
-    mutationFn: async (params: {
-      type: 'dashboard' | 'articles' | 'users' | 'performance'
-      format: 'csv' | 'json'
-      dateRange?: string
-      filters?: Record<string, any>
-    }) => {
-      const response = await apiClient.get('/analytics/export', {
-        params,
-        responseType: 'blob'
+    mutationFn: ({
+      type,
+      format = 'json'
+    }: {
+      type: 'dashboard' | 'articles' | 'users'
+      format?: 'json' | 'csv'
+    }) => apiService.exportAnalytics(type, format),
+
+    onSuccess: (data, variables) => {
+      // Create and trigger download
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: variables.format === 'csv' ? 'text/csv' : 'application/json'
       })
-      
-      // Create download link
-      const blob = new Blob([response.data])
-      const url = window.URL.createObjectURL(blob)
+      const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `analytics-${params.type}-${new Date().toISOString().split('T')[0]}.${params.format}`
+      link.download = `analytics-${variables.type}-${new Date().toISOString().split('T')[0]}.${variables.format}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      
-      return response.data
-    },
+      URL.revokeObjectURL(url)
+    }
   })
+}
+
+// Helper hook for time range selection
+export const useAnalyticsTimeRange = () => {
+  const getTimeRange = (period: 'day' | 'week' | 'month' | 'year'): { startDate: string; endDate: string } => {
+    const now = new Date()
+    const endDate = now.toISOString().split('T')[0]
+    let startDate: string
+
+    switch (period) {
+      case 'day':
+        startDate = endDate // Same day
+        break
+      case 'week':
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        startDate = weekAgo.toISOString().split('T')[0]
+        break
+      case 'month':
+        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+        startDate = monthAgo.toISOString().split('T')[0]
+        break
+      case 'year':
+        const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+        startDate = yearAgo.toISOString().split('T')[0]
+        break
+      default:
+        startDate = endDate
+    }
+
+    return { startDate, endDate }
+  }
+
+  return { getTimeRange }
 }

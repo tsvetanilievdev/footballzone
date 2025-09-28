@@ -1,19 +1,49 @@
+// User role enum - MUST match backend Prisma UserRole enum
+export enum UserRole {
+  FREE = 'FREE',
+  PLAYER = 'PLAYER',
+  COACH = 'COACH',
+  PARENT = 'PARENT',
+  ADMIN = 'ADMIN'
+}
+
+// User interface - aligned with backend User model
 export interface User {
   id: string
   email: string
   name: string
-  role: 'free' | 'player' | 'coach' | 'parent' | 'admin'
-  avatar?: string
+  role: UserRole
+  avatarUrl?: string // backend uses avatarUrl, not avatar
+  bio?: string
+  isActive: boolean
+  emailVerified: boolean
   createdAt: Date
+  updatedAt: Date
   subscription?: Subscription
 }
 
+// Subscription status enum - MUST match backend Prisma SubscriptionStatus enum
+export enum SubscriptionStatus {
+  ACTIVE = 'ACTIVE',
+  CANCELED = 'CANCELED',
+  PAST_DUE = 'PAST_DUE',
+  UNPAID = 'UNPAID'
+}
+
+// Subscription interface - aligned with backend Subscription model
 export interface Subscription {
   id: string
-  status: 'active' | 'canceled' | 'past_due'
-  plan: 'player' | 'coach' | 'parent'
+  userId: string
+  planId: string
+  status: SubscriptionStatus
+  currentPeriodStart: Date
   currentPeriodEnd: Date
   cancelAtPeriodEnd: boolean
+  canceledAt?: Date
+  stripeSubscriptionId?: string
+  stripeCustomerId?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Extended Article interface with advanced template support
@@ -29,7 +59,7 @@ export interface Article {
     name: string
     avatar?: string
   }
-  category: 'read' | 'coach' | 'player' | 'parent' | 'news' | 'training' | 'tactics' | 'players' | 'coaches' | 'interviews' | 'analysis' | 'youth' | 'fitness' | 'psychology' | 'nutrition' | 'technique' | 'conditioning' | 'periodization' | 'technical-skills' | 'physical-fitness' | 'tactical-awareness' | 'mental-strength' | 'nutrition-recovery'
+  category: ArticleCategory
   subcategory?: string
   tags: string[]
   publishedAt: Date
@@ -39,30 +69,8 @@ export interface Article {
     releaseFree: Date
     isPermanentPremium: boolean
   }
-  // Enhanced zone visibility system
-  zones: ('read' | 'coach' | 'player' | 'parent' | 'series')[]
-  zoneSettings: {
-    read: {
-      visible: boolean
-      requiresSubscription: boolean
-      freeAfterDate?: Date
-    }
-    coach: {
-      visible: boolean
-      requiresSubscription: boolean
-      freeAfterDate?: Date
-    }
-    player: {
-      visible: boolean
-      requiresSubscription: boolean
-      freeAfterDate?: Date
-    }
-    parent: {
-      visible: boolean
-      requiresSubscription: boolean
-      freeAfterDate?: Date
-    }
-  }
+  // Zone visibility - aligned with backend ArticleZone model
+  zones: ArticleZone[]
   series?: {
     name: string
     slug: string
@@ -70,34 +78,20 @@ export interface Article {
     part?: number
     totalParts?: number
   }
-  template: ArticleTemplate | null
-  // New fields for advanced management
-  order?: number // Manual ordering
-  isFeatured?: boolean // Featured/pinned articles
-  viewCount?: number // View tracking
-  downloads?: {
-    title: string
-    url: string
-    type: 'pdf' | 'doc' | 'excel' | 'image' | 'video'
-    size?: string
-    downloadCount?: number
-  }[]
-  analytics?: {
-    views: number
-    uniqueViews: number
-    avgReadTime: number
-    completionRate: number
-    lastViewed?: Date
-  }
-  // Content formatting
-  formatting?: {
-    fontSize: number
-    fontFamily: string
-    textColor: string
-    backgroundColor: string
-    lineHeight: number
-    textAlign: 'left' | 'center' | 'right' | 'justify'
-  }
+  templateId?: string
+  template?: ArticleTemplate
+  // Backend aligned fields
+  authorId?: string
+  customOrder?: number
+  isFeatured?: boolean
+  viewCount: number
+  seriesId?: string
+  seriesPart?: number
+  status: ArticleStatus
+  seoTitle?: string
+  seoDescription?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Template configuration system
@@ -141,15 +135,116 @@ export interface TemplateSection {
   maxItems?: number
 }
 
+// Series related enums - MUST match backend Prisma enums
+export enum SeriesCategory {
+  COACHES = 'coaches',
+  PLAYERS = 'players',
+  TEAMS = 'teams',
+  GENERAL = 'general'
+}
+
+export enum SeriesStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED'
+}
+
+// Backend-aligned Series interface
 export interface Series {
+  id: string
   name: string
   slug: string
-  description: string
-  image: string
-  articleCount: number
-  tags: string[]
-  lastUpdated: Date
-  articles: Article[]
+  description?: string
+  coverImageUrl?: string
+  category: SeriesCategory
+  status: SeriesStatus
+  totalPlannedArticles?: number
+  tags?: string[]
+  createdAt: Date
+  updatedAt: Date
+  // Computed fields from backend
+  articlesCount: number
+  estimatedReadTime: number
+  completionRate: number
+  articles?: SeriesArticle[]
+}
+
+export interface SeriesArticle {
+  id: string
+  title: string
+  slug: string
+  seriesPart: number
+  readTime: number
+  publishedAt: Date
+  viewCount: number
+  author?: {
+    id: string
+    name: string
+    avatarUrl?: string
+  }
+}
+
+export interface SeriesProgress {
+  seriesId: string
+  userId: string
+  articlesCompleted: number
+  totalArticles: number
+  completionPercentage: number
+  currentArticleId?: string
+  lastAccessedAt: Date
+}
+
+export interface SeriesRecommendation {
+  seriesId: string
+  name: string
+  slug: string
+  coverImageUrl?: string
+  category: SeriesCategory
+  articlesCount: number
+  estimatedReadTime: number
+  matchScore: number
+  reason: string
+}
+
+export interface SeriesFilters {
+  page: number
+  limit: number
+  category?: SeriesCategory
+  status?: SeriesStatus
+  search?: string
+  sortBy?: 'createdAt' | 'updatedAt' | 'name' | 'articlesCount'
+  sortOrder?: 'asc' | 'desc'
+}
+
+export interface SeriesAnalytics {
+  seriesInfo: {
+    id: string
+    name: string
+    articlesCount: number
+    status: SeriesStatus
+  }
+  engagement: {
+    totalViews: number
+    uniqueUsers: number
+    avgCompletionRate: number
+    avgReadTime: number
+  }
+  progression: {
+    usersStarted: number
+    usersCompleted: number
+    dropoffPoints: Array<{
+      articleIndex: number
+      dropoffRate: number
+    }>
+  }
+  articlePerformance: Array<{
+    id: string
+    title: string
+    seriesPart: number
+    views: number
+    avgCompletion: number
+  }>
 }
 
 export interface Video {

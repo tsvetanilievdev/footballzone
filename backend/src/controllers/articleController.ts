@@ -71,6 +71,25 @@ export const getArticleBySlug = async (req: Request, res: Response, next: NextFu
   }
 }
 
+export const getArticleById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params
+    
+    const article = await articleService.getArticleById(id)
+    
+    if (!article) {
+      throw new AppError('Article not found', 404)
+    }
+
+    res.json({
+      success: true,
+      data: article
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const searchArticles = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {

@@ -1,3 +1,4 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiService } from '@/services/api'
 import { queryKeys, optimisticUpdateHelpers, invalidateQueries } from '@/lib/react-query'
@@ -31,22 +32,43 @@ export function useArticles(params: ArticleListParams = {}) {
 
 // Hook for fetching articles by zone
 export function useArticlesByZone(zone: ArticleZone, params: Omit<ArticleListParams, 'zone'> = {}) {
-  return useQuery({
+  // Fix for Next.js SSR hydration issue - React Query needs client-side hydration
+  const [isClient, setIsClient] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  const query = useQuery({
     queryKey: queryKeys.zoneArticles(zone, params),
-    queryFn: () => apiService.getArticles({ ...params, zone }),
+    queryFn: async () => {
+      const result = await apiService.getArticles({ ...params, zone });
+      return result;
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    enabled: !!zone,
-  })
+    enabled: isClient && !!zone, // Enable only after client hydration
+    retry: 1,
+    retryDelay: 1000,
+  });
+
+  return query;
 }
 
 // Hook for fetching featured articles
 export function useFeaturedArticles(limit: number = 6) {
+  const [isClient, setIsClient] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   return useQuery({
     queryKey: queryKeys.articlesList({ featured: true, limit }),
     queryFn: () => apiService.getArticles({ featured: true, limit }),
     staleTime: 10 * 60 * 1000, // 10 minutes for featured content
     gcTime: 60 * 60 * 1000,    // 1 hour
+    enabled: isClient, // Enable only after client hydration
   })
 }
 
@@ -68,6 +90,17 @@ export function useArticle(slug: string) {
     staleTime: 10 * 60 * 1000, // 10 minutes for article details
     gcTime: 60 * 60 * 1000,    // 1 hour
     enabled: !!slug,
+  })
+}
+
+// Hook for fetching single article by ID
+export function useArticleById(id: string) {
+  return useQuery({
+    queryKey: ['articles', 'detail', 'id', id],
+    queryFn: () => apiService.getArticleById(id),
+    staleTime: 10 * 60 * 1000, // 10 minutes for article details
+    gcTime: 60 * 60 * 1000,    // 1 hour
+    enabled: !!id,
   })
 }
 

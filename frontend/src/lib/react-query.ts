@@ -24,15 +24,15 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: true,    // Refetch when reconnecting to internet
       refetchOnMount: true,        // Refetch when component mounts
       
-      // Network mode - fail fast on network errors
-      networkMode: 'online',
+      // Network mode - try requests regardless of network status
+      networkMode: 'always',
     },
     mutations: {
       // Retry mutations once on failure
       retry: 1,
       
       // Network mode for mutations
-      networkMode: 'online',
+      networkMode: 'always',
     },
   },
 })
@@ -86,7 +86,9 @@ export const optimisticUpdateHelpers = {
     queryClient.setQueryData(
       queryKeys.articlesList(),
       (oldData: any) => {
-        if (!oldData) return { data: [newArticle], pagination: { total: 1 } }
+        if (!oldData || !oldData.data || !Array.isArray(oldData.data)) {
+          return { data: [newArticle], pagination: { total: 1 } }
+        }
         return {
           ...oldData,
           data: [newArticle, ...oldData.data],
@@ -105,7 +107,7 @@ export const optimisticUpdateHelpers = {
     queryClient.setQueriesData(
       { queryKey: queryKeys.articles },
       (oldData: any) => {
-        if (!oldData?.data) return oldData
+        if (!oldData?.data || !Array.isArray(oldData.data)) return oldData
         return {
           ...oldData,
           data: oldData.data.map((article: any) =>
@@ -127,7 +129,7 @@ export const optimisticUpdateHelpers = {
     queryClient.setQueriesData(
       { queryKey: queryKeys.articles },
       (oldData: any) => {
-        if (!oldData?.data) return oldData
+        if (!oldData?.data || !Array.isArray(oldData.data)) return oldData
         return {
           ...oldData,
           data: oldData.data.filter((article: any) => article.id !== articleId),

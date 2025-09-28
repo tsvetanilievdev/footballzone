@@ -1,3 +1,6 @@
 export { default as TacticalTemplate } from './TacticalTemplate'
 export { default as TrainingTemplate } from './TrainingTemplate'
 export { default as AnalysisTemplate } from './AnalysisTemplate'
+export { default as NewsTemplate } from './NewsTemplate'
+export { default as InterviewTemplate } from './InterviewTemplate'
+export { default as PlayerGuideTemplate } from './PlayerGuideTemplate'

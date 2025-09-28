@@ -92,6 +92,12 @@ export default function EnhancedArticleEditor({
     handleInputChange('tags', (articleData.tags || []).filter(tag => tag !== tagToRemove))
   }
 
+  const getVisibleZones = () => {
+    return Object.entries(articleData.zoneSettings || {})
+      .filter(([, settings]) => settings?.visible)
+      .map(([zone]) => zone)
+  }
+
   const validateForm = (): ParsedValidationError[] => {
     const errors: ParsedValidationError[] = []
 
@@ -252,7 +258,7 @@ export default function EnhancedArticleEditor({
                   selectedTemplate={selectedTemplate}
                   onTemplateSelect={handleTemplateSelect}
                   category={articleData.category || 'read'}
-                  zone={articleData.category || 'read'}
+                  zone={getVisibleZones().join(',')} // Подавай всички видими зони
                   onTemplateConfig={(templateId) => {
                     console.log('Configure template:', templateId)
                   }}
@@ -327,10 +333,16 @@ export default function EnhancedArticleEditor({
                       <option value="NEWS">Новини</option>
                       <option value="TRAINING">Тренировки</option>
                       <option value="TACTICS">Тактика</option>
-                      <option value="PLAYERS">Играчи</option>
-                      <option value="COACHES">Треньори</option>
+                      <option value="PSYCHOLOGY">Психология</option>
+                      <option value="NUTRITION">Хранене</option>
+                      <option value="TECHNIQUE">Техника</option>
+                      <option value="FITNESS">Фитнес</option>
                       <option value="INTERVIEWS">Интервюта</option>
                       <option value="ANALYSIS">Анализи</option>
+                      <option value="YOUTH">Младежи</option>
+                      <option value="CONDITIONING">Кондиция</option>
+                      <option value="PERIODIZATION">Периодизация</option>
+                      <option value="MANAGEMENT">Мениджмънт</option>
                     </select>
                   </div>
 
@@ -349,26 +361,58 @@ export default function EnhancedArticleEditor({
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={articleData.isPremium || false}
-                      onChange={(e) => handleInputChange('isPremium', e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-black">Премиум статия</span>
-                  </label>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={articleData.isPremium || false}
+                        onChange={(e) => handleInputChange('isPremium', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-black">Премиум статия</span>
+                    </label>
 
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={articleData.isFeatured || false}
-                      onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-black">Препоръчана</span>
-                  </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={articleData.isFeatured || false}
+                        onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-black">Препоръчана</span>
+                    </label>
+                  </div>
+
+                  {articleData.isPremium && (
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h4 className="text-sm font-medium text-yellow-800 mb-2">Настройки за премиум съдържание</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm text-yellow-700 mb-1">
+                            Дата за безплатен достъп (опционално)
+                          </label>
+                          <input
+                            type="date"
+                            value={articleData.premiumSchedule?.releaseFree ?
+                              new Date(articleData.premiumSchedule.releaseFree).toISOString().split('T')[0] : ''}
+                            onChange={(e) => {
+                              const date = e.target.value ? new Date(e.target.value) : null
+                              handleInputChange('premiumSchedule', {
+                                ...articleData.premiumSchedule,
+                                releaseFree: date,
+                                isPermanentPremium: !date
+                              })
+                            }}
+                            className="w-full p-2 border border-yellow-300 rounded text-sm"
+                          />
+                          <p className="text-xs text-yellow-600 mt-1">
+                            Ако не е избрана дата, статията ще остане завинаги премиум
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -408,9 +452,76 @@ export default function EnhancedArticleEditor({
             )}
 
             {activeTab === 'styling' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold text-black mb-4">Стилизиране</h3>
-                <p className="text-gray-600">Опции за стилизиране ще бъдат добавени скоро.</p>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <h3 className="text-lg font-semibold text-black mb-4">Стилизиране и внешен вид</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Основна снимка
+                    </label>
+                    <input
+                      type="url"
+                      value={articleData.featuredImage || ''}
+                      onChange={(e) => handleInputChange('featuredImage', e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="URL на основната снимка..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Slug (URL адрес)
+                    </label>
+                    <input
+                      type="text"
+                      value={articleData.slug || ''}
+                      onChange={(e) => handleInputChange('slug', e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="url-slug-za-statistata"
+                    />
+                  </div>
+                </div>
+
+                {articleData.featuredImage && (
+                  <div>
+                    <h4 className="text-sm font-medium text-black mb-2">Предварителен преглед на снимката</h4>
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <img
+                        src={articleData.featuredImage}
+                        alt="Основна снимка"
+                        className="w-full max-w-md h-auto rounded"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h4 className="text-sm font-medium text-black mb-3">Автоматично генерирани настройки</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Автор:</span>
+                        <span className="ml-1">{articleData.author?.name || 'Admin'}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Дата на публикуване:</span>
+                        <span className="ml-1">{new Date(articleData.publishedAt || new Date()).toLocaleDateString('bg-BG')}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Време за четене:</span>
+                        <span className="ml-1">~{Math.ceil((articleData.content || '').replace(/<[^>]*>/g, '').split(' ').length / 200)} мин</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Брой думи:</span>
+                        <span className="ml-1">{(articleData.content || '').replace(/<[^>]*>/g, '').split(' ').filter(word => word.length > 0).length}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

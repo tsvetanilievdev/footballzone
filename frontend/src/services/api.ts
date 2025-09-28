@@ -1,5 +1,6 @@
 import { AuthResponse, RegisterRequest, TokenResponse, User } from '@/types/auth';
 import { Article, ArticleZone } from '@/types/articles';
+import type { Article as FullArticle } from '@/types';
 import { apiClient } from '@/utils/api-client';
 
 // Type definitions for API parameters
@@ -40,23 +41,161 @@ class ApiService {
   // ========================================
 
   async getArticles(params?: ArticleListParams) {
-    const searchParams = new URLSearchParams();
-    
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.zone) searchParams.append('zone', params.zone);
-    if (params?.featured) searchParams.append('featured', 'true');
-    if (params?.latest) searchParams.append('latest', 'true');
-    if (params?.category) searchParams.append('category', params.category);
-    if (params?.author) searchParams.append('author', params.author);
-    if (params?.search) searchParams.append('q', params.search);
-    
-    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
-    return apiClient.get(`/articles${query}`);
+    console.log('🔍 ApiService.getArticles called with params:', params);
+
+    try {
+      const searchParams = new URLSearchParams();
+
+      if (params?.page) searchParams.append('page', params.page.toString());
+      if (params?.limit) searchParams.append('limit', params.limit.toString());
+      if (params?.zone) searchParams.append('zone', params.zone);
+      if (params?.featured) searchParams.append('featured', 'true');
+      if (params?.latest) searchParams.append('latest', 'true');
+      if (params?.category) searchParams.append('category', params.category);
+      if (params?.author) searchParams.append('author', params.author);
+      if (params?.search) searchParams.append('q', params.search);
+
+      const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+      const url = `/articles${query}`;
+
+      console.log('📡 Making API request to:', url);
+      console.log('🌐 Base URL:', this.baseUrl);
+      console.log('🔧 API Client instance:', apiClient);
+
+      console.log('⏳ About to call apiClient.get...');
+      const response = await apiClient.get(url);
+      console.log('✅ API response received:', response);
+
+      // Transform article list response
+      if (response.data && Array.isArray(response.data)) {
+        console.log('🔄 Transforming response data...');
+        const transformed = {
+          ...response,
+          data: response.data.map((article: any) => this.transformBackendArticleToFrontend(article))
+        };
+        console.log('✅ Data transformation complete:', transformed);
+        return transformed;
+      }
+
+      console.log('✅ Returning response as-is:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error in getArticles:', error);
+      console.error('❌ Error details:', error instanceof Error ? error.message : error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      throw error;
+    }
   }
 
   async getArticle(slug: string) {
-    return apiClient.get(`/articles/${slug}`);
+    const response = await apiClient.get(`/articles/${slug}`);
+    
+    // Backend returns {success: true, data: articleData}
+    const articleData = response.data?.data || response.data || response;
+    const transformed = this.transformBackendArticleToFrontend(articleData);
+    return transformed;
+  }
+
+  async getArticleById(id: string) {
+    const response = await apiClient.get(`/articles/by-id/${id}`);
+    
+    // Backend returns {success: true, data: articleData}
+    const articleData = response.data?.data || response.data || response;
+    const transformed = this.transformBackendArticleToFrontend(articleData);
+    return transformed;
+  }
+
+  // Transform backend article structure to frontend Article interface
+  private transformBackendArticleToFrontend(backendArticle: any): FullArticle {
+    return {
+      id: backendArticle.id,
+      title: backendArticle.title || 'Без заглавие',
+      slug: backendArticle.slug,
+      excerpt: backendArticle.excerpt || '',
+      content: backendArticle.content || '',
+      featuredImage: backendArticle.featuredImageUrl || '/images/placeholder-article.jpg',
+      featuredImageUrl: backendArticle.featuredImageUrl || '/images/placeholder-article.jpg',
+      author: {
+        name: backendArticle.author?.name || 'Анонимен автор',
+        avatar: backendArticle.author?.avatarUrl || undefined
+      },
+      category: this.mapBackendCategoryToFrontend(backendArticle.category),
+      subcategory: backendArticle.subcategory || undefined,
+      tags: backendArticle.tags || [],
+      publishedAt: new Date(backendArticle.publishedAt || backendArticle.createdAt),
+      readTime: backendArticle.readTime || 5,
+      isPremium: backendArticle.isPremium || false,
+      premiumSchedule: backendArticle.premiumReleaseDate ? {
+        releaseFree: new Date(backendArticle.premiumReleaseDate),
+        isPermanentPremium: backendArticle.isPermanentPremium || false
+      } : undefined,
+      zones: this.mapBackendZonesToFrontend(backendArticle.zones || []),
+      zoneSettings: this.mapBackendZoneSettings(backendArticle.zones || []),
+      series: backendArticle.series ? {
+        name: backendArticle.series.name,
+        slug: backendArticle.series.slug,
+        description: backendArticle.series.description,
+        part: backendArticle.seriesPart,
+        totalParts: undefined // Can be calculated if needed
+      } : undefined,
+      template: backendArticle.template || null,
+      order: backendArticle.customOrder || undefined,
+      isFeatured: backendArticle.isFeatured || false,
+      viewCount: backendArticle.viewCount || 0,
+      analytics: {
+        views: backendArticle.viewCount || 0,
+        uniqueViews: backendArticle.viewCount || 0, // Placeholder
+        avgReadTime: backendArticle.readTime || 5,
+        completionRate: 75, // Placeholder
+        lastViewed: backendArticle.updatedAt ? new Date(backendArticle.updatedAt) : undefined
+      }
+    };
+  }
+
+  private mapBackendCategoryToFrontend(backendCategory: string): any {
+    const categoryMap: { [key: string]: string } = {
+      'NEWS': 'news',
+      'TRAINING': 'training', 
+      'TACTICS': 'tactics',
+      'PSYCHOLOGY': 'psychology',
+      'NUTRITION': 'nutrition',
+      'TECHNIQUE': 'technique',
+      'FITNESS': 'fitness',
+      'INTERVIEWS': 'interviews',
+      'ANALYSIS': 'analysis',
+      'YOUTH': 'youth',
+      'CONDITIONING': 'conditioning',
+      'PERIODIZATION': 'periodization',
+      'MANAGEMENT': 'management'
+    };
+    
+    return categoryMap[backendCategory] || 'news';
+  }
+
+  private mapBackendZonesToFrontend(backendZones: any[]): string[] {
+    return backendZones.map(zone => zone.zone.toLowerCase());
+  }
+
+  private mapBackendZoneSettings(backendZones: any[]) {
+    const defaultZoneSettings = {
+      read: { visible: false, requiresSubscription: false },
+      coach: { visible: false, requiresSubscription: true },
+      player: { visible: false, requiresSubscription: true },
+      parent: { visible: false, requiresSubscription: true }
+    };
+
+    backendZones.forEach(zone => {
+      const zoneName = zone.zone.toLowerCase();
+      if (zoneName in defaultZoneSettings) {
+        (defaultZoneSettings as any)[zoneName] = {
+          visible: zone.visible,
+          requiresSubscription: zone.requiresSubscription,
+          freeAfterDate: zone.freeAfterDate ? new Date(zone.freeAfterDate) : undefined
+        };
+      }
+    });
+
+    return defaultZoneSettings;
   }
 
   async searchArticles(params: ArticleSearchParams) {
@@ -370,6 +509,74 @@ class ApiService {
 
   async changePassword(currentPassword: string, newPassword: string) {
     return apiClient.post('/auth/change-password', { currentPassword, newPassword });
+  }
+
+  // ========================================
+  // ANALYTICS API
+  // ========================================
+
+  async getAnalyticsDashboard(params?: {
+    startDate?: string;
+    endDate?: string;
+    period?: 'day' | 'week' | 'month' | 'year';
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append('startDate', params.startDate);
+    if (params?.endDate) searchParams.append('endDate', params.endDate);
+    if (params?.period) searchParams.append('period', params.period);
+
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient.get(`/analytics/dashboard${query}`);
+  }
+
+  async getRealTimeAnalytics() {
+    return apiClient.get('/analytics/realtime');
+  }
+
+  async getArticleAnalytics(articleId: string, params?: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append('startDate', params.startDate);
+    if (params?.endDate) searchParams.append('endDate', params.endDate);
+
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient.get(`/analytics/articles/${articleId}/detailed${query}`);
+  }
+
+  async getUserActivity(userId: string, params?: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append('startDate', params.startDate);
+    if (params?.endDate) searchParams.append('endDate', params.endDate);
+
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient.get(`/analytics/users/${userId}/activity${query}`);
+  }
+
+  async getPerformanceMetrics() {
+    return apiClient.get('/analytics/performance');
+  }
+
+  async exportAnalytics(type: 'dashboard' | 'articles' | 'users', format: 'json' | 'csv' = 'json') {
+    return apiClient.get(`/analytics/export?type=${type}&format=${format}`);
+  }
+
+  async trackEvent(action: string, resourceType?: string, resourceId?: string, metadata?: any) {
+    return apiClient.post('/analytics/track', { action, resourceType, resourceId, metadata });
+  }
+
+  async getAdvancedAnalytics(params: {
+    metric: 'user_retention' | 'content_performance' | 'engagement_funnel' | 'revenue_analytics';
+    groupBy?: string;
+    startDate?: string;
+    endDate?: string;
+    filters?: Record<string, any>;
+  }) {
+    return apiClient.post('/analytics/advanced', params);
   }
 
   // ========================================

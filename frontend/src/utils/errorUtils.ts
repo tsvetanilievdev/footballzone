@@ -10,6 +10,16 @@ export interface ErrorContext {
   action?: 'create' | 'update' | 'delete' | 'upload' | 'login' | 'register';
 }
 
+// Enum for common error contexts
+export enum ErrorContextEnum {
+  AUTHENTICATION = 'authentication',
+  CONTENT_MANAGEMENT = 'content_management',
+  SETTINGS = 'settings',
+  MEDIA_UPLOAD = 'media_upload',
+  USER_MANAGEMENT = 'user_management',
+  GENERAL = 'general'
+}
+
 export function parseValidationErrors(
   errorMessage: string, 
   context?: ErrorContext

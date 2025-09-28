@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:
@@ -15,7 +13,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - footballzone-network
     healthcheck:
@@ -37,67 +34,10 @@ services:
       - footballzone-network
     command: redis-server --appendonly yes --requirepass "redis123"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Backend API
-  backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: footballzone-backend
-    restart: unless-stopped
-    ports:
-      - "3001:3001"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://postgres:footballzone123@db:5432/footballzone
-      REDIS_URL: redis://:redis123@redis:6379
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      JWT_EXPIRES_IN: 7d
-      API_VERSION: v1
-      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
-      RATE_LIMIT_WINDOW_MS: 900000
-      RATE_LIMIT_MAX_REQUESTS: 100
-      MAX_FILE_SIZE: 10485760
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-      - ./backend/uploads:/app/uploads
-    networks:
-      - footballzone-network
-    command: npm run dev
-
-  # Frontend Next.js
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: footballzone-frontend  
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    environment:
-      NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    networks:
-      - footballzone-network
-    command: npm run dev
 
 volumes:
   postgres_data:

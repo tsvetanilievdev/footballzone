@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import {
   PlusIcon,
@@ -17,19 +18,21 @@ import {
   BookOpenIcon,
   ClipboardDocumentListIcon,
   BarsArrowUpIcon,
-  SquaresPlusIcon
+  SquaresPlusIcon,
+  ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/Button'
 import { Article } from '@/types'
-import EnhancedArticleEditor from '@/components/admin/EnhancedArticleEditor'
+import TemplateBasedEditor from '@/components/admin/TemplateBasedEditor'
 import { formatDateShortBG } from '@/utils/dateUtils'
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
 import ArticleOrderManager from '@/components/admin/ArticleOrderManager'
 import EnhancedMediaManager from '@/components/admin/EnhancedMediaManager'
 import TemplateManager from '@/components/admin/TemplateManager'
+import SeriesManagement from '@/components/admin/SeriesManagement'
 import { getActiveTemplates, convertToLegacyTemplate } from '@/data/templates'
 import { useAdminArticles, useAdminArticleStats, useAdminUsers, useAdminUserStats } from '@/hooks/api/useAdmin'
-import { useCreateArticle, useUpdateArticle, useDeleteArticle } from '@/hooks/api/useArticles'
+import { useCreateArticle, useUpdateArticle, useDeleteArticle, useArticleById } from '@/hooks/api/useArticles'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import MediaUploadForm from '@/components/admin/MediaUploadForm'
@@ -61,9 +64,10 @@ const mockCategories = [
   { id: '5', name: 'Новини', count: 40, color: 'red' }
 ]
 
-type ActiveTab = 'dashboard' | 'articles' | 'analytics' | 'ordering' | 'series' | 'users' | 'categories' | 'media' | 'templates' | 'settings' | 'moderation' | 'create-article'
+type ActiveTab = 'dashboard' | 'articles' | 'analytics' | 'ordering' | 'series' | 'users' | 'categories' | 'media' | 'templates' | 'settings' | 'moderation'
 
-export default function AdminPage() {
+function AdminContent() {
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard')
   const [showArticleEditor, setShowArticleEditor] = useState(false)
   const [editingArticle, setEditingArticle] = useState<AdminArticle | null>(null)
@@ -89,6 +93,34 @@ export default function AdminPage() {
   const createArticleMutation = useCreateArticle()
   const updateArticleMutation = useUpdateArticle()
   const deleteArticleMutation = useDeleteArticle()
+
+  // Get edit article ID from URL params
+  const editArticleId = searchParams.get('edit')
+  const { data: editArticleData, isLoading: isLoadingEditArticle } = useArticleById(editArticleId || '')
+
+  // Effect to handle edit article loading from URL
+  useEffect(() => {
+    if (editArticleId && editArticleData && !showArticleEditor) {
+      // Convert real article data to AdminArticle format
+      const adminArticle: AdminArticle = {
+        id: editArticleData.id,
+        title: editArticleData.title,
+        author: editArticleData.author || { name: 'Unknown' },
+        category: editArticleData.category,
+        zone: editArticleData.zoneSettings ? Object.keys(editArticleData.zoneSettings).find(zone => editArticleData.zoneSettings?.[zone]?.visible) || 'read' : 'read',
+        status: editArticleData.publishedAt ? 'published' : 'draft',
+        viewCount: editArticleData.viewCount || 0,
+        publishedAt: editArticleData.publishedAt || null,
+        isPremium: editArticleData.isPremium || false,
+        createdAt: editArticleData.createdAt || new Date().toISOString(),
+        updatedAt: editArticleData.updatedAt || new Date().toISOString()
+      }
+      
+      setEditingArticle(adminArticle)
+      setShowArticleEditor(true)
+      setActiveTab('articles')
+    }
+  }, [editArticleId, editArticleData, showArticleEditor])
 
   const handleSaveArticle = async (articleData: any) => {
     try {
@@ -171,13 +203,49 @@ export default function AdminPage() {
 
   const convertAdminToArticlePartial = (a: AdminArticle | null): Partial<Article> | undefined => {
     if (!a) return undefined
+    
+    // If we have full article data from the edit flow, use it
+    if (editArticleData && a.id === editArticleData.id) {
+      return {
+        id: editArticleData.id,
+        title: editArticleData.title,
+        slug: editArticleData.slug,
+        excerpt: editArticleData.excerpt,
+        content: editArticleData.content,
+        featuredImage: editArticleData.featuredImage,
+        featuredImageUrl: editArticleData.featuredImageUrl,
+        author: editArticleData.author,
+        category: editArticleData.category,
+        tags: editArticleData.tags || [],
+        readTime: editArticleData.readTime,
+        isPremium: editArticleData.isPremium,
+        publishedAt: editArticleData.publishedAt,
+        viewCount: editArticleData.viewCount,
+        createdAt: editArticleData.createdAt,
+        updatedAt: editArticleData.updatedAt,
+        zoneSettings: editArticleData.zoneSettings
+      }
+    }
+    
+    // Fallback for basic admin article data
     const zone = (a.zone || 'read').toLowerCase()
     const mappedZone = ['read', 'coach', 'player', 'parent'].includes(zone) ? (zone as any) : 'read'
     return {
       id: a.id,
       title: a.title,
-      author: { name: a.author },
+      slug: `article-${a.id}`,
+      excerpt: '',
+      content: '',
+      featuredImage: '',
+      author: { name: typeof a.author === 'string' ? a.author : a.author.name },
       category: mappedZone,
+      tags: [],
+      readTime: 5,
+      isPremium: a.isPremium,
+      publishedAt: a.publishedAt,
+      viewCount: a.viewCount,
+      createdAt: a.createdAt,
+      updatedAt: a.updatedAt
     }
   }
 
@@ -216,13 +284,12 @@ export default function AdminPage() {
           {/* Main Content */}
           <div className="flex-1 p-8">
             {showArticleEditor ? (
-              <EnhancedArticleEditor
+              <TemplateBasedEditor
                 article={convertAdminToArticlePartial(editingArticle)}
                 templates={getActiveTemplates().map(convertToLegacyTemplate)}
                 onSave={handleSaveArticle}
                 onCancel={handleCancelEdit}
                 mode={editingArticle ? 'edit' : 'create'}
-                onContentChange={() => setHasUnsavedChanges(true)}
               />
             ) : (
               <>
@@ -230,7 +297,7 @@ export default function AdminPage() {
                 {activeTab === 'articles' && <ArticlesTab onEditArticle={handleEditArticle} onCreateArticle={handleCreateArticle} onDeleteArticle={handleDeleteArticle} />}
                 {activeTab === 'analytics' && <AnalyticsDashboard />}
                 {activeTab === 'ordering' && <ArticleOrderTab />}
-                {activeTab === 'series' && <SeriesTab />}
+                {activeTab === 'series' && <SeriesManagement />}
                 {activeTab === 'users' && <UsersTab />}
                 {activeTab === 'categories' && <CategoriesTab categories={mockCategories} />}
                 {activeTab === 'media' && <EnhancedMediaTab />}
@@ -1476,373 +1543,11 @@ function ModerationTab() {
   )
 }
 
-// Series Tab
-const mockSeries = [
-  {
-    id: '1',
-    name: 'Философията на Антонио Конте',
-    slug: 'antonio-conte-philosophy',
-    description: 'Серия статии за треньорската философия и методите на Антонио Конте',
-    category: 'coaches',
-    status: 'active',
-    articleCount: 5,
-    totalPlanned: 8,
-    lastUpdated: new Date('2024-01-15'),
-    tags: ['Конте', 'Философия', 'Тактика'],
-    coverImage: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'
-  },
-  {
-    id: '2',
-    name: 'Тики-така еволюция',
-    slug: 'tiki-taka-evolution',
-    description: 'Развитието на tiki-taka стила от Cruyff до Guardiola',
-    category: 'teams',
-    status: 'draft',
-    articleCount: 3,
-    totalPlanned: 6,
-    lastUpdated: new Date('2024-01-10'),
-    tags: ['Tiki-taka', 'Барселона', 'Гуардиола'],
-    coverImage: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=400&h=250&fit=crop'
-  },
-  {
-    id: '3',
-    name: 'Техники на Роналдиньо',
-    slug: 'ronaldinho-techniques',
-    description: 'Магическите техники и финтове на бразилския маестро',
-    category: 'players',
-    status: 'completed',
-    articleCount: 4,
-    totalPlanned: 4,
-    lastUpdated: new Date('2024-01-05'),
-    tags: ['Роналдиньо', 'Техника', 'Финтове'],
-    coverImage: 'https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=400&h=250&fit=crop'
-  }
-]
-
-function SeriesTab() {
-  const [editingSeries, setEditingSeries] = useState<{ 
-    id: string; 
-    name: string; 
-    category?: string; 
-    description?: string; 
-    totalPlanned?: number;
-    status?: string;
-    tags?: string[];
-  } | null>(null)
-  const [showSeriesForm, setShowSeriesForm] = useState(false)
-
-  const getCategoryName = (category: string) => {
-    switch (category) {
-      case 'coaches': return 'Треньори'
-      case 'players': return 'Играчи'
-      case 'teams': return 'Отбори'
-      case 'general': return 'Общи'
-      default: return category
-    }
-  }
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'coaches': return 'bg-green-100 text-green-800'
-      case 'players': return 'bg-purple-100 text-purple-800'
-      case 'teams': return 'bg-blue-100 text-blue-800'
-      case 'general': return 'bg-green-50 text-green-800'
-      default: return 'bg-green-50 text-green-800'
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'draft': return 'bg-yellow-100 text-yellow-800'
-      case 'completed': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-green-50 text-green-800'
-    }
-  }
-
-  const getStatusName = (status: string) => {
-    switch (status) {
-      case 'active': return 'Активна'
-      case 'draft': return 'Чернова'
-      case 'completed': return 'Завършена'
-      default: return status
-    }
-  }
-
-
-  const getProgressPercent = (current: number, total: number) => {
-    return Math.round((current / total) * 100)
-  }
-
-  const handleCreateSeries = () => {
-    setEditingSeries(null)
-    setShowSeriesForm(true)
-  }
-
-  const handleEditSeries = (series: { id: string; name: string; category?: string; description?: string }) => {
-    setEditingSeries(series)
-    setShowSeriesForm(true)
-  }
-
-  const handleSaveSeries = (seriesData: { name: string; description: string }) => {
-    console.log('Saving series:', seriesData)
-    setShowSeriesForm(false)
-    setEditingSeries(null)
-  }
-
-  if (showSeriesForm) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {editingSeries ? 'Редактиране на серия' : 'Създаване на нова серия'}
-            </h2>
-            <button
-              onClick={() => setShowSeriesForm(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          </div>
-
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            const formData = new FormData(e.target as HTMLFormElement)
-            handleSaveSeries({
-              name: formData.get('name') as string || '',
-              description: formData.get('description') as string || ''
-            })
-          }} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Име на серията
-                </label>
-                <input
-                  type="text"
-                  defaultValue={editingSeries?.name || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Въведете име на серията"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Категория
-                </label>
-                <select
-                  defaultValue={editingSeries?.category || 'general'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="coaches">Треньори</option>
-                  <option value="players">Играчи</option>
-                  <option value="teams">Отбори</option>
-                  <option value="general">Общи</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Описание
-              </label>
-              <textarea
-                rows={3}
-                defaultValue={editingSeries?.description || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Кратко описание на серията"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Планирани статии
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  defaultValue={editingSeries?.totalPlanned || 5}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Статус
-                </label>
-                <select
-                  defaultValue={editingSeries?.status || 'draft'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="draft">Чернова</option>
-                  <option value="active">Активна</option>
-                  <option value="completed">Завършена</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тагове (разделени със запетая)
-              </label>
-              <input
-                type="text"
-                defaultValue={editingSeries?.tags?.join(', ') || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="напр. тактика, техника, анализ"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-6 border-t">
-              <button
-                type="button"
-                onClick={() => setShowSeriesForm(false)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Отказ
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                {editingSeries ? 'Запази промените' : 'Създай серия'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    )
-  }
-
+// Note: SeriesTab has been replaced with SeriesManagement component
+export default function AdminPage() {
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Серии</h1>
-          <p className="text-gray-600 mt-2">Управление на серии от статии</p>
-        </div>
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={handleCreateSeries}
-        >
-          <PlusIcon className="w-4 h-4 mr-2" />
-          Нова серия
-        </Button>
-      </div>
-
-      {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-green-100">
-        <div className="flex items-center space-x-4">
-            <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-            <option>Всички категории</option>
-            <option>Треньори</option>
-            <option>Играчи</option>
-            <option>Отбори</option>
-            <option>Общи</option>
-          </select>
-            <select className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-            <option>Всички статуси</option>
-            <option>Активни</option>
-            <option>Чернови</option>
-            <option>Завършени</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Series Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockSeries.map((series) => (
-          <div key={series.id} className="bg-white rounded-lg shadow-sm border border-green-100 overflow-hidden hover:shadow-md transition-shadow hover-lift">
-            {/* Cover Image */}
-            <div className="h-48 bg-gray-200 overflow-hidden">
-              <img 
-                src={series.coverImage} 
-                alt={series.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-[#000000] text-lg leading-tight">
-                  {series.name}
-                </h3>
-                <div className="flex space-x-1">
-                  <button 
-                    className="text-blue-600 hover:text-blue-800"
-                    onClick={() => handleEditSeries(series)}
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button className="text-red-600 hover:text-red-800">
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-sm text-[#166534] mb-4 line-clamp-2">
-                {series.description}
-              </p>
-
-              {/* Badges */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(series.category)}`}>
-                  {getCategoryName(series.category)}
-                </span>
-                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(series.status)}`}>
-                  {getStatusName(series.status)}
-                </span>
-              </div>
-
-              {/* Progress */}
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-[#166534]">Прогрес</span>
-                  <span className="text-sm font-medium text-[#000000]">
-                    {series.articleCount} / {series.totalPlanned}
-                  </span>
-                </div>
-                <div className="w-full bg-green-100 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all"
-                    style={{ width: `${getProgressPercent(series.articleCount, series.totalPlanned)}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-[#166534] mt-1">
-                  {getProgressPercent(series.articleCount, series.totalPlanned)}% завършено
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  {series.tags.slice(0, 3).map(tag => (
-                    <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                      {tag}
-                    </span>
-                  ))}
-                  {series.tags.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
-                      +{series.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-between items-center text-xs text-[#166534] border-t pt-3">
-                <span>Обновено: {formatDateShortBG(series.lastUpdated)}</span>
-                <button className="text-blue-600 hover:text-blue-800 font-medium">
-                  Виж статии →
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Suspense fallback={<LoadingSpinner />}>
+      <AdminContent />
+    </Suspense>
   )
 }

@@ -1,152 +1,150 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '@/utils/api-client'
+import type {
+  Series,
+  SeriesFilters,
+  SeriesProgress,
+  SeriesRecommendation,
+  SeriesAnalytics,
+  SeriesCategory,
+  SeriesStatus,
+  SeriesArticle
+} from '@/types'
 
-// Types for series data
-export interface Series {
-  id: string
+// API Response interfaces
+interface SeriesResponse {
+  series: Series[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+}
+
+interface CreateSeriesData {
   name: string
   slug: string
-  description: string | null
-  category: 'TACTICS' | 'TECHNIQUE' | 'FITNESS' | 'PSYCHOLOGY' | 'YOUTH_DEVELOPMENT' | 'COACHING'
-  status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
-  coverImageUrl: string | null
-  tags: string[]
-  totalPlannedArticles: number | null
-  createdAt: string
-  updatedAt: string
-  articles?: SeriesArticle[]
-  _count?: {
-    articles: number
-  }
+  description?: string
+  coverImageUrl?: string
+  category: SeriesCategory
+  totalPlannedArticles?: number
+  tags?: string[]
 }
 
-export interface SeriesArticle {
-  id: string
-  title: string
-  slug: string
-  partNumber: number
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
-  publishedAt: string | null
-  readTime: number
-  category: string
+interface UpdateSeriesData {
+  name?: string
+  slug?: string
+  description?: string
+  coverImageUrl?: string
+  category?: SeriesCategory
+  status?: SeriesStatus
+  totalPlannedArticles?: number
+  tags?: string[]
 }
 
-export interface UserProgress {
-  seriesId: string
-  userId: string
-  currentPartNumber: number
-  completedParts: number[]
-  progressPercentage: number
-  lastReadAt: string
-  estimatedTimeRemaining: number
-}
-
-export interface SeriesRecommendation {
-  series: Series
-  score: number
-  reasons: string[]
-  similarity: number
-}
-
-export interface SeriesAnalytics {
-  seriesId: string
-  totalReaders: number
-  completionRate: number
-  avgProgressPercentage: number
-  dropoffPoints: Array<{
-    partNumber: number
-    dropoffRate: number
+interface ReorderData {
+  articleOrders: Array<{
+    articleId: string
+    seriesPart: number
   }>
-  engagementMetrics: {
-    avgTimePerPart: number
-    returnRate: number
-    shareRate: number
-  }
 }
 
-// List series with filtering and pagination
-export const useSeries = (params?: {
-  category?: string
-  status?: string
-  search?: string
-  page?: number
-  limit?: number
-}) => {
+// Query Keys
+export const seriesKeys = {
+  all: ['series'] as const,
+  lists: () => [...seriesKeys.all, 'list'] as const,
+  list: (filters: SeriesFilters) => [...seriesKeys.lists(), filters] as const,
+  details: () => [...seriesKeys.all, 'detail'] as const,
+  detail: (id: string) => [...seriesKeys.details(), id] as const,
+  progress: (seriesId: string, userId: string) => [...seriesKeys.all, 'progress', seriesId, userId] as const,
+  recommendations: (userId: string) => [...seriesKeys.all, 'recommendations', userId] as const,
+  analytics: (seriesId: string) => [...seriesKeys.all, 'analytics', seriesId] as const,
+  popular: () => [...seriesKeys.all, 'popular'] as const,
+  category: (category: SeriesCategory) => [...seriesKeys.all, 'category', category] as const,
+}
+
+// Get all series with filtering
+export function useSeries(filters: SeriesFilters) {
   return useQuery({
-    queryKey: ['series', 'list', params],
-    queryFn: async () => {
-      const response = await apiClient.get<{
-        series: Series[]
-        total: number
-        pages: number
-        currentPage: number
-      }>('/series', { params })
+    queryKey: seriesKeys.list(filters),
+    queryFn: async (): Promise<SeriesResponse> => {
+      const params = new URLSearchParams()
+      params.append('page', filters.page.toString())
+      params.append('limit', filters.limit.toString())
+
+      if (filters.category) params.append('category', filters.category)
+      if (filters.status) params.append('status', filters.status)
+      if (filters.search) params.append('search', filters.search)
+      if (filters.sortBy) params.append('sortBy', filters.sortBy)
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
+
+      const response = await apiClient.get(`/series?${params.toString()}`)
       return response.data
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
-// Popular series
-export const usePopularSeries = (limit: number = 6) => {
+// Get popular series
+export function usePopularSeries(limit = 10) {
   return useQuery({
-    queryKey: ['series', 'popular', limit],
-    queryFn: async () => {
-      const response = await apiClient.get<Series[]>(`/series/popular?limit=${limit}`)
+    queryKey: seriesKeys.popular(),
+    queryFn: async (): Promise<Series[]> => {
+      const response = await apiClient.get(`/series/popular?limit=${limit}`)
+      return response.data
+    },
+    staleTime: 15 * 60 * 1000, // 15 minutes
+  })
+}
+
+// Get series by category
+export function useSeriesByCategory(category: SeriesCategory, page = 1, limit = 10) {
+  return useQuery({
+    queryKey: seriesKeys.category(category),
+    queryFn: async (): Promise<SeriesResponse> => {
+      const response = await apiClient.get(`/series/category/${category}?page=${page}&limit=${limit}`)
       return response.data
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
-// Series by category
-export const useSeriesByCategory = (category: string) => {
+// Get series by ID or slug
+export function useSeriesDetail(identifier: string, includeArticles = true) {
   return useQuery({
-    queryKey: ['series', 'category', category],
-    queryFn: async () => {
-      const response = await apiClient.get<Series[]>(`/series/category/${category}`)
+    queryKey: seriesKeys.detail(identifier),
+    queryFn: async (): Promise<Series> => {
+      const params = includeArticles ? '?articles=true' : '?articles=false'
+      const response = await apiClient.get(`/series/${identifier}${params}`)
       return response.data
     },
-    enabled: !!category,
+    enabled: !!identifier,
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
-// Single series details
-export const useSeriesDetails = (seriesId: string) => {
+// Get user progress in series (requires auth)
+export function useSeriesProgress(seriesId: string, enabled = true) {
   return useQuery({
-    queryKey: ['series', 'details', seriesId],
-    queryFn: async () => {
-      const response = await apiClient.get<Series & { articles: SeriesArticle[] }>(`/series/${seriesId}`)
+    queryKey: seriesKeys.progress(seriesId, 'current'),
+    queryFn: async (): Promise<SeriesProgress> => {
+      const response = await apiClient.get(`/series/${seriesId}/progress`)
       return response.data
     },
-    enabled: !!seriesId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-}
-
-// User progress for a series
-export const useSeriesProgress = (seriesId: string) => {
-  return useQuery({
-    queryKey: ['series', 'progress', seriesId],
-    queryFn: async () => {
-      const response = await apiClient.get<UserProgress>(`/series/${seriesId}/progress`)
-      return response.data
-    },
-    enabled: !!seriesId,
+    enabled: enabled && !!seriesId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   })
 }
 
-// Continue reading from last position
-export const useContinueReading = (seriesId: string) => {
+// Continue reading series (requires auth)
+export function useContinueSeriesReading(seriesId: string) {
   return useQuery({
-    queryKey: ['series', 'continue', seriesId],
+    queryKey: [...seriesKeys.detail(seriesId), 'continue'],
     queryFn: async () => {
-      const response = await apiClient.get<{
-        nextArticle: SeriesArticle
-        progress: UserProgress
-      }>(`/series/${seriesId}/continue`)
+      const response = await apiClient.get(`/series/${seriesId}/continue`)
       return response.data
     },
     enabled: !!seriesId,
@@ -154,176 +152,160 @@ export const useContinueReading = (seriesId: string) => {
   })
 }
 
-// Series analytics (admin/coach only)
-export const useSeriesAnalytics = (seriesId: string) => {
+// Get series analytics (Admin only)
+export function useSeriesAnalytics(seriesId: string, enabled = true) {
   return useQuery({
-    queryKey: ['series', 'analytics', seriesId],
-    queryFn: async () => {
-      const response = await apiClient.get<SeriesAnalytics>(`/series/${seriesId}/analytics`)
+    queryKey: seriesKeys.analytics(seriesId),
+    queryFn: async (): Promise<SeriesAnalytics> => {
+      const response = await apiClient.get(`/series/${seriesId}/analytics`)
       return response.data
     },
-    enabled: !!seriesId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: enabled && !!seriesId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
-// AI-powered series recommendations
-export const useSeriesRecommendations = (limit: number = 5) => {
+// Get series recommendations (requires auth)
+export function useSeriesRecommendations(limit = 5) {
   return useQuery({
-    queryKey: ['series', 'recommendations', limit],
-    queryFn: async () => {
-      const response = await apiClient.get<SeriesRecommendation[]>(`/series/recommendations?limit=${limit}`)
+    queryKey: seriesKeys.recommendations('current'),
+    queryFn: async (): Promise<SeriesRecommendation[]> => {
+      const response = await apiClient.get(`/series/recommendations?limit=${limit}`)
       return response.data
     },
     staleTime: 30 * 60 * 1000, // 30 minutes
   })
 }
 
-// Create series (admin/coach only)
-export const useCreateSeries = () => {
+// Mutations for CRUD operations (Admin/Coach only)
+export function useCreateSeries() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: async (seriesData: {
-      name: string
-      description?: string
-      category: Series['category']
-      coverImageUrl?: string
-      tags?: string[]
-      totalPlannedArticles?: number
-    }) => {
-      const response = await apiClient.post<Series>('/series', seriesData)
+    mutationFn: async (data: CreateSeriesData): Promise<Series> => {
+      const response = await apiClient.post('/series', data)
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['series'] })
-    },
+      queryClient.invalidateQueries({ queryKey: seriesKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.popular() })
+    }
   })
 }
 
-// Update series (admin/coach only)
-export const useUpdateSeries = () => {
+export function useUpdateSeries() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      id, 
-      updates 
-    }: { 
-      id: string
-      updates: Partial<Series> 
-    }) => {
-      const response = await apiClient.put<Series>(`/series/${id}`, updates)
+    mutationFn: async ({ id, data }: { id: string; data: UpdateSeriesData }): Promise<Series> => {
+      const response = await apiClient.put(`/series/${id}`, data)
       return response.data
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['series'] })
-      queryClient.invalidateQueries({ queryKey: ['series', 'details', variables.id] })
-    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: seriesKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.detail(data.id) })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.popular() })
+    }
   })
 }
 
-// Delete series (admin only)
-export const useDeleteSeries = () => {
+export function useDeleteSeries() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: async (seriesId: string) => {
-      await apiClient.delete(`/series/${seriesId}`)
+    mutationFn: async (id: string): Promise<void> => {
+      await apiClient.delete(`/series/${id}`)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['series'] })
-    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: seriesKeys.lists() })
+      queryClient.removeQueries({ queryKey: seriesKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.popular() })
+    }
   })
 }
 
-// Add article to series
-export const useAddArticleToSeries = () => {
+// Article management within series
+export function useAddArticleToSeries() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async ({
       seriesId,
       articleId,
-      partNumber
+      seriesPart
     }: {
       seriesId: string
       articleId: string
-      partNumber?: number
+      seriesPart: number
     }) => {
       const response = await apiClient.post(`/series/${seriesId}/articles/${articleId}`, {
-        partNumber
+        seriesPart
       })
       return response.data
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['series', 'details', variables.seriesId] })
-      queryClient.invalidateQueries({ queryKey: ['series'] })
-    },
+    onSuccess: (_, { seriesId }) => {
+      queryClient.invalidateQueries({ queryKey: seriesKeys.detail(seriesId) })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.lists() })
+    }
   })
 }
 
-// Remove article from series
-export const useRemoveArticleFromSeries = () => {
+export function useRemoveArticleFromSeries() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async (articleId: string) => {
-      await apiClient.delete(`/series/articles/${articleId}`)
+      const response = await apiClient.delete(`/series/articles/${articleId}`)
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['series'] })
-    },
+      queryClient.invalidateQueries({ queryKey: seriesKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.details() })
+    }
   })
 }
 
-// Reorder articles in series (drag-and-drop)
-export const useReorderSeriesArticles = () => {
+export function useReorderSeriesArticles() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: async ({
-      seriesId,
-      articleOrder
-    }: {
-      seriesId: string
-      articleOrder: Array<{ articleId: string; partNumber: number }>
-    }) => {
-      const response = await apiClient.put(`/series/${seriesId}/reorder`, { articleOrder })
+    mutationFn: async ({ seriesId, data }: { seriesId: string; data: ReorderData }) => {
+      const response = await apiClient.put(`/series/${seriesId}/reorder`, data)
       return response.data
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['series', 'details', variables.seriesId] })
-    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: seriesKeys.detail(data.id) })
+      queryClient.invalidateQueries({ queryKey: seriesKeys.lists() })
+    }
   })
 }
 
 // Track progress when reading article in series
-export const useTrackSeriesProgress = () => {
+export function useTrackSeriesProgress() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async ({
       seriesId,
       articleId,
-      partNumber,
+      seriesPart,
       completed = false
     }: {
       seriesId: string
       articleId: string
-      partNumber: number
+      seriesPart: number
       completed?: boolean
     }) => {
       const response = await apiClient.post(`/series/${seriesId}/progress`, {
         articleId,
-        partNumber,
+        seriesPart,
         completed
       })
       return response.data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['series', 'progress', variables.seriesId] })
-      queryClient.invalidateQueries({ queryKey: ['series', 'continue', variables.seriesId] })
-    },
+      queryClient.invalidateQueries({ queryKey: seriesKeys.progress(variables.seriesId, 'current') })
+      queryClient.invalidateQueries({ queryKey: [...seriesKeys.detail(variables.seriesId), 'continue'] })
+    }
   })
 }
