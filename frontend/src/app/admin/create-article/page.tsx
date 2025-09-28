@@ -37,7 +37,7 @@ export default function CreateArticlePage() {
                 Статията е създадена успешно!
               </h1>
               <p className="text-gray-600 mb-6">
-                Статията &quot;{createdArticle.title}&quot; беше създадена с темплейт &quot;{createdArticle.template.name}&quot;.
+                Статията &quot;{createdArticle.title}&quot; беше създадена с темплейт &quot;{createdArticle.template?.name || 'Неизвестен'}&quot;.
               </p>
               <p className="text-sm text-gray-500">
                 Пренасочване към админ панела след 3 секунди...
