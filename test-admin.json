@@ -1,7 +1,0 @@
-{
-  "name": "Admin User",
-  "email": "admin@footballzone.bg",
-  "password": "AdminPass123!",
-  "role": "ADMIN",
-  "acceptTerms": true
-}
