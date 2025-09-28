@@ -42,16 +42,19 @@ import MediaGallery from '@/components/admin/MediaGallery'
 interface AdminArticle {
   id: string
   title: string
+  slug: string
+  excerpt: string
   author: {
     name: string
     email?: string
   }
   category: string
-  zone: string
+  zones: string[]
   status: string
   viewCount: number
   publishedAt: string | null
   isPremium: boolean
+  isFeatured: boolean
   createdAt: string
   updatedAt: string
 }
@@ -105,13 +108,16 @@ function AdminContent() {
       const adminArticle: AdminArticle = {
         id: editArticleData.id,
         title: editArticleData.title,
+        slug: editArticleData.slug || '',
+        excerpt: editArticleData.excerpt || '',
         author: editArticleData.author || { name: 'Unknown' },
         category: editArticleData.category,
-        zone: editArticleData.zoneSettings ? Object.keys(editArticleData.zoneSettings).find(zone => editArticleData.zoneSettings?.[zone]?.visible) || 'read' : 'read',
-        status: editArticleData.publishedAt ? 'published' : 'draft',
+        zones: editArticleData.zoneSettings ? Object.keys(editArticleData.zoneSettings).filter(zone => editArticleData.zoneSettings?.[zone]?.visible) : ['read'],
+        status: editArticleData.publishedAt ? 'PUBLISHED' : 'DRAFT',
         viewCount: editArticleData.viewCount || 0,
         publishedAt: editArticleData.publishedAt || null,
         isPremium: editArticleData.isPremium || false,
+        isFeatured: editArticleData.isFeatured || false,
         createdAt: editArticleData.createdAt || new Date().toISOString(),
         updatedAt: editArticleData.updatedAt || new Date().toISOString()
       }
@@ -228,13 +234,13 @@ function AdminContent() {
     }
     
     // Fallback for basic admin article data
-    const zone = (a.zone || 'read').toLowerCase()
-    const mappedZone = ['read', 'coach', 'player', 'parent'].includes(zone) ? (zone as any) : 'read'
+    const zones = a.zones || ['read']
+    const mappedZone = zones.find(zone => ['read', 'coach', 'player', 'parent'].includes(zone.toLowerCase())) || 'read'
     return {
       id: a.id,
       title: a.title,
-      slug: `article-${a.id}`,
-      excerpt: '',
+      slug: a.slug || `article-${a.id}`,
+      excerpt: a.excerpt || '',
       content: '',
       featuredImage: '',
       author: { name: typeof a.author === 'string' ? a.author : a.author.name },
@@ -567,8 +573,8 @@ function ArticlesTab({
     )
   }
 
-  const articles = articlesData?.data?.data || []
-  const totalPages = articlesData?.data?.totalPages || 1
+  const articles = articlesData?.data || []
+  const totalPages = articlesData?.pagination?.pages || 1
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -593,7 +599,7 @@ function ArticlesTab({
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-green-100">
         <div className="flex items-center space-x-4">
-          <select 
+          <select
             value={filters.zone}
             onChange={(e) => handleFilterChange('zone', e.target.value)}
             className="border border-green-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
@@ -602,7 +608,7 @@ function ArticlesTab({
             <option value="coach">Coach Zone</option>
             <option value="player">Player Zone</option>
             <option value="parent">Parent Zone</option>
-            <option value="read">Read Zone</option>
+            <option value="READ">Read Zone</option>
           </select>
           <select 
             value={filters.status}
@@ -680,33 +686,33 @@ function ArticlesTab({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000]">
-                  {typeof article.author === 'string' ? article.author : article.author.name}
+                  {typeof article.author === 'string' ? article.author : article.author?.name || 'Unknown'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    article.zone === 'Coach' ? 'bg-green-100 text-green-800' :
-                    article.zone === 'Player' ? 'bg-blue-100 text-blue-800' :
-                    article.zone === 'Parent' ? 'bg-orange-100 text-orange-800' :
+                    article.zones?.includes('coach') ? 'bg-green-100 text-green-800' :
+                    article.zones?.includes('player') ? 'bg-blue-100 text-blue-800' :
+                    article.zones?.includes('parent') ? 'bg-orange-100 text-orange-800' :
                     'bg-green-50 text-green-800'
                   }`}>
-                    {article.zone}
+                    {article.zones?.join(', ') || 'READ'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    article.status === 'published' ? 'bg-green-100 text-green-800' :
-                    article.status === 'draft' ? 'bg-green-50 text-green-800' :
+                    article.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' :
+                    article.status === 'DRAFT' ? 'bg-green-50 text-green-800' :
                     'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {article.status === 'published' ? 'Публикувано' :
-                     article.status === 'draft' ? 'Чернова' : 'На ревизия'}
+                    {article.status === 'PUBLISHED' ? 'Публикувано' :
+                     article.status === 'DRAFT' ? 'Чернова' : 'На ревизия'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000]">
                   {(article.viewCount || 0).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#166534]">
-                  {article.publishedAt || '-'}
+                  {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('bg-BG') : '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
