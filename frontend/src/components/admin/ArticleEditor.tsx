@@ -324,6 +324,25 @@ export default function ArticleEditor({
         </div>
       </div>
 
+      {/* Zone Assignment */}
+      <div className="bg-white p-6 rounded-lg border">
+        <ZoneAssignmentSelector
+          selectedZones={formData.zones}
+          onZonesChange={handleZonesChange}
+        />
+        {errors.zones && <p className="text-red-500 text-sm mt-2">{errors.zones}</p>}
+      </div>
+
+      {/* Template Selection */}
+      <div className="bg-white p-6 rounded-lg border">
+        <TemplateSelector
+          selectedTemplate={formData.template}
+          onTemplateSelect={(template) => handleInputChange('template', template)}
+          category={formData.category}
+          zone={formData.zones.length > 0 ? formData.zones.join(',') : undefined}
+        />
+      </div>
+
       {/* Basic Information */}
       <div className="bg-white p-6 rounded-lg border">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Основна информация</h3>
@@ -404,15 +423,6 @@ export default function ArticleEditor({
             placeholder="Опционална подкатегория"
           />
         </div>
-      </div>
-
-      {/* Template Selection */}
-      <div className="bg-white p-6 rounded-lg border">
-        <TemplateSelector
-          selectedTemplate={formData.template}
-          onTemplateSelect={(template) => handleInputChange('template', template)}
-          category={formData.category}
-        />
       </div>
 
       {/* Content */}
@@ -789,15 +799,6 @@ export default function ArticleEditor({
             </select>
           </div>
         </div>
-      </div>
-
-      {/* Zone Assignment */}
-      <div className="bg-white p-6 rounded-lg border">
-        <ZoneAssignmentSelector
-          selectedZones={formData.zones}
-          onZonesChange={handleZonesChange}
-        />
-        {errors.zones && <p className="text-red-500 text-sm mt-2">{errors.zones}</p>}
       </div>
 
       {/* Premium Settings */}

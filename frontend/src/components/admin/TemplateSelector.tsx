@@ -45,7 +45,7 @@ export default function TemplateSelector({
         // Събираме темплейти от всички зони
         const allTemplates = getActiveTemplates()
         available = allTemplates.filter(template =>
-          template.category === 'universal' || zones.some(z => template.category === z.trim())
+          template.category === 'universal' || zones.some(z => template.allowedZones?.includes(z.trim()))
         )
       } else {
         // Единична зона

@@ -1308,6 +1308,7 @@ export const convertToLegacyTemplate = (template: Template): any => {
     name: template.name,
     description: template.description,
     category: template.category,
+    allowedZones: template.allowedZones || [],
     settings: {
       textLength: sectionsLength > 2 ? 'long' : sectionsLength > 1 ? 'medium' : 'short',
       allowVideos: template.mediaSettings?.video?.enabled || false,
