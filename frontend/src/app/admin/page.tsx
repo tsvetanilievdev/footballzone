@@ -198,13 +198,11 @@ function AdminContent() {
   }
 
   const handleCreateArticle = () => {
-    setEditingArticle(null)
-    setShowArticleEditor(true)
+    window.location.href = '/admin/create-article'
   }
 
   const handleEditArticle = (article: AdminArticle) => {
-    setEditingArticle(article)
-    setShowArticleEditor(true)
+    window.location.href = `/admin/edit-article/${article.id}`
   }
 
   const convertAdminToArticlePartial = (a: AdminArticle | null): Partial<Article> | undefined => {

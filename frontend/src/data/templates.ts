@@ -638,6 +638,643 @@ export const mockTemplates: (Template & { stats: TemplateStatistics })[] = [
       lastUsed: new Date('2024-01-18'),
       popularFields: ['title', 'steps', 'progress-tracking', 'featured-image']
     }
+  },
+  // NEW TEMPLATES ADDED - 6 additional templates
+  {
+    id: 'fitness-program',
+    name: 'Фитнес програма',
+    slug: 'fitness-program',
+    description: 'Специализиран темплейт за физическа подготовка и фитнес планове',
+    category: 'player',
+    version: '1.0.0',
+    author: 'System',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-20'),
+    isActive: true,
+    allowedZones: ['player', 'coach'],
+    requiredPermissions: [],
+    layout: {
+      id: 'fitness-layout',
+      name: 'Fitness Layout',
+      description: 'Structured layout for fitness programs',
+      preview: '/images/templates/fitness-layout.png',
+      structure: {
+        header: true,
+        sidebar: true,
+        footer: true,
+        columns: 2,
+        maxWidth: 'lg'
+      }
+    },
+    style: {
+      id: 'fitness-style',
+      name: 'Energetic Orange',
+      colors: {
+        primary: '#ea580c',
+        secondary: '#c2410c',
+        accent: '#fb923c',
+        background: '#ffffff',
+        text: '#000000',
+        muted: '#6b7280'
+      },
+      typography: {
+        headingFont: 'Inter',
+        bodyFont: 'Inter',
+        fontSize: 'md',
+        lineHeight: 'normal'
+      },
+      spacing: {
+        padding: 'lg',
+        margin: 'md'
+      },
+      borders: {
+        radius: 'lg',
+        width: 'medium'
+      }
+    },
+    sections: [],
+    seoFields: {
+      metaDescription: true,
+      ogImage: true,
+      structuredData: true
+    },
+    mediaSettings: {
+      featuredImage: {
+        required: true,
+        maxSize: 5,
+        allowedFormats: ['jpg', 'png', 'webp'],
+        aspectRatio: '16:9'
+      },
+      gallery: {
+        enabled: true,
+        maxImages: 8,
+        maxSize: 3
+      },
+      video: {
+        enabled: true,
+        platforms: ['youtube', 'vimeo'],
+        maxVideos: 5
+      },
+      documents: {
+        enabled: true,
+        allowedFormats: ['pdf'],
+        maxSize: 5
+      }
+    },
+    features: {
+      comments: true,
+      likes: true,
+      sharing: true,
+      printing: true,
+      bookmarking: true,
+      relatedArticles: true,
+      tableOfContents: true,
+      estimatedReadTime: true,
+      progressIndicator: true
+    },
+    preview: {
+      thumbnail: '/images/templates/fitness-thumb.png',
+      screenshots: ['/images/templates/fitness-1.png'],
+      demoUrl: '/demo/fitness-program'
+    },
+    stats: {
+      templateId: 'fitness-program',
+      usageCount: 23,
+      zoneBreakdown: { 'player': 18, 'coach': 5 },
+      averageRating: 4.6,
+      lastUsed: new Date('2024-01-19'),
+      popularFields: ['workout-plan', 'exercises', 'nutrition-tips']
+    }
+  },
+  {
+    id: 'match-analysis',
+    name: 'Анализ на мач',
+    slug: 'match-analysis',
+    description: 'Детайлен темплейт за анализ на мачове с статистики и видео материали',
+    category: 'coach',
+    version: '2.0.0',
+    author: 'System',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-20'),
+    isActive: true,
+    allowedZones: ['coach', 'read'],
+    requiredPermissions: [],
+    layout: {
+      id: 'match-analysis-layout',
+      name: 'Match Analysis Layout',
+      description: 'Professional layout for match breakdowns',
+      preview: '/images/templates/match-layout.png',
+      structure: {
+        header: true,
+        sidebar: true,
+        footer: true,
+        columns: 2,
+        maxWidth: 'xl'
+      }
+    },
+    style: {
+      id: 'match-style',
+      name: 'Professional Navy',
+      colors: {
+        primary: '#1e40af',
+        secondary: '#1e3a8a',
+        accent: '#3b82f6',
+        background: '#ffffff',
+        text: '#000000',
+        muted: '#6b7280'
+      },
+      typography: {
+        headingFont: 'Inter',
+        bodyFont: 'Inter',
+        fontSize: 'md',
+        lineHeight: 'relaxed'
+      },
+      spacing: {
+        padding: 'lg',
+        margin: 'lg'
+      },
+      borders: {
+        radius: 'md',
+        width: 'thin'
+      }
+    },
+    sections: [],
+    seoFields: {
+      metaDescription: true,
+      ogImage: true,
+      structuredData: true
+    },
+    mediaSettings: {
+      featuredImage: {
+        required: true,
+        maxSize: 5,
+        allowedFormats: ['jpg', 'png', 'webp'],
+        aspectRatio: '16:9'
+      },
+      gallery: {
+        enabled: true,
+        maxImages: 15,
+        maxSize: 5
+      },
+      video: {
+        enabled: true,
+        platforms: ['youtube', 'vimeo'],
+        maxVideos: 10
+      },
+      documents: {
+        enabled: true,
+        allowedFormats: ['pdf', 'doc'],
+        maxSize: 10
+      }
+    },
+    features: {
+      comments: true,
+      likes: true,
+      sharing: true,
+      printing: true,
+      bookmarking: true,
+      relatedArticles: true,
+      tableOfContents: true,
+      estimatedReadTime: true,
+      progressIndicator: true
+    },
+    preview: {
+      thumbnail: '/images/templates/match-thumb.png',
+      screenshots: ['/images/templates/match-1.png', '/images/templates/match-2.png'],
+      demoUrl: '/demo/match-analysis'
+    },
+    stats: {
+      templateId: 'match-analysis',
+      usageCount: 67,
+      zoneBreakdown: { 'coach': 52, 'read': 15 },
+      averageRating: 4.9,
+      lastUsed: new Date('2024-01-20'),
+      popularFields: ['match-stats', 'video-highlights', 'tactical-breakdown']
+    }
+  },
+  {
+    id: 'youth-development',
+    name: 'Юношеско развитие',
+    slug: 'youth-development',
+    description: 'Темплейт за родители и треньори, фокусиран върху развитието на млади играчи',
+    category: 'parent',
+    version: '1.5.0',
+    author: 'System',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-18'),
+    isActive: true,
+    allowedZones: ['parent', 'coach'],
+    requiredPermissions: [],
+    layout: {
+      id: 'youth-layout',
+      name: 'Youth Development Layout',
+      description: 'Family-friendly layout with clear sections',
+      preview: '/images/templates/youth-layout.png',
+      structure: {
+        header: true,
+        sidebar: false,
+        footer: true,
+        columns: 1,
+        maxWidth: 'md'
+      }
+    },
+    style: {
+      id: 'youth-style',
+      name: 'Warm Purple',
+      colors: {
+        primary: '#7c3aed',
+        secondary: '#6d28d9',
+        accent: '#a855f7',
+        background: '#ffffff',
+        text: '#000000',
+        muted: '#6b7280'
+      },
+      typography: {
+        headingFont: 'Inter',
+        bodyFont: 'Inter',
+        fontSize: 'lg',
+        lineHeight: 'relaxed'
+      },
+      spacing: {
+        padding: 'lg',
+        margin: 'lg'
+      },
+      borders: {
+        radius: 'lg',
+        width: 'thin'
+      }
+    },
+    sections: [],
+    seoFields: {
+      metaDescription: true,
+      ogImage: true,
+      structuredData: false
+    },
+    mediaSettings: {
+      featuredImage: {
+        required: true,
+        maxSize: 3,
+        allowedFormats: ['jpg', 'png'],
+        aspectRatio: '4:3'
+      },
+      gallery: {
+        enabled: true,
+        maxImages: 6,
+        maxSize: 2
+      },
+      video: {
+        enabled: true,
+        platforms: ['youtube'],
+        maxVideos: 3
+      },
+      documents: {
+        enabled: true,
+        allowedFormats: ['pdf'],
+        maxSize: 5
+      }
+    },
+    features: {
+      comments: true,
+      likes: true,
+      sharing: true,
+      printing: true,
+      bookmarking: true,
+      relatedArticles: true,
+      tableOfContents: false,
+      estimatedReadTime: true,
+      progressIndicator: false
+    },
+    preview: {
+      thumbnail: '/images/templates/youth-thumb.png',
+      screenshots: ['/images/templates/youth-1.png'],
+      demoUrl: '/demo/youth-development'
+    },
+    stats: {
+      templateId: 'youth-development',
+      usageCount: 34,
+      zoneBreakdown: { 'parent': 28, 'coach': 6 },
+      averageRating: 4.7,
+      lastUsed: new Date('2024-01-18'),
+      popularFields: ['development-tips', 'age-groups', 'safety-guidelines']
+    }
+  },
+  {
+    id: 'nutrition-guide',
+    name: 'Хранителен план',
+    slug: 'nutrition-guide',
+    description: 'Специализиран темплейт за хранене и диетични препоръки за футболисти',
+    category: 'universal',
+    version: '1.2.0',
+    author: 'System',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-17'),
+    isActive: true,
+    allowedZones: ['player', 'parent', 'coach'],
+    requiredPermissions: [],
+    layout: {
+      id: 'nutrition-layout',
+      name: 'Nutrition Layout',
+      description: 'Clean layout optimized for meal plans and recipes',
+      preview: '/images/templates/nutrition-layout.png',
+      structure: {
+        header: true,
+        sidebar: true,
+        footer: false,
+        columns: 2,
+        maxWidth: 'lg'
+      }
+    },
+    style: {
+      id: 'nutrition-style',
+      name: 'Fresh Green',
+      colors: {
+        primary: '#16a34a',
+        secondary: '#15803d',
+        accent: '#22c55e',
+        background: '#ffffff',
+        text: '#000000',
+        muted: '#6b7280'
+      },
+      typography: {
+        headingFont: 'Inter',
+        bodyFont: 'Inter',
+        fontSize: 'md',
+        lineHeight: 'relaxed'
+      },
+      spacing: {
+        padding: 'md',
+        margin: 'md'
+      },
+      borders: {
+        radius: 'lg',
+        width: 'thin'
+      }
+    },
+    sections: [],
+    seoFields: {
+      metaDescription: true,
+      ogImage: true,
+      structuredData: true
+    },
+    mediaSettings: {
+      featuredImage: {
+        required: true,
+        maxSize: 3,
+        allowedFormats: ['jpg', 'png', 'webp'],
+        aspectRatio: '16:9'
+      },
+      gallery: {
+        enabled: true,
+        maxImages: 12,
+        maxSize: 2
+      },
+      video: {
+        enabled: false,
+        platforms: [],
+        maxVideos: 0
+      },
+      documents: {
+        enabled: true,
+        allowedFormats: ['pdf'],
+        maxSize: 3
+      }
+    },
+    features: {
+      comments: true,
+      likes: true,
+      sharing: true,
+      printing: true,
+      bookmarking: true,
+      relatedArticles: true,
+      tableOfContents: true,
+      estimatedReadTime: true,
+      progressIndicator: false
+    },
+    preview: {
+      thumbnail: '/images/templates/nutrition-thumb.png',
+      screenshots: ['/images/templates/nutrition-1.png'],
+      demoUrl: '/demo/nutrition-guide'
+    },
+    stats: {
+      templateId: 'nutrition-guide',
+      usageCount: 41,
+      zoneBreakdown: { 'player': 20, 'parent': 15, 'coach': 6 },
+      averageRating: 4.5,
+      lastUsed: new Date('2024-01-17'),
+      popularFields: ['meal-plans', 'recipes', 'supplements']
+    }
+  },
+  {
+    id: 'equipment-review',
+    name: 'Ревю на екипировка',
+    slug: 'equipment-review',
+    description: 'Темплейт за детайлни ревюта на футболна екипировка и оборудване',
+    category: 'read',
+    version: '1.8.0',
+    author: 'System',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-19'),
+    isActive: true,
+    allowedZones: ['read', 'player'],
+    requiredPermissions: [],
+    layout: {
+      id: 'equipment-layout',
+      name: 'Equipment Review Layout',
+      description: 'Product-focused layout with comparison tables',
+      preview: '/images/templates/equipment-layout.png',
+      structure: {
+        header: true,
+        sidebar: true,
+        footer: true,
+        columns: 2,
+        maxWidth: 'lg'
+      }
+    },
+    style: {
+      id: 'equipment-style',
+      name: 'Modern Gray',
+      colors: {
+        primary: '#4b5563',
+        secondary: '#374151',
+        accent: '#6b7280',
+        background: '#ffffff',
+        text: '#000000',
+        muted: '#9ca3af'
+      },
+      typography: {
+        headingFont: 'Inter',
+        bodyFont: 'Inter',
+        fontSize: 'md',
+        lineHeight: 'normal'
+      },
+      spacing: {
+        padding: 'lg',
+        margin: 'md'
+      },
+      borders: {
+        radius: 'md',
+        width: 'thin'
+      }
+    },
+    sections: [],
+    seoFields: {
+      metaDescription: true,
+      ogImage: true,
+      structuredData: true
+    },
+    mediaSettings: {
+      featuredImage: {
+        required: true,
+        maxSize: 5,
+        allowedFormats: ['jpg', 'png', 'webp'],
+        aspectRatio: '16:9'
+      },
+      gallery: {
+        enabled: true,
+        maxImages: 20,
+        maxSize: 3
+      },
+      video: {
+        enabled: true,
+        platforms: ['youtube'],
+        maxVideos: 3
+      },
+      documents: {
+        enabled: false,
+        allowedFormats: [],
+        maxSize: 0
+      }
+    },
+    features: {
+      comments: true,
+      likes: true,
+      sharing: true,
+      printing: false,
+      bookmarking: true,
+      relatedArticles: true,
+      tableOfContents: true,
+      estimatedReadTime: true,
+      progressIndicator: true
+    },
+    preview: {
+      thumbnail: '/images/templates/equipment-thumb.png',
+      screenshots: ['/images/templates/equipment-1.png', '/images/templates/equipment-2.png'],
+      demoUrl: '/demo/equipment-review'
+    },
+    stats: {
+      templateId: 'equipment-review',
+      usageCount: 28,
+      zoneBreakdown: { 'read': 22, 'player': 6 },
+      averageRating: 4.3,
+      lastUsed: new Date('2024-01-19'),
+      popularFields: ['product-specs', 'rating-system', 'comparison-table']
+    }
+  },
+  {
+    id: 'rule-explanation',
+    name: 'Обяснение на правила',
+    slug: 'rule-explanation',
+    description: 'Образователен темплейт за обяснение на футболни правила и регламенти',
+    category: 'universal',
+    version: '2.2.0',
+    author: 'System',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-16'),
+    isActive: true,
+    allowedZones: ['read', 'coach', 'parent'],
+    requiredPermissions: [],
+    layout: {
+      id: 'rule-layout',
+      name: 'Educational Layout',
+      description: 'Step-by-step layout for rule explanations',
+      preview: '/images/templates/rule-layout.png',
+      structure: {
+        header: true,
+        sidebar: false,
+        footer: true,
+        columns: 1,
+        maxWidth: 'md'
+      }
+    },
+    style: {
+      id: 'rule-style',
+      name: 'Educational Blue',
+      colors: {
+        primary: '#0ea5e9',
+        secondary: '#0284c7',
+        accent: '#38bdf8',
+        background: '#ffffff',
+        text: '#000000',
+        muted: '#6b7280'
+      },
+      typography: {
+        headingFont: 'Inter',
+        bodyFont: 'Inter',
+        fontSize: 'lg',
+        lineHeight: 'relaxed'
+      },
+      spacing: {
+        padding: 'lg',
+        margin: 'lg'
+      },
+      borders: {
+        radius: 'md',
+        width: 'thin'
+      }
+    },
+    sections: [],
+    seoFields: {
+      metaDescription: true,
+      ogImage: true,
+      structuredData: true
+    },
+    mediaSettings: {
+      featuredImage: {
+        required: true,
+        maxSize: 3,
+        allowedFormats: ['jpg', 'png'],
+        aspectRatio: '16:9'
+      },
+      gallery: {
+        enabled: true,
+        maxImages: 8,
+        maxSize: 2
+      },
+      video: {
+        enabled: true,
+        platforms: ['youtube'],
+        maxVideos: 5
+      },
+      documents: {
+        enabled: true,
+        allowedFormats: ['pdf'],
+        maxSize: 5
+      }
+    },
+    features: {
+      comments: true,
+      likes: false,
+      sharing: true,
+      printing: true,
+      bookmarking: true,
+      relatedArticles: true,
+      tableOfContents: true,
+      estimatedReadTime: true,
+      progressIndicator: true
+    },
+    preview: {
+      thumbnail: '/images/templates/rule-thumb.png',
+      screenshots: ['/images/templates/rule-1.png'],
+      demoUrl: '/demo/rule-explanation'
+    },
+    stats: {
+      templateId: 'rule-explanation',
+      usageCount: 56,
+      zoneBreakdown: { 'read': 28, 'coach': 18, 'parent': 10 },
+      averageRating: 4.8,
+      lastUsed: new Date('2024-01-16'),
+      popularFields: ['rule-text', 'examples', 'diagrams']
+    }
   }
 ]
 

@@ -11,6 +11,8 @@ import {
   EyeIcon as PreviewIcon
 } from '@heroicons/react/24/outline'
 import RichTextEditor from './RichTextEditor'
+import ZoneAssignmentSelector from './ZoneAssignmentSelector'
+import PremiumScheduler from './PremiumScheduler'
 import { Article, ArticleTemplate } from '@/types'
 import { articleTemplates } from '@/data/templates'
 
@@ -37,13 +39,41 @@ export default function TemplateBasedArticleCreator({
     featuredImage: '',
     isPremium: false,
     status: 'draft' as 'draft' | 'published',
-    zones: [] as Array<{zone: string, visible: boolean, requiresSubscription: boolean}>
+    zones: [] as string[],
+    seoTitle: '',
+    seoDescription: '',
+    seoKeywords: [] as string[],
+    authorName: '',
+    authorBio: '',
+    readTime: 5,
+    premiumSchedule: undefined as { releaseFree: Date; isPermanentPremium: boolean } | undefined
   })
 
-  const handleInputChange = (field: string, value: string | boolean | string[]) => {
+  const handleInputChange = (field: string, value: any) => {
     setArticleData(prev => ({
       ...prev,
       [field]: value
+    }))
+  }
+
+  const handleZonesChange = (zones: string[]) => {
+    setArticleData(prev => ({
+      ...prev,
+      zones
+    }))
+  }
+
+  const handlePremiumChange = (isPremium: boolean) => {
+    setArticleData(prev => ({
+      ...prev,
+      isPremium
+    }))
+  }
+
+  const handleScheduleChange = (schedule?: { releaseFree: Date; isPermanentPremium: boolean }) => {
+    setArticleData(prev => ({
+      ...prev,
+      premiumSchedule: schedule
     }))
   }
 
@@ -84,6 +114,10 @@ export default function TemplateBasedArticleCreator({
       alert('Трябва да изберете поне една зона за статията')
       return
     }
+    if (!articleData.authorName) {
+      alert('Името на автора е задължително')
+      return
+    }
     if (articleData.slug && articleData.slug.length < 3) {
       alert('Slug-ът трябва да съдържа поне 3 символа')
       return
@@ -107,17 +141,24 @@ export default function TemplateBasedArticleCreator({
       tags: articleData.tags,
       featuredImage: articleData.featuredImage,
       author: {
-        name: 'Admin',
+        name: articleData.authorName || 'Admin',
         avatar: '/images/admin-avatar.jpg',
-        bio: 'Администратор на Football Zone'
+        bio: articleData.authorBio || 'Администратор на Football Zone'
       },
       publishedAt: new Date().toISOString(),
-      readTime: Math.ceil(articleData.content.split(' ').length / 200),
+      readTime: articleData.readTime || Math.ceil(articleData.content.split(' ').length / 200),
       isPremium: articleData.isPremium,
+      premiumSchedule: articleData.premiumSchedule,
       status: articleData.status,
       views: 0,
       likes: 0,
-      comments: []
+      comments: [],
+      zones: articleData.zones,
+      seo: {
+        title: articleData.seoTitle,
+        description: articleData.seoDescription,
+        keywords: articleData.seoKeywords
+      }
     }
 
     onSave(newArticle)
@@ -410,37 +451,162 @@ export default function TemplateBasedArticleCreator({
             </div>
           </div>
 
-          {/* Zone Selection */}
+          {/* Zone Assignment */}
           <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Зони *</h3>
+            <ZoneAssignmentSelector
+              selectedZones={articleData.zones}
+              onZonesChange={handleZonesChange}
+            />
+          </div>
+
+          {/* Premium Settings */}
+          <div className="bg-white p-6 rounded-lg border">
+            <PremiumScheduler
+              isPremium={articleData.isPremium}
+              premiumSchedule={articleData.premiumSchedule}
+              onPremiumChange={handlePremiumChange}
+              onScheduleChange={handleScheduleChange}
+            />
+          </div>
+
+          {/* Featured Image */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Основна снимка</h3>
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">Изберете в кои зони да се показва статията:</p>
-              {['READ', 'coach', 'player', 'parent'].map(zone => {
-                const isSelected = articleData.zones.some(z => z.zone === zone.toUpperCase())
-                return (
-                  <div key={zone} className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id={`zone-${zone}`}
-                      checked={isSelected}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          handleInputChange('zones', [
-                            ...articleData.zones,
-                            { zone: zone.toUpperCase(), visible: true, requiresSubscription: false }
-                          ])
-                        } else {
-                          handleInputChange('zones', articleData.zones.filter(z => z.zone !== zone.toUpperCase()))
-                        }
-                      }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor={`zone-${zone}`} className="text-sm font-medium text-gray-700 capitalize">
-                      {zone} Zone
-                    </label>
-                  </div>
-                )
-              })}
+              <input
+                type="text"
+                value={articleData.featuredImage}
+                onChange={(e) => handleInputChange('featuredImage', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="URL на основната снимка..."
+              />
+              <p className="text-xs text-gray-500">Въведете URL адрес на основната снимка за статията</p>
+            </div>
+          </div>
+
+          {/* Author Information */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Информация за автора</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Име на автора *
+                </label>
+                <input
+                  type="text"
+                  value={articleData.authorName}
+                  onChange={(e) => handleInputChange('authorName', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Въведете име на автора..."
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Кратко био
+                </label>
+                <textarea
+                  value={articleData.authorBio}
+                  onChange={(e) => handleInputChange('authorBio', e.target.value)}
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Кратко описание на автора..."
+                  maxLength={300}
+                />
+                <p className="text-xs text-gray-500 mt-1">Максимум 300 символа</p>
+              </div>
+            </div>
+          </div>
+
+          {/* SEO Settings */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO настройки</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  SEO заглавие
+                </label>
+                <input
+                  type="text"
+                  value={articleData.seoTitle}
+                  onChange={(e) => handleInputChange('seoTitle', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="SEO оптимизирано заглавие..."
+                  maxLength={255}
+                />
+                <p className="text-xs text-gray-500 mt-1">Максимум 255 символа</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  SEO описание
+                </label>
+                <textarea
+                  value={articleData.seoDescription}
+                  onChange={(e) => handleInputChange('seoDescription', e.target.value)}
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="SEO описание (до 160 символа)..."
+                  maxLength={320}
+                />
+                <p className="text-xs text-gray-500 mt-1">Максимум 320 символа</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  SEO ключови думи
+                </label>
+                <input
+                  type="text"
+                  placeholder="Добавете ключова дума и натиснете Enter..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const keyword = e.currentTarget.value.trim()
+                      if (keyword && !articleData.seoKeywords.includes(keyword)) {
+                        handleInputChange('seoKeywords', [...articleData.seoKeywords, keyword])
+                        e.currentTarget.value = ''
+                      }
+                    }
+                  }}
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {articleData.seoKeywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full flex items-center gap-1"
+                    >
+                      {keyword}
+                      <button
+                        onClick={() => handleInputChange('seoKeywords', articleData.seoKeywords.filter((_, i) => i !== index))}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Article Settings */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Настройки на статията</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Време за четене (минути)
+                </label>
+                <input
+                  type="number"
+                  value={articleData.readTime}
+                  onChange={(e) => handleInputChange('readTime', parseInt(e.target.value) || 5)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min={1}
+                  max={240}
+                />
+                <p className="text-xs text-gray-500 mt-1">Приблизително време за четене в минути (1-240)</p>
+              </div>
             </div>
           </div>
 

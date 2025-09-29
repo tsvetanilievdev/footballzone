@@ -10,8 +10,8 @@ import {
 } from '@heroicons/react/24/outline'
 import TemplateSelector from './TemplateSelector'
 import RichTextEditor from './RichTextEditor'
-// import ZoneAssignmentSelector from './ZoneAssignmentSelector'
-// import PremiumScheduler from './PremiumScheduler'
+import ZoneAssignmentSelector from './ZoneAssignmentSelector'
+import PremiumScheduler from './PremiumScheduler'
 
 interface Video {
   title: string
@@ -21,7 +21,9 @@ interface Video {
 }
 
 interface ArticleData {
+  id?: string
   title: string
+  slug?: string
   excerpt: string
   content: string
   template: string
@@ -60,6 +62,7 @@ interface ArticleData {
     type: 'pdf' | 'doc' | 'excel' | 'image'
     size?: string
   }[]
+  readTime?: number
 }
 
 interface ArticleEditorProps {
@@ -115,6 +118,27 @@ export default function ArticleEditor({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
+  }
+
+  const handleZonesChange = (zones: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      zones
+    }))
+  }
+
+  const handlePremiumChange = (isPremium: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      isPremium
+    }))
+  }
+
+  const handleScheduleChange = (schedule?: { releaseFree: Date; isPermanentPremium: boolean }) => {
+    setFormData(prev => ({
+      ...prev,
+      premiumSchedule: schedule
+    }))
   }
 
   const handleImageUpload = async (file: File) => {
@@ -234,6 +258,14 @@ export default function ArticleEditor({
       newErrors.content = 'Съдържанието е задължително'
     }
 
+    if (!formData.category) {
+      newErrors.category = 'Категорията е задължителна'
+    }
+
+    if (formData.zones.length === 0) {
+      newErrors.zones = 'Трябва да изберете поне една зона'
+    }
+
     if (!formData.featuredImage) {
       newErrors.featuredImage = 'Основната снимка е задължителна'
     }
@@ -320,12 +352,27 @@ export default function ArticleEditor({
             <select
               value={formData.category}
               onChange={(e) => handleInputChange('category', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
+              className={`w-full p-3 border rounded-lg ${
+                errors.category ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
-              <option value="read">Read Zone</option>
-              <option value="coach">Coach Zone</option>
-              <option value="player">Player Zone</option>
+              <option value="">Изберете категория</option>
+              <option value="TACTICS">Тактика</option>
+              <option value="TECHNIQUE">Техника</option>
+              <option value="FITNESS">Фитнес</option>
+              <option value="PSYCHOLOGY">Психология</option>
+              <option value="NUTRITION">Хранене</option>
+              <option value="INJURY_PREVENTION">Превенция на травми</option>
+              <option value="COACHING">Треньорство</option>
+              <option value="YOUTH_DEVELOPMENT">Юношеско развитие</option>
+              <option value="EQUIPMENT">Екипировка</option>
+              <option value="RULES">Правила</option>
+              <option value="NEWS">Новини</option>
+              <option value="INTERVIEWS">Интервюта</option>
+              <option value="ANALYSIS">Анализи</option>
+              <option value="OTHER">Други</option>
             </select>
+            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
           </div>
         </div>
 
@@ -742,6 +789,25 @@ export default function ArticleEditor({
             </select>
           </div>
         </div>
+      </div>
+
+      {/* Zone Assignment */}
+      <div className="bg-white p-6 rounded-lg border">
+        <ZoneAssignmentSelector
+          selectedZones={formData.zones}
+          onZonesChange={handleZonesChange}
+        />
+        {errors.zones && <p className="text-red-500 text-sm mt-2">{errors.zones}</p>}
+      </div>
+
+      {/* Premium Settings */}
+      <div className="bg-white p-6 rounded-lg border">
+        <PremiumScheduler
+          isPremium={formData.isPremium}
+          premiumSchedule={formData.premiumSchedule}
+          onPremiumChange={handlePremiumChange}
+          onScheduleChange={handleScheduleChange}
+        />
       </div>
 
       {/* Action Buttons */}
