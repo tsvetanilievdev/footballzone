@@ -15,7 +15,7 @@ import {
 // Using available icons as replacements for missing ones
 import {
   Bars3Icon as AlignLeftIcon,
-  Bars3CenterLeftIcon as AlignCenterIcon, 
+  Bars3CenterLeftIcon as AlignCenterIcon,
   Bars3BottomRightIcon as AlignRightIcon,
   ListBulletIcon as ListNumberedIcon,
   ChatBubbleLeftRightIcon as QuoteIcon
@@ -74,7 +74,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   const [wordCount, setWordCount] = useState(0)
 
   useEffect(() => {
-    if (editorRef.current) {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value
       updateWordCount()
     }
@@ -219,13 +219,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
             className="p-2 rounded hover:bg-gray-100 flex items-center gap-1"
             title="Цвят на текста"
           >
-            <div 
+            <div
               className="w-4 h-4 rounded border border-gray-300"
               style={{ backgroundColor: selectedColor }}
             ></div>
             <span className="text-xs">Цвят</span>
           </button>
-          
+
           {showColorPicker && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg p-2 shadow-lg z-10">
               <div className="grid grid-cols-10 gap-1">
@@ -252,13 +252,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
             className="p-2 rounded hover:bg-gray-100 flex items-center gap-1"
             title="Цвят на фона"
           >
-            <div 
+            <div
               className="w-4 h-4 rounded border border-gray-300"
               style={{ backgroundColor: selectedBgColor === 'transparent' ? '#f0f0f0' : selectedBgColor }}
             ></div>
             <span className="text-xs">Фон</span>
           </button>
-          
+
           {showBgColorPicker && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg p-2 shadow-lg z-10">
               <div className="grid grid-cols-10 gap-1">
@@ -384,7 +384,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           className="p-2 rounded hover:bg-gray-100"
           title="Добави изображение"
         >
-                          <PhotoIcon className="w-4 h-4" />
+          <PhotoIcon className="w-4 h-4" />
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1"></div>
@@ -395,7 +395,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           className="p-2 rounded hover:bg-gray-100"
           title="Отмени"
         >
-                          <ArrowUturnLeftIcon className="w-4 h-4" />
+          <ArrowUturnLeftIcon className="w-4 h-4" />
         </button>
 
         <button
@@ -403,7 +403,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           className="p-2 rounded hover:bg-gray-100"
           title="Повтори"
         >
-                          <ArrowUturnRightIcon className="w-4 h-4" />
+          <ArrowUturnRightIcon className="w-4 h-4" />
         </button>
       </div>
 
@@ -413,8 +413,11 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         contentEditable
         onInput={handleInput}
         onKeyDown={handleKeyDown}
-        className="min-h-96 p-4 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        style={{ fontFamily: selectedFont, fontSize: selectedSize }}
+        className="min-h-96 p-4 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&]:text-left"
+        style={{
+          fontFamily: selectedFont,
+          fontSize: selectedSize
+        }}
         placeholder={placeholder}
         suppressContentEditableWarning
       />
@@ -424,6 +427,17 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         <span>Думи: {wordCount}</span>
         <span>Символи: {value.length}</span>
       </div>
+
+      {/* Inline styles to fix text direction */}
+      <style jsx>{`
+        [contenteditable] {
+          writing-mode: horizontal-tb !important;
+        }
+        [contenteditable]:empty:before {
+          content: attr(placeholder);
+          color: #9ca3af;
+        }
+      `}</style>
     </div>
   )
 }

@@ -15,8 +15,8 @@ interface TemplateSelectorProps {
   zone?: string
 }
 
-export default function TemplateSelector({ 
-  selectedTemplate, 
+export default function TemplateSelector({
+  selectedTemplate,
   onTemplateSelect,
   category,
   className = '',
@@ -27,6 +27,7 @@ export default function TemplateSelector({
   const [templates, setTemplates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showDetails, setShowDetails] = useState<string | null>(null)
+  const [showAllTemplates, setShowAllTemplates] = useState(false)
 
   useEffect(() => {
     // Зареждане на темплейти: приоритетно подадени отвън; иначе по зона; fallback към категория
@@ -38,7 +39,10 @@ export default function TemplateSelector({
 
     let available: any[] = []
 
-    if (zone) {
+    if (showAllTemplates) {
+      // Показваме всички активни темплейти
+      available = getActiveTemplates()
+    } else if (zone) {
       // Ако има множество зони (разделени със запетая)
       const zones = zone.split(',').filter(z => z.trim())
       if (zones.length > 1) {
@@ -58,7 +62,7 @@ export default function TemplateSelector({
 
     setTemplates(available)
     setLoading(false)
-  }, [category, templatesOverride, zone])
+  }, [category, templatesOverride, zone, showAllTemplates])
 
   if (loading) {
     return (
@@ -119,15 +123,36 @@ export default function TemplateSelector({
   return (
     <div className={`space-y-6 ${className}`}>
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Избери темплейт за статията
-        </h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Избери темплейт за статията
+          </h3>
+
+          {/* Show All Templates Toggle */}
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showAllTemplates}
+              onChange={(e) => setShowAllTemplates(e.target.checked)}
+              className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <span className="text-sm text-gray-700">Покажи всички темплейти</span>
+          </label>
+        </div>
+
         <p className="text-sm text-gray-600">
           Всеки темплейт има специфични настройки за съдържание и визуализация
         </p>
-        {zone && zone.includes(',') && (
+
+        {zone && zone.includes(',') && !showAllTemplates && (
           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
             <strong>Показани темплейти за зони:</strong> {zone.split(',').map(z => z.trim()).join(', ')} + универсални
+          </div>
+        )}
+
+        {showAllTemplates && (
+          <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
+            <strong>Показани:</strong> Всички активни темплейти ({templates.length})
           </div>
         )}
       </div>

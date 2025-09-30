@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { 
-  PhotoIcon, 
-  VideoCameraIcon, 
+import { useState, useEffect } from 'react'
+import {
+  PhotoIcon,
+  VideoCameraIcon,
   XMarkIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import TemplateSelector from './TemplateSelector'
 import RichTextEditor from './RichTextEditor'
 import ZoneAssignmentSelector from './ZoneAssignmentSelector'
 import PremiumScheduler from './PremiumScheduler'
+import { getTemplatePlaceholder, isPlaceholderContent } from '@/utils/templatePlaceholders'
 
 interface Video {
   title: string
@@ -108,6 +110,15 @@ export default function ArticleEditor({
   const [newTag, setNewTag] = useState('')
   const [newKeyword, setNewKeyword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false)
+
+  // Проверка дали съдържанието е все още placeholder
+  useEffect(() => {
+    if (formData.content && formData.template) {
+      const isPlaceholder = isPlaceholderContent(formData.content, formData.template)
+      setShowPlaceholderWarning(isPlaceholder)
+    }
+  }, [formData.content, formData.template])
 
   const handleInputChange = (field: string, value: unknown) => {
     setFormData(prev => ({
@@ -118,6 +129,36 @@ export default function ArticleEditor({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
+  }
+
+  const handleTemplateChange = (templateId: string) => {
+    // Проверка дали има съществуващо съдържание
+    const hasExistingContent = formData.content && formData.content.trim().length > 0
+
+    if (hasExistingContent && !isPlaceholderContent(formData.content, formData.template)) {
+      // Ако има реално съдържание, питаме потребителя
+      const confirmChange = window.confirm(
+        'Промяната на темплейта ще замени текущото съдържание с примерно такова. Сигурни ли сте?'
+      )
+      if (!confirmChange) return
+    }
+
+    // Зареждаме placeholder съдържание за новия темплейт
+    const placeholderContent = getTemplatePlaceholder(templateId)
+
+    setFormData(prev => ({
+      ...prev,
+      template: templateId,
+      content: placeholderContent
+    }))
+  }
+
+  const loadPlaceholderContent = () => {
+    const placeholderContent = getTemplatePlaceholder(formData.template)
+    setFormData(prev => ({
+      ...prev,
+      content: placeholderContent
+    }))
   }
 
   const handleZonesChange = (zones: string[]) => {
@@ -337,7 +378,7 @@ export default function ArticleEditor({
       <div className="bg-white p-6 rounded-lg border">
         <TemplateSelector
           selectedTemplate={formData.template}
-          onTemplateSelect={(template) => handleInputChange('template', template)}
+          onTemplateSelect={handleTemplateChange}
           category={formData.category}
           zone={formData.zones.length > 0 ? formData.zones.join(',') : undefined}
         />
@@ -427,8 +468,30 @@ export default function ArticleEditor({
 
       {/* Content */}
       <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Съдържание</h3>
-        
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Съдържание</h3>
+
+          {showPlaceholderWarning && (
+            <button
+              type="button"
+              onClick={loadPlaceholderContent}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+            >
+              <SparklesIcon className="w-4 h-4" />
+              Зареди примерно съдържание
+            </button>
+          )}
+        </div>
+
+        {showPlaceholderWarning && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+            <SparklesIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-800">
+              <strong>Примерно съдържание:</strong> Това е template съдържание. Редактирайте го с реалната информация преди публикуване.
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Съдържание на статията *

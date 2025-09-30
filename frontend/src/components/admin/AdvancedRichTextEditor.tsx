@@ -451,10 +451,9 @@ export default function AdvancedRichTextEditor({
             ref={editorRef}
             contentEditable
             className="p-4 min-h-64 outline-none prose max-w-none"
-            style={{ 
+            style={{
               fontFamily: fontFamily,
-              fontSize: `${fontSize}px`,
-              direction: 'ltr'
+              fontSize: `${fontSize}px`
             }}
             onInput={handleInput}
             onKeyDown={handleKeyDown}

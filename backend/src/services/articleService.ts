@@ -426,6 +426,11 @@ export const createArticle = async (articleData: any, authorId: string) => {
       })
     })
 
+    // Invalidate article cache
+    await redis.delPattern(`article:*`)
+    await redis.delPattern(`articles:*`)
+    await redis.delPattern(`search:*`)
+
     return result
   } catch (error: any) {
     console.error('Error creating article:', error)
@@ -506,6 +511,11 @@ export const updateArticle = async (id: string, updateData: any, userId: string,
       })
     })
 
+    // Invalidate article cache
+    await redis.delPattern(`article:*`)
+    await redis.delPattern(`articles:*`)
+    await redis.delPattern(`search:*`)
+
     return result
   } catch (error: any) {
     console.error('Error updating article:', error)
@@ -547,10 +557,15 @@ export const deleteArticle = async (id: string, userId: string, userRole: string
       await tx.articleZone.deleteMany({ where: { articleId: id } })
       await tx.articleView.deleteMany({ where: { articleId: id } })
       await tx.userActivity.deleteMany({ where: { resourceId: id } })
-      
+
       // Delete the article
       await tx.article.delete({ where: { id } })
     })
+
+    // Invalidate article cache
+    await redis.delPattern(`article:*`)
+    await redis.delPattern(`articles:*`)
+    await redis.delPattern(`search:*`)
 
     return { 
       success: true, 
