@@ -27,11 +27,41 @@ const nextConfig: NextConfig = {
         protocol: 'https' as const,
         hostname: 'footballzone.bg',
       },
+      // Common image hosting domains
+      {
+        protocol: 'https' as const,
+        hostname: 'media.assettype.com',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'imgur.com',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'i.imgur.com',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'cdn.pixabay.com',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: '*.googleusercontent.com',
+      },
       // Allow localhost only in development
       ...(process.env.NODE_ENV === 'development' ? [
         {
           protocol: 'http' as const,
           hostname: 'localhost',
+        },
+        // In development, allow any HTTPS domain for testing
+        {
+          protocol: 'https' as const,
+          hostname: '**',
         }
       ] : []),
     ],

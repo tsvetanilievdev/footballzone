@@ -114,6 +114,8 @@ export default function ArticleEditor({
   const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false)
   const [showImageLinkInput, setShowImageLinkInput] = useState(false)
   const [imageLinkUrl, setImageLinkUrl] = useState('')
+  const [showFeaturedImageLinkInput, setShowFeaturedImageLinkInput] = useState(false)
+  const [featuredImageLinkUrl, setFeaturedImageLinkUrl] = useState('')
 
   // Проверка дали съдържанието е все още placeholder
   useEffect(() => {
@@ -232,6 +234,17 @@ export default function ArticleEditor({
       }))
       setImageLinkUrl('')
       setShowImageLinkInput(false)
+    }
+  }
+
+  const addFeaturedImageLink = () => {
+    if (featuredImageLinkUrl.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        featuredImage: featuredImageLinkUrl.trim()
+      }))
+      setFeaturedImageLinkUrl('')
+      setShowFeaturedImageLinkInput(false)
     }
   }
 
@@ -551,9 +564,9 @@ export default function ArticleEditor({
           <div className="flex items-center space-x-4">
             {formData.featuredImage ? (
               <div className="relative">
-                <img 
-                  src={formData.featuredImage} 
-                  alt="Featured" 
+                <img
+                  src={formData.featuredImage}
+                  alt="Featured"
                   className="w-32 h-24 object-cover rounded-lg"
                 />
                 <button
@@ -569,8 +582,8 @@ export default function ArticleEditor({
                 <PhotoIcon className="w-8 h-8 text-gray-400" />
               </div>
             )}
-            
-            <div>
+
+            <div className="flex gap-2 flex-wrap">
               <input
                 type="file"
                 accept="image/*"
@@ -587,8 +600,48 @@ export default function ArticleEditor({
               >
                 {uploading ? 'Качване...' : 'Избери снимка'}
               </label>
+
+              <button
+                type="button"
+                onClick={() => setShowFeaturedImageLinkInput(!showFeaturedImageLinkInput)}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                <LinkIcon className="w-4 h-4 mr-2" />
+                Добави линк
+              </button>
             </div>
           </div>
+
+          {showFeaturedImageLinkInput && (
+            <div className="mt-4 flex gap-2">
+              <input
+                type="text"
+                value={featuredImageLinkUrl}
+                onChange={(e) => setFeaturedImageLinkUrl(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeaturedImageLink())}
+                placeholder="Въведете URL на основната снимка"
+                className="flex-1 p-2 border border-gray-300 rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={addFeaturedImageLink}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Добави
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFeaturedImageLinkInput(false)
+                  setFeaturedImageLinkUrl('')
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Отказ
+              </button>
+            </div>
+          )}
+
           {errors.featuredImage && <p className="text-red-500 text-sm mt-1">{errors.featuredImage}</p>}
         </div>
 

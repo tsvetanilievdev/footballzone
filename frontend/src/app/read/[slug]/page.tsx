@@ -367,56 +367,189 @@ function ClassicTemplate({ article }: { article: Article }) {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <article>
                 {/* Featured Image */}
-                <div className="relative h-64 md:h-96 mb-0">
+                <div className="relative h-64 md:h-96 lg:h-[450px] mb-0">
                   <Image
                     src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
                     alt={article.title || 'Статия от FootballZone.bg'}
                     fill
                     className="object-cover"
+                    priority
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  
-                  {/* Header Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                      <div className="mb-4">
-                        <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-green-600 text-white shadow-lg">
-                          {article.category}
-                        </span>
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                  {/* Category badge on image */}
+                  <div className="absolute top-6 left-6">
+                    <span className="inline-flex items-center px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-green-600 text-white shadow-xl">
+                      {article.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Title and metadata section - below image */}
+                <div className="px-6 md:px-12 py-8 bg-white border-b border-gray-200">
+                  <div className="max-w-4xl mx-auto">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
+                      {article.title}
+                    </h1>
+
+                    {/* Excerpt/Subtitle */}
+                    {article.excerpt && (
+                      <p className="text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">
+                        {article.excerpt}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm md:text-base text-gray-600">
+                      <div className="flex items-center">
+                        <UserIcon className="w-5 h-5 mr-2 text-green-600" />
+                        <span className="font-semibold">{article.author?.name || 'Анонимен автор'}</span>
                       </div>
-                      
-                      <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
-                        {article.title}
-                      </h1>
-                      
-                      <div className="flex flex-wrap items-center gap-6 text-sm text-white/90">
-                        <div className="flex items-center">
-                          <UserIcon className="w-4 h-4 mr-2" />
-                          <span className="font-medium">{article.author?.name || 'Анонимен автор'}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <CalendarIcon className="w-4 h-4 mr-2" />
-                          <span>{safeFormatDate(article.publishedAt)}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <ClockIcon className="w-4 h-4 mr-2" />
-                          <span>{article.readTime} минути четене</span>
-                        </div>
+                      <div className="flex items-center">
+                        <CalendarIcon className="w-5 h-5 mr-2 text-green-600" />
+                        <span>{safeFormatDate(article.publishedAt)}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <ClockIcon className="w-5 h-5 mr-2 text-green-600" />
+                        <span>{article.readTime} минути четене</span>
                       </div>
                     </div>
+                  </div>
                 </div>
                 
                 {/* Content */}
-                <div className="px-6 md:px-8 py-8">
-                  <div className="prose prose-lg max-w-none prose-gray">
-                    <div 
-                      dangerouslySetInnerHTML={{ __html: article.content }} 
-                      className="text-gray-800 leading-relaxed"
+                <div className="px-6 md:px-12 py-12">
+                  <div className="max-w-3xl mx-auto">
+                    <div
+                      dangerouslySetInnerHTML={{ __html: article.content }}
+                      className="article-content text-gray-800"
                     />
                   </div>
-                  
+
+                  <style jsx global>{`
+                    .article-content {
+                      font-size: 1.125rem;
+                      line-height: 1.8;
+                      color: #1f2937;
+                    }
+
+                    .article-content h1,
+                    .article-content h2,
+                    .article-content h3 {
+                      color: #059669;
+                      font-weight: 700;
+                      margin-top: 2.5rem;
+                      margin-bottom: 1.25rem;
+                      line-height: 1.3;
+                    }
+
+                    .article-content h1 {
+                      font-size: 2rem;
+                    }
+
+                    .article-content h2 {
+                      font-size: 1.75rem;
+                      border-bottom: 3px solid #10b981;
+                      padding-bottom: 0.5rem;
+                    }
+
+                    .article-content h3 {
+                      font-size: 1.5rem;
+                    }
+
+                    .article-content p {
+                      margin-bottom: 1.5rem;
+                      line-height: 1.8;
+                    }
+
+                    .article-content ul,
+                    .article-content ol {
+                      margin: 1.5rem 0;
+                      padding-left: 2rem;
+                    }
+
+                    .article-content li {
+                      margin-bottom: 0.75rem;
+                      line-height: 1.7;
+                    }
+
+                    .article-content blockquote {
+                      border-left: 4px solid #10b981;
+                      padding: 1.5rem 1.5rem 1.5rem 2rem;
+                      margin: 2rem 0;
+                      background: linear-gradient(to right, #f0fdf4, #ffffff);
+                      font-style: italic;
+                      color: #374151;
+                      border-radius: 0 0.5rem 0.5rem 0;
+                      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    }
+
+                    .article-content strong {
+                      color: #059669;
+                      font-weight: 700;
+                    }
+
+                    .article-content a {
+                      color: #10b981;
+                      text-decoration: underline;
+                      text-decoration-color: #86efac;
+                      text-decoration-thickness: 2px;
+                      transition: all 0.2s;
+                    }
+
+                    .article-content a:hover {
+                      color: #059669;
+                      text-decoration-color: #10b981;
+                    }
+
+                    .article-content img {
+                      max-width: 100%;
+                      height: auto;
+                      border-radius: 0.75rem;
+                      margin: 2rem 0;
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .article-content hr {
+                      border: none;
+                      border-top: 2px solid #e5e7eb;
+                      margin: 3rem 0;
+                    }
+
+                    /* Emoji bullets for lists */
+                    .article-content ul li::marker {
+                      content: '⚽ ';
+                    }
+
+                    /* Better code blocks if any */
+                    .article-content code {
+                      background: #f3f4f6;
+                      padding: 0.2rem 0.4rem;
+                      border-radius: 0.25rem;
+                      font-size: 0.9em;
+                      color: #059669;
+                      font-family: 'Courier New', monospace;
+                    }
+
+                    .article-content pre {
+                      background: #1f2937;
+                      color: #10b981;
+                      padding: 1.5rem;
+                      border-radius: 0.5rem;
+                      overflow-x: auto;
+                      margin: 2rem 0;
+                    }
+
+                    .article-content pre code {
+                      background: transparent;
+                      padding: 0;
+                      color: #10b981;
+                    }
+                  `}</style>
+
                   {/* Tags */}
                   {article.tags && article.tags.length > 0 && (
-                    <div className="mt-12 pt-8 border-t border-gray-200">
+                    <div className="max-w-3xl mx-auto mt-12 pt-8 border-t border-gray-200">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Тагове</h3>
                       <div className="flex flex-wrap gap-3">
                         {article.tags.map((tag) => (
