@@ -129,12 +129,16 @@ function AdminContent() {
 
   const handleSaveArticle = async (articleData: any) => {
     try {
-      if (editingArticle) {
+      if (editArticleData) {
+        // Use editArticleData.id (real article ID from API)
+        console.log('Updating article with ID:', editArticleData.id)
+        console.log('Article data:', articleData)
         await updateArticleMutation.mutateAsync({
-          id: editingArticle.id,
+          id: editArticleData.id,
           data: articleData
         })
       } else {
+        console.log('Creating new article')
         await createArticleMutation.mutateAsync(articleData)
       }
       setShowArticleEditor(false)
@@ -142,7 +146,7 @@ function AdminContent() {
       setHasUnsavedChanges(false)
     } catch (error) {
       console.error('Error saving article:', error)
-      // Handle error (show toast, etc.)
+      alert('Грешка при запазване: ' + (error as any)?.response?.data?.error?.message || (error as Error).message)
     }
   }
 

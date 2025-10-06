@@ -17,8 +17,8 @@ const articleBaseSchema = z.object({
   isPermanentPremium: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
   customOrder: z.number().int().optional(),
-  templateId: z.string().uuid().optional(),
-  seriesId: z.string().uuid().optional(),
+  templateId: z.string().cuid().optional(),
+  seriesId: z.string().cuid().optional(),
   seriesPart: z.number().int().min(1).optional(),
   status: z.nativeEnum(ArticleStatus).default(ArticleStatus.DRAFT),
   seoTitle: z.string().max(255).optional(),
@@ -43,7 +43,7 @@ export const createArticleSchema = z.object({
 // Update article schema
 export const updateArticleSchema = z.object({
   params: z.object({
-    id: z.string().uuid()
+    id: z.string().cuid()
   }),
   body: articleBaseSchema.partial().extend({
     zones: z.array(articleZoneSchema).min(1).max(5).optional()
@@ -53,7 +53,7 @@ export const updateArticleSchema = z.object({
 // Delete article schema
 export const deleteArticleSchema = z.object({
   params: z.object({
-    id: z.string().uuid()
+    id: z.string().cuid()
   })
 })
 
@@ -93,7 +93,7 @@ export const searchArticlesSchema = z.object({
 // Track view schema
 export const trackViewSchema = z.object({
   params: z.object({
-    id: z.string().uuid()
+    id: z.string().cuid()
   }),
   body: z.object({
     sessionId: z.string(),
