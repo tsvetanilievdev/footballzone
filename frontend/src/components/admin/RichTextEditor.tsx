@@ -9,7 +9,9 @@ import {
   LinkIcon,
   PhotoIcon,
   ArrowUturnLeftIcon,
-  ArrowUturnRightIcon
+  ArrowUturnRightIcon,
+  PlusIcon,
+  MinusIcon
 } from '@heroicons/react/24/outline'
 
 // Using available icons as replacements for missing ones
@@ -127,9 +129,75 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     execCommand('fontName', font)
   }
 
+  const applyFontSize = (size: string) => {
+    // Focus first to ensure we're in the editor
+    editorRef.current?.focus()
+
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const range = selection.getRangeAt(0)
+
+    // If no text is selected, insert a styled space/placeholder for future typing
+    if (range.collapsed) {
+      const span = document.createElement('span')
+      span.style.fontSize = size
+      span.innerHTML = '&nbsp;' // Non-breaking space as placeholder
+
+      range.insertNode(span)
+
+      // Move cursor inside the span so future typing inherits the style
+      range.setStart(span.firstChild!, 1)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      handleInput()
+      return
+    }
+
+    // Create a span with the font size for selected text
+    const span = document.createElement('span')
+    span.style.fontSize = size
+
+    // Wrap the selected content
+    try {
+      const contents = range.extractContents()
+      span.appendChild(contents)
+      range.insertNode(span)
+
+      // Clear selection and place cursor after the styled text
+      range.setStartAfter(span)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      // Trigger change
+      handleInput()
+    } catch (error) {
+      console.error('Error applying font size:', error)
+    }
+  }
+
   const changeSize = (size: string) => {
     setSelectedSize(size)
-    execCommand('fontSize', size.replace('px', ''))
+    applyFontSize(size)
+  }
+
+  const increaseFontSize = () => {
+    const currentSize = parseInt(selectedSize)
+    const newSize = Math.min(currentSize + 1, 72) // Max 72px
+    const newSizeStr = `${newSize}px`
+    setSelectedSize(newSizeStr)
+    applyFontSize(newSizeStr)
+  }
+
+  const decreaseFontSize = () => {
+    const currentSize = parseInt(selectedSize)
+    const newSize = Math.max(currentSize - 1, 8) // Min 8px
+    const newSizeStr = `${newSize}px`
+    setSelectedSize(newSizeStr)
+    applyFontSize(newSizeStr)
   }
 
   const changeColor = (color: string) => {
@@ -175,15 +243,33 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           ))}
         </select>
 
-        <select
-          value={selectedSize}
-          onChange={(e) => changeSize(e.target.value)}
-          className="px-2 py-1 border border-gray-300 rounded text-sm w-16"
-        >
-          {FONT_SIZES.map(size => (
-            <option key={size.value} value={size.value}>{size.label}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={decreaseFontSize}
+            className="p-1.5 border border-gray-300 rounded-l hover:bg-gray-100"
+            title="Намали размера на шрифта"
+          >
+            <MinusIcon className="w-3 h-3" />
+          </button>
+          <select
+            value={selectedSize}
+            onChange={(e) => changeSize(e.target.value)}
+            className="px-2 py-1 border-y border-gray-300 text-sm w-16"
+          >
+            {FONT_SIZES.map(size => (
+              <option key={size.value} value={size.value}>{size.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={increaseFontSize}
+            className="p-1.5 border border-gray-300 rounded-r hover:bg-gray-100"
+            title="Увеличи размера на шрифта"
+          >
+            <PlusIcon className="w-3 h-3" />
+          </button>
+        </div>
 
         {/* Text Style Controls */}
         <button
@@ -414,10 +500,6 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         className="min-h-96 p-4 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&]:text-left"
-        style={{
-          fontFamily: selectedFont,
-          fontSize: selectedSize
-        }}
         placeholder={placeholder}
         suppressContentEditableWarning
       />

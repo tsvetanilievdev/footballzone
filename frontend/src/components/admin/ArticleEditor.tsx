@@ -7,7 +7,8 @@ import {
   XMarkIcon,
   PlusIcon,
   TrashIcon,
-  SparklesIcon
+  SparklesIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline'
 import TemplateSelector from './TemplateSelector'
 import RichTextEditor from './RichTextEditor'
@@ -111,6 +112,8 @@ export default function ArticleEditor({
   const [newKeyword, setNewKeyword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false)
+  const [showImageLinkInput, setShowImageLinkInput] = useState(false)
+  const [imageLinkUrl, setImageLinkUrl] = useState('')
 
   // Проверка дали съдържанието е все още placeholder
   useEffect(() => {
@@ -219,6 +222,17 @@ export default function ArticleEditor({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
     }))
+  }
+
+  const addImageLink = () => {
+    if (imageLinkUrl.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, imageLinkUrl.trim()]
+      }))
+      setImageLinkUrl('')
+      setShowImageLinkInput(false)
+    }
   }
 
   const addVideo = () => {
@@ -570,9 +584,9 @@ export default function ArticleEditor({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             {formData.images.map((image, index) => (
               <div key={index} className="relative">
-                <img 
-                  src={image} 
-                  alt={`Image ${index + 1}`} 
+                <img
+                  src={image}
+                  alt={`Image ${index + 1}`}
                   className="w-full h-24 object-cover rounded-lg"
                 />
                 <button
@@ -585,25 +599,66 @@ export default function ArticleEditor({
               </div>
             ))}
           </div>
-          
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => {
-              const files = Array.from(e.target.files || [])
-              files.forEach(handleImageUpload)
-            }}
-            className="hidden"
-            id="additional-images"
-          />
-          <label
-            htmlFor="additional-images"
-            className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-          >
-            <PlusIcon className="w-4 h-4 mr-2" />
-            Добави снимки
-          </label>
+
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || [])
+                files.forEach(handleImageUpload)
+              }}
+              className="hidden"
+              id="additional-images"
+            />
+            <label
+              htmlFor="additional-images"
+              className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Качи снимки
+            </label>
+
+            <button
+              type="button"
+              onClick={() => setShowImageLinkInput(!showImageLinkInput)}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              <LinkIcon className="w-4 h-4 mr-2" />
+              Добави линк
+            </button>
+          </div>
+
+          {showImageLinkInput && (
+            <div className="mt-4 flex gap-2">
+              <input
+                type="text"
+                value={imageLinkUrl}
+                onChange={(e) => setImageLinkUrl(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImageLink())}
+                placeholder="Въведете URL на снимката"
+                className="flex-1 p-2 border border-gray-300 rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={addImageLink}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Добави
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImageLinkInput(false)
+                  setImageLinkUrl('')
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Отказ
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Videos */}
