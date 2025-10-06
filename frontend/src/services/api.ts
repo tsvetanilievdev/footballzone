@@ -214,30 +214,63 @@ class ApiService {
     return apiClient.get(`/articles/search?${searchParams.toString()}`);
   }
 
-  async createArticle(articleData: Partial<Article>) {
+  async createArticle(articleData: any) {
     // Transform frontend Article format to backend API format
     const transformedData = {
       title: articleData.title || 'Untitled Article',
-      slug: articleData.slug || articleData.title?.toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .substring(0, 50) || `article-${Date.now()}`,
+      slug: articleData.slug || this.generateSlug(articleData.title),
       excerpt: articleData.excerpt || '',
       content: articleData.content || '',
-      featuredImageUrl: articleData.featuredImage || undefined,
-      category: this.mapCategoryToBackend(articleData.category),
+      featuredImageUrl: articleData.featuredImage || articleData.featuredImageUrl || undefined,
+      category: articleData.category?.toUpperCase() || 'NEWS',
       subcategory: articleData.subcategory || undefined,
       tags: articleData.tags || [],
-      readTime: articleData.readTime || 5,
+      readTime: articleData.readTime || Math.ceil((articleData.content || '').split(' ').length / 200) || 5,
       isPremium: articleData.isPremium || false,
-      isPermanentPremium: false,
+      premiumReleaseDate: articleData.premiumSchedule?.releaseFree?.toISOString?.() || undefined,
+      isPermanentPremium: articleData.premiumSchedule?.isPermanentPremium || false,
       isFeatured: articleData.isFeatured || false,
       customOrder: articleData.order || undefined,
-      status: 'PUBLISHED',
+      status: articleData.status?.toUpperCase() || 'DRAFT',
+      seoTitle: articleData.seo?.title || undefined,
+      seoDescription: articleData.seo?.description || undefined,
       zones: this.mapZonesToBackend(articleData.zones || ['read']),
     };
-    
-    return apiClient.post('/articles', transformedData);
+
+    console.log('📤 Transformed article data for backend:', transformedData);
+
+    const response = await apiClient.post('/articles', transformedData);
+
+    // Backend returns {success: true, data: articleData, message: '...'}
+    const createdArticle = response.data || response;
+    return this.transformBackendArticleToFrontend(createdArticle);
+  }
+
+  private generateSlug(title: string): string {
+    if (!title) return `article-${Date.now()}`;
+
+    // Cyrillic to Latin transliteration map
+    const cyrillicToLatin: Record<string, string> = {
+      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'zh', 'з': 'z',
+      'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+      'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
+      'ш': 'sh', 'щ': 'sht', 'ъ': 'a', 'ь': 'y', 'ю': 'yu', 'я': 'ya',
+      'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ж': 'Zh', 'З': 'Z',
+      'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P',
+      'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch',
+      'Ш': 'Sh', 'Щ': 'Sht', 'Ъ': 'A', 'Ь': 'Y', 'Ю': 'Yu', 'Я': 'Ya'
+    };
+
+    return title
+      .split('')
+      .map(char => cyrillicToLatin[char] || char)
+      .join('')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
+      .substring(0, 100);
   }
 
   private mapCategoryToBackend(frontendCategory?: string): string {
@@ -262,19 +295,27 @@ class ApiService {
     return categoryMap[frontendCategory || 'read'] || 'NEWS';
   }
 
-  private mapZonesToBackend(frontendZones: string[]) {
+  private mapZonesToBackend(frontendZones: any[]) {
+    // ZoneType enum values from backend: READ, coach, player, parent, series
     const zoneMap: { [key: string]: string } = {
       'read': 'READ',
       'coach': 'coach',
       'player': 'player',
-      'parent': 'parent'
+      'parent': 'parent',
+      'series': 'series'
     };
-    
-    return frontendZones.map(zone => ({
-      zone: zoneMap[zone] || 'READ',
-      visible: true,
-      requiresSubscription: zone !== 'read' // Only read zone is free by default
-    }));
+
+    return frontendZones.map(zone => {
+      // Handle both string zones and zone objects
+      const zoneStr = typeof zone === 'string' ? zone : zone.zone || zone;
+      const zoneLower = String(zoneStr).toLowerCase();
+
+      return {
+        zone: zoneMap[zoneLower] || 'READ',
+        visible: true,
+        requiresSubscription: zoneLower !== 'read' // Only read zone is free by default
+      };
+    });
   }
 
   async updateArticle(id: string, articleData: Partial<Article>) {

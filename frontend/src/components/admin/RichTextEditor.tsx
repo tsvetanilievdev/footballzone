@@ -69,6 +69,8 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   const [isUnderline, setIsUnderline] = useState(false)
   const [selectedFont, setSelectedFont] = useState('Arial')
   const [selectedSize, setSelectedSize] = useState('16px')
+  const [customSize, setCustomSize] = useState('')
+  const [showCustomSizeInput, setShowCustomSizeInput] = useState(false)
   const [selectedColor, setSelectedColor] = useState('#000000')
   const [selectedBgColor, setSelectedBgColor] = useState('transparent')
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -81,6 +83,41 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       updateWordCount()
     }
   }, [value])
+
+  // Track selection changes to update font size display
+  useEffect(() => {
+    const updateFormatting = () => {
+      const selection = window.getSelection()
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0)
+        const container = range.commonAncestorContainer
+        const element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as HTMLElement
+
+        if (element && editorRef.current?.contains(element)) {
+          // Get computed font size
+          const computedStyle = window.getComputedStyle(element)
+          const fontSize = computedStyle.fontSize
+          if (fontSize) {
+            setSelectedSize(fontSize)
+          }
+
+          // Get computed font family
+          const fontFamily = computedStyle.fontFamily
+          if (fontFamily) {
+            setSelectedFont(fontFamily.replace(/['"]/g, '').split(',')[0])
+          }
+
+          // Check bold, italic, underline
+          setIsBold(computedStyle.fontWeight === 'bold' || parseInt(computedStyle.fontWeight) >= 600)
+          setIsItalic(computedStyle.fontStyle === 'italic')
+          setIsUnderline(computedStyle.textDecoration.includes('underline'))
+        }
+      }
+    }
+
+    document.addEventListener('selectionchange', updateFormatting)
+    return () => document.removeEventListener('selectionchange', updateFormatting)
+  }, [])
 
   const updateWordCount = () => {
     if (editorRef.current) {
@@ -101,6 +138,22 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       onChange(editorRef.current.innerHTML)
       updateWordCount()
     }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+
+    // Get plain text from clipboard
+    const text = e.clipboardData.getData('text/plain')
+
+    // Insert plain text at cursor position
+    document.execCommand('insertText', false, text)
+
+    // Ensure the editor is focused
+    editorRef.current?.focus()
+
+    // Update content
+    handleInput()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -180,8 +233,23 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   }
 
   const changeSize = (size: string) => {
+    if (size === 'custom') {
+      setShowCustomSizeInput(true)
+      return
+    }
     setSelectedSize(size)
     applyFontSize(size)
+  }
+
+  const applyCustomSize = () => {
+    const sizeValue = parseInt(customSize)
+    if (sizeValue && sizeValue >= 8 && sizeValue <= 144) {
+      const newSize = `${sizeValue}px`
+      setSelectedSize(newSize)
+      applyFontSize(newSize)
+      setCustomSize('')
+      setShowCustomSizeInput(false)
+    }
   }
 
   const increaseFontSize = () => {
@@ -253,13 +321,16 @@ export default function RichTextEditor({ value, onChange, placeholder, className
             <MinusIcon className="w-3 h-3" />
           </button>
           <select
-            value={selectedSize}
+            value={FONT_SIZES.find(s => s.value === selectedSize) ? selectedSize : 'custom'}
             onChange={(e) => changeSize(e.target.value)}
-            className="px-2 py-1 border-y border-gray-300 text-sm w-16"
+            className="px-2 py-1 border-y border-gray-300 text-sm w-20"
           >
             {FONT_SIZES.map(size => (
               <option key={size.value} value={size.value}>{size.label}</option>
             ))}
+            <option value="custom">
+              {FONT_SIZES.find(s => s.value === selectedSize) ? 'Друг' : parseInt(selectedSize)}
+            </option>
           </select>
           <button
             type="button"
@@ -270,6 +341,39 @@ export default function RichTextEditor({ value, onChange, placeholder, className
             <PlusIcon className="w-3 h-3" />
           </button>
         </div>
+
+        {showCustomSizeInput && (
+          <div className="flex items-center gap-1 ml-2">
+            <input
+              type="number"
+              value={customSize}
+              onChange={(e) => setCustomSize(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && applyCustomSize()}
+              placeholder="Размер"
+              min="8"
+              max="144"
+              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={applyCustomSize}
+              className="px-2 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            >
+              OK
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowCustomSizeInput(false)
+                setCustomSize('')
+              }}
+              className="px-2 py-1 border border-gray-300 text-sm rounded hover:bg-gray-50"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Text Style Controls */}
         <button
@@ -499,6 +603,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         contentEditable
         onInput={handleInput}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         className="min-h-96 p-4 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&]:text-left"
         placeholder={placeholder}
         suppressContentEditableWarning

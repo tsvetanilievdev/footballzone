@@ -370,18 +370,65 @@ export const searchArticles = async (filters: SearchFilters) => {
   }
 }
 
-export const createArticle = async (articleData: any, authorId: string) => {
+// Helper function to transliterate Cyrillic to Latin
+const transliterateCyrillic = (text: string): string => {
+  const cyrillicToLatin: Record<string, string> = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'zh', 'з': 'z',
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+    'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
+    'ш': 'sh', 'щ': 'sht', 'ъ': 'a', 'ь': 'y', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ж': 'Zh', 'З': 'Z',
+    'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P',
+    'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch',
+    'Ш': 'Sh', 'Щ': 'Sht', 'Ъ': 'A', 'Ь': 'Y', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+
+  return text
+    .split('')
+    .map(char => cyrillicToLatin[char] || char)
+    .join('');
+}
+
+// Helper function to generate a unique slug
+const generateUniqueSlug = async (title: string): Promise<string> => {
+  // Transliterate and create base slug
+  let baseSlug = transliterateCyrillic(title)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+    .substring(0, 90); // Leave room for suffix
+
+  if (!baseSlug || baseSlug.length < 3) {
+    baseSlug = `article-${Date.now()}`;
+  }
+
+  let slug = baseSlug;
+  let counter = 1;
+
+  // Check if slug exists and add counter if needed
+  while (await prisma.article.findUnique({ where: { slug } })) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+}
+
+export const createArticle = async (articleData: any, authorId: string): Promise<any> => {
   try {
     const { zones, ...articleFields } = articleData
-    
-    // Generate slug if not provided
-    if (!articleFields.slug) {
-      articleFields.slug = articleFields.title
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-')      // Replace spaces with hyphens
-        .replace(/-+/g, '-')       // Replace multiple hyphens with single
-        .trim()
+
+    // Generate unique slug if not provided or if provided slug is too short
+    if (!articleFields.slug || articleFields.slug.length < 3) {
+      articleFields.slug = await generateUniqueSlug(articleFields.title)
+    } else {
+      // Verify provided slug is unique
+      const existing = await prisma.article.findUnique({ where: { slug: articleFields.slug } })
+      if (existing) {
+        articleFields.slug = await generateUniqueSlug(articleFields.title)
+      }
     }
 
     // Create article with zones using transaction
@@ -434,8 +481,16 @@ export const createArticle = async (articleData: any, authorId: string) => {
     return result
   } catch (error: any) {
     console.error('Error creating article:', error)
+    // P2002 shouldn't happen now since we generate unique slugs, but keep as safety
     if (error.code === 'P2002') {
-      throw new AppError('Article with this slug already exists', 409)
+      // Retry with timestamp-based slug as last resort
+      const timestampSlug = `article-${Date.now()}`;
+      const newArticleData = {
+        ...articleData,
+        slug: timestampSlug
+      };
+      // Retry the creation (recursive call is safe here as timestamp is always unique)
+      return createArticle(newArticleData, authorId);
     }
     throw new AppError('Failed to create article', 500)
   }

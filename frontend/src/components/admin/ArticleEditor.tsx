@@ -321,9 +321,10 @@ export default function ArticleEditor({
       newErrors.zones = 'Трябва да изберете поне една зона'
     }
 
-    if (!formData.featuredImage) {
-      newErrors.featuredImage = 'Основната снимка е задължителна'
-    }
+    // featuredImage is now optional
+    // if (!formData.featuredImage) {
+    //   newErrors.featuredImage = 'Основната снимка е задължителна'
+    // }
 
     if (!formData.author.name.trim()) {
       newErrors.authorName = 'Името на автора е задължително'
@@ -342,7 +343,22 @@ export default function ArticleEditor({
   }
 
   const generateSlug = (title: string) => {
+    // Cyrillic to Latin transliteration map
+    const cyrillicToLatin: Record<string, string> = {
+      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'zh', 'з': 'z',
+      'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+      'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
+      'ш': 'sh', 'щ': 'sht', 'ъ': 'a', 'ь': 'y', 'ю': 'yu', 'я': 'ya',
+      'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ж': 'Zh', 'З': 'Z',
+      'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P',
+      'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch',
+      'Ш': 'Sh', 'Щ': 'Sht', 'Ъ': 'A', 'Ь': 'Y', 'Ю': 'Yu', 'Я': 'Ya'
+    }
+
     return title
+      .split('')
+      .map(char => cyrillicToLatin[char] || char)
+      .join('')
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
@@ -530,7 +546,7 @@ export default function ArticleEditor({
         {/* Featured Image */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Основна снимка *
+            Основна снимка (опционално)
           </label>
           <div className="flex items-center space-x-4">
             {formData.featuredImage ? (

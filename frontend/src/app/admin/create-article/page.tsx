@@ -16,41 +16,9 @@ export default function CreateArticlePage() {
     try {
       console.log('Създаване на статия:', articleData)
 
-      // Convert frontend data to backend format
-      const backendData = {
-        title: articleData.title,
-        slug: articleData.slug || generateSlug(articleData.title),
-        excerpt: articleData.excerpt,
-        content: articleData.content,
-        category: articleData.category,
-        subcategory: articleData.subcategory,
-        tags: articleData.tags,
-        featuredImageUrl: articleData.featuredImage,
-        isPremium: articleData.isPremium,
-        premiumReleaseDate: articleData.premiumSchedule?.releaseFree?.toISOString(),
-        isPermanentPremium: articleData.premiumSchedule?.isPermanentPremium || false,
-        status: articleData.status?.toUpperCase(),
-        readTime: articleData.readTime || Math.ceil(articleData.content.split(' ').length / 200),
-        seoTitle: articleData.seo?.title,
-        seoDescription: articleData.seo?.description,
-        zones: articleData.zones.map((zone: string) => ({
-          zone: zone.toUpperCase(),
-          visible: true,
-          requiresSubscription: articleData.isPremium
-        }))
-      }
-
-      // Helper function to generate slug
-      function generateSlug(title: string) {
-        return title
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .trim()
-      }
-
-      const result = await createArticleMutation.mutateAsync(backendData)
+      // apiService.createArticle handles all the transformation
+      // Just pass the articleData directly
+      const result = await createArticleMutation.mutateAsync(articleData)
       setCreatedArticle(result)
 
       // Пренасочване след 3 секунди
