@@ -23,14 +23,13 @@ import {
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/Button'
 import { Article } from '@/types'
-import TemplateBasedEditor from '@/components/admin/TemplateBasedEditor'
+import ArticleEditor from '@/components/admin/ArticleEditor'
 import { formatDateShortBG } from '@/utils/dateUtils'
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
 import ArticleOrderManager from '@/components/admin/ArticleOrderManager'
 import EnhancedMediaManager from '@/components/admin/EnhancedMediaManager'
 import TemplateManager from '@/components/admin/TemplateManager'
 import SeriesManagement from '@/components/admin/SeriesManagement'
-import { getActiveTemplates, convertToLegacyTemplate } from '@/data/templates'
 import { useAdminArticles, useAdminArticleStats, useAdminUsers, useAdminUserStats } from '@/hooks/api/useAdmin'
 import { useCreateArticle, useUpdateArticle, useDeleteArticle, useArticleById } from '@/hooks/api/useArticles'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
@@ -288,13 +287,13 @@ function AdminContent() {
           {/* Main Content */}
           <div className="flex-1 p-8">
             {showArticleEditor ? (
-              <TemplateBasedEditor
-                article={convertAdminToArticlePartial(editingArticle)}
-                templates={getActiveTemplates().map(convertToLegacyTemplate)}
-                onSave={handleSaveArticle}
-                onCancel={handleCancelEdit}
-                mode={editingArticle ? 'edit' : 'create'}
-              />
+              <div className="max-w-7xl mx-auto">
+                <ArticleEditor
+                  article={editArticleData}
+                  onSave={handleSaveArticle}
+                  onCancel={handleCancelEdit}
+                />
+              </div>
             ) : (
               <>
                 {activeTab === 'dashboard' && <DashboardTab onCreateArticle={handleCreateArticle} onSetActiveTab={handleTabChange} />}
