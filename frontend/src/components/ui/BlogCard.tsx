@@ -27,9 +27,9 @@ export default function BlogCard({ article, showVideo = false, showPhoto = false
         
         {/* Date Badge */}
         <div className="absolute top-3 left-3">
-          <div className="bg-green-600 text-white text-center rounded-lg px-2.5 py-1.5 shadow-lg">
-            <div className="text-lg font-bold leading-none">{day}</div>
-            <div className="text-xs font-medium uppercase">{month}</div>
+          <div className="bg-gradient-to-br from-green-500 to-green-700 text-white text-center rounded-xl px-3 py-2 shadow-xl backdrop-blur-sm">
+            <div className="text-xl font-extrabold leading-none">{day}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5">{month}</div>
           </div>
         </div>
 

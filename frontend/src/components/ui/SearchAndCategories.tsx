@@ -46,37 +46,37 @@ export default function SearchAndCategories({
   }
 
   return (
-    <div className="bg-white border-b border-gray-200">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+    <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           {/* Search Section */}
-          <div className="relative w-full sm:w-64">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-              <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+          <div className="relative w-full sm:w-80">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={handleSearchChange}
-              className="block w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+              className="block w-full rounded-lg border-2 border-gray-200 bg-gray-50 py-3 pl-12 pr-4 text-base text-gray-900 placeholder-gray-500 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all"
               aria-label="Search"
               placeholder="Търсете статии..."
             />
           </div>
 
           {/* Categories Section - Horizontal Scroll */}
-          <div className="flex-1 overflow-x-auto">
-            <div className="flex gap-2 pb-1">
+          <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className="flex gap-2 pb-2">
               {footballCategories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.slug)}
                   className={`
-                    px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap transition-all duration-200 
-                    border border-gray-200 hover:border-green-500
+                    px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200
+                    border-2
                     ${selectedCategory === category.slug
-                      ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white text-gray-900 hover:bg-green-50 hover:text-green-700'
+                      ? 'bg-green-600 text-white border-green-600 shadow-md scale-105'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 hover:shadow-sm'
                     }
                   `}
                 >

@@ -86,6 +86,7 @@ export default function ArticleEditor({
     excerpt: article?.excerpt || '',
     content: article?.content || '',
     template: article?.template || 'classic',
+    displayTemplate: article?.displayTemplate || 'CLASSIC',
     category: article?.category || 'read',
     subcategory: article?.subcategory || '',
     tags: article?.tags || [],
@@ -425,6 +426,23 @@ export default function ArticleEditor({
           category={formData.category}
           zone={formData.zones.length > 0 ? formData.zones.join(',') : undefined}
         />
+      </div>
+
+      {/* Display Template Selection */}
+      <div className="bg-white p-6 rounded-lg border">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Display Template (как да се визуализира)</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Изберете как статията да се показва на читателите
+        </p>
+        <select
+          value={formData.displayTemplate || 'CLASSIC'}
+          onChange={(e) => handleInputChange('displayTemplate', e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="CLASSIC">Класически (препоръчван)</option>
+          <option value="MODERN">Модерен</option>
+          <option value="MAGAZINE">Списание</option>
+        </select>
       </div>
 
       {/* Basic Information */}

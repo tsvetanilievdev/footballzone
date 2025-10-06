@@ -29,29 +29,28 @@ import { safeFormatDate } from '@/utils/dateUtils'
 
 export default function ArticleTemplatePage() {
   const params = useParams()
-  const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern' | 'magazine' | null>('classic') // Default to classic template
-  
+
   // Get slug from URL params
   const slug = params.slug as string
-  
+
   // Fetch article from API
   const { data: article, isLoading, isError, error, refetch } = useArticle(slug)
-  
+
   // Track article view
   const trackView = useTrackArticleView()
-  
+
   // Track view only once when article loads (use ref to prevent multiple calls)
   const hasTrackedView = useRef(false)
-  
+
   useEffect(() => {
     if (article?.id && !hasTrackedView.current) {
       hasTrackedView.current = true
       trackView.mutate({
         articleId: article.id,
-        metadata: { source: 'read-zone', template: selectedTemplate || 'classic' }
+        metadata: { source: 'read-zone', template: article.displayTemplate || 'CLASSIC' }
       })
     }
-  }, [article?.id, trackView]) // Remove selectedTemplate from dependencies
+  }, [article?.id, trackView, article?.displayTemplate])
 
   // Loading state
   if (isLoading) {
@@ -93,249 +92,19 @@ export default function ArticleTemplatePage() {
     )
   }
 
-  // Show article with selected template (default to classic)
-  if (selectedTemplate) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AdminEditButton article={article} />
-        <Header />
-        <div className="pt-16">
-          {selectedTemplate === 'classic' && <ClassicTemplate article={article} />}
-          {selectedTemplate === 'modern' && <ModernTemplate article={article} />}
-          {selectedTemplate === 'magazine' && <MagazineTemplate article={article} />}
-          
-          {/* Template selection button */}
-          <div className="fixed bottom-6 right-6 z-50">
-            <button
-              onClick={() => setSelectedTemplate(null)}
-              className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
-              title="Избери различен темплейт"
-            >
-              <ArrowLeftIcon className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    )
-  }
+  // Determine which template to use based on article's displayTemplate field
+  const templateToUse = article.displayTemplate || 'CLASSIC'
 
+  // Render the article with the appropriate template
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminEditButton article={article} />
       <Header />
-      
-      <div className="pt-16 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back to Read Zone */}
-          <div className="mb-8">
-            <Link
-              href="/read"
-              className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors"
-            >
-              <ArrowLeftIcon className="w-5 h-5 mr-2" />
-              Назад към Read Zone
-            </Link>
-          </div>
-
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Избери темплейт за статия
-            </h1>
-            <p className="text-xl text-black max-w-3xl mx-auto">
-              Разгледай 3-те различни темплейта за показване на статии и избери този, който най-добре отговаря на нуждите ти.
-            </p>
-          </div>
-
-          {/* Template Preview Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Classic Template Preview */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-300">
-              <div className="relative">
-                <Image
-                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
-                  alt="Classic Template"
-                  width={400}
-                  height={192}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-lg font-bold">Класически</h3>
-                  <p className="text-sm opacity-90">Традиционен и елегантен дизайн</p>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-green-700">
-                    <span className="flex items-center"><UserIcon className="w-4 h-4 mr-1" /> Автор</span>
-                    <span className="flex items-center"><ClockIcon className="w-4 h-4 mr-1" /> {article.readTime} мин</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-                    <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-                    <div className="h-3 bg-gray-100 rounded w-2/3 animate-pulse"></div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setSelectedTemplate('classic')}
-                  className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                >
-                  Прегледай Класически
-                </button>
-              </div>
-            </div>
-
-            {/* Modern Template Preview */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-300">
-              <div className="relative">
-                <Image
-                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
-                  alt="Modern Template"
-                  width={400}
-                  height={192}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-green-600/50 to-transparent" />
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-lg font-bold">Модерен</h3>
-                  <p className="text-sm opacity-90">Съвременен и интерактивен</p>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full"></div>
-                    <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-5 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <div className="h-6 bg-green-100 rounded-full w-16 animate-pulse"></div>
-                    <div className="h-6 bg-green-100 rounded-full w-20 animate-pulse"></div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setSelectedTemplate('modern')}
-                  className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                >
-                  Прегледай Модерен
-                </button>
-              </div>
-            </div>
-
-            {/* Magazine Template Preview */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-300">
-              <div className="relative">
-                <Image
-                  src={article.featuredImageUrl || article.featuredImage || '/images/placeholder-article.jpg'}
-                  alt="Magazine Template"
-                  width={400}
-                  height={192}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 to-transparent" />
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-lg font-bold">Списание</h3>
-                  <p className="text-sm opacity-90">Стил на съвременно списание</p>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="text-sm text-green-600 font-semibold">КАТЕГОРИЯ</div>
-                  <div className="space-y-2">
-                    <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-6 bg-gray-200 rounded w-4/5 animate-pulse"></div>
-                  </div>
-                  <div className="border-l-4 border-green-600 pl-4">
-                    <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-                    <div className="h-3 bg-gray-100 rounded w-3/4 animate-pulse mt-1"></div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setSelectedTemplate('magazine')}
-                  className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                >
-                  Прегледай Списание
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Features Comparison */}
-          <div className="mt-16 bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-                Сравнение на функционалности
-              </h2>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-4 font-semibold text-gray-900">Функционалност</th>
-                      <th className="text-center py-4 font-semibold text-green-600">Класически</th>
-                      <th className="text-center py-4 font-semibold text-green-600">Модерен</th>
-                      <th className="text-center py-4 font-semibold text-green-600">Списание</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    <tr className="border-b">
-                      <td className="py-4 text-black">Четим дизайн</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">✅</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-4 text-black">Интерактивни елементи</td>
-                      <td className="text-center py-4">⭐</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">⭐</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-4 text-black">Боковa лента</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">❌</td>
-                      <td className="text-center py-4">✅</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-4 text-black">Социални функции</td>
-                      <td className="text-center py-4">⭐</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">⭐</td>
-                    </tr>
-                    <tr>
-                      <td className="py-4 text-black">Мобилна оптимизация</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">✅</td>
-                      <td className="text-center py-4">✅</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="mt-6 text-center text-sm text-green-700">
-                ✅ Пълна поддръжка | ⭐ Основна поддръжка | ❌ Не се поддържа
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="pt-16">
+        {templateToUse === 'CLASSIC' && <ClassicTemplate article={article} />}
+        {templateToUse === 'MODERN' && <ModernTemplate article={article} />}
+        {templateToUse === 'MAGAZINE' && <MagazineTemplate article={article} />}
       </div>
-      
       <Footer />
     </div>
   )
@@ -639,7 +408,7 @@ function ClassicTemplate({ article }: { article: Article }) {
 function ModernTemplate({ article }: { article: Article }) {
   const [isLiked, setIsLiked] = useState(false)
   const [likes, setLikes] = useState(42)
-  
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
@@ -650,37 +419,41 @@ function ModernTemplate({ article }: { article: Article }) {
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-8">
+        {/* Strong gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
+
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-12">
           <div className="max-w-5xl mx-auto">
-            <div className="mb-6">
-              <span className="inline-flex items-center px-6 py-3 rounded-full text-sm font-semibold bg-green-600 text-white shadow-lg">
+            <div className="mb-4 md:mb-6">
+              <span className="inline-flex items-center px-4 md:px-6 py-2 md:py-3 rounded-full text-xs md:text-sm font-bold bg-green-600 text-white shadow-xl">
                 {article.category}
               </span>
             </div>
-            
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
+
+            <h1 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white mb-4 md:mb-6 leading-tight"
+                style={{
+                  textShadow: '0 4px 12px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.9)'
+                }}>
               {article.title}
             </h1>
-            
-            <div className="flex flex-wrap items-center gap-8 text-white/90">
+
+            <div className="flex flex-wrap items-center gap-4 md:gap-6 lg:gap-8 text-white">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
-                  <UserIcon className="w-6 h-6" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-green-600 rounded-full flex items-center justify-center shadow-xl">
+                  <UserIcon className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
                 <div>
-                  <div className="font-semibold text-lg">{article.author?.name || 'Анонимен автор'}</div>
-                  <div className="text-sm text-white/70">Автор</div>
+                  <div className="font-bold text-base md:text-lg">{article.author?.name || 'Анонимен автор'}</div>
+                  <div className="text-xs md:text-sm text-white/80">Автор</div>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <ClockIcon className="w-5 h-5" />
-                <span className="text-lg">{article.readTime} мин четене</span>
+                <span className="text-sm md:text-base lg:text-lg font-medium">{article.readTime} мин четене</span>
               </div>
               <div className="flex items-center space-x-2">
                 <EyeIcon className="w-5 h-5" />
-                <span className="text-lg">{article.viewCount || 1234} прегледа</span>
+                <span className="text-sm md:text-base lg:text-lg font-medium">{article.viewCount || 1234} прегледа</span>
               </div>
             </div>
           </div>

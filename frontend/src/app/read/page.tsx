@@ -58,30 +58,34 @@ export default function ReadZonePage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Hero Section - Reduced height */}
+      {/* Hero Section - Improved */}
       <main id="main" role="main">
-      <section className="relative bg-black text-white pt-16">
-        {/* Background Image */}
-        <div className="absolute inset-0">
+      <section className="relative bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white pt-16">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
           <NextImage
             src="https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=1920&h=300&fit=crop&crop=center"
             alt="Blog Header"
             width={1920}
             height={300}
-            className="w-full h-full object-cover opacity-50"
+            className="w-full h-full object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/40"></div>
         </div>
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-8 lg:px-8">
-          <div className="text-center animate-fade-in-up">
-            <div className="mb-2 animate-scale-in" style={{ animationDelay: '200ms' }}>
-              <span className="text-green-400 text-sm font-semibold uppercase tracking-wider">BLOG</span>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-12 lg:py-16 lg:px-8">
+          <div className="text-center">
+            <div className="mb-4">
+              <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-bold uppercase tracking-wider">
+                📚 Read Zone
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-              Football Zone Blog
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
+              Футболни Анализи и Новини
             </h1>
+            <p className="text-lg sm:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+              Открийте най-новите тактически анализи, интервюта и футболни истории
+            </p>
           </div>
         </div>
       </section>
