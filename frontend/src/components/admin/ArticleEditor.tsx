@@ -83,6 +83,7 @@ export default function ArticleEditor({
 }: ArticleEditorProps) {
   const [formData, setFormData] = useState<ArticleData>({
     title: article?.title || '',
+    slug: article?.slug || '',
     excerpt: article?.excerpt || '',
     content: article?.content || '',
     template: article?.template || 'classic',
@@ -350,9 +351,14 @@ export default function ArticleEditor({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (validateForm()) {
-      onSave(formData)
+      // Generate slug if not present
+      const dataToSave = {
+        ...formData,
+        slug: formData.slug || generateSlug(formData.title)
+      }
+      onSave(dataToSave)
     }
   }
 
