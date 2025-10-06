@@ -99,6 +99,12 @@ enum CourseStatus {
   ARCHIVED
 }
 
+enum DisplayTemplate {
+  CLASSIC
+  MODERN
+  MAGAZINE
+}
+
 enum LessonType {
   VIDEO
   TEXT
@@ -316,6 +322,7 @@ model Article {
   templateId           String?         @map("template_id")
   seriesId             String?         @map("series_id")
   seriesPart           Int?            @map("series_part")
+  displayTemplate      DisplayTemplate @default(CLASSIC) @map("display_template")
   status               ArticleStatus   @default(DRAFT)
   seoTitle             String?         @map("seo_title")
   seoDescription       String?         @map("seo_description")

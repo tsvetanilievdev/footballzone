@@ -30,6 +30,13 @@ export enum SubscriptionStatus {
   UNPAID = 'UNPAID'
 }
 
+// Display Template enum - MUST match backend Prisma DisplayTemplate enum
+export enum DisplayTemplate {
+  CLASSIC = 'CLASSIC',
+  MODERN = 'MODERN',
+  MAGAZINE = 'MAGAZINE'
+}
+
 // Subscription interface - aligned with backend Subscription model
 export interface Subscription {
   id: string
@@ -80,6 +87,7 @@ export interface Article {
   }
   templateId?: string
   template?: ArticleTemplate
+  displayTemplate?: DisplayTemplate // Which display template to use for rendering
   // Backend aligned fields
   authorId?: string
   customOrder?: number
