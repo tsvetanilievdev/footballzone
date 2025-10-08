@@ -55,9 +55,10 @@ export const getArticles = async (req: Request, res: Response, next: NextFunctio
 export const getArticleBySlug = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { slug } = req.params
-    
-    const article = await articleService.getArticleBySlug(slug)
-    
+    const user = req.user // Get authenticated user if exists
+
+    const article = await articleService.getArticleBySlug(slug, user)
+
     if (!article) {
       throw new AppError('Article not found', 404)
     }

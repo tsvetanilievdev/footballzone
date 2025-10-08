@@ -42,12 +42,12 @@ export default function PlayerArticleCard({ article }: PlayerArticleCardProps) {
         {/* Premium/Free Badge - Top Right */}
         <div className="absolute top-4 right-4">
           {article.isPremium ? (
-            <div className="flex items-center px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black rounded-full shadow-lg backdrop-blur-sm transform rotate-3 hover:rotate-0 transition-transform duration-300">
+            <div className="flex items-center px-3 py-2 bg-gradient-to-r from-yellow-400/90 to-orange-500/90 text-black rounded-full shadow-lg backdrop-blur-md transform rotate-3 hover:rotate-0 transition-transform duration-300">
               <LockClosedIcon className="w-4 h-4 mr-1" />
               <span className="text-xs font-bold uppercase">PRO</span>
             </div>
           ) : (
-            <div className="flex items-center px-3 py-2 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full shadow-lg backdrop-blur-sm transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+            <div className="flex items-center px-3 py-2 bg-gradient-to-r from-green-400/90 to-emerald-500/90 text-white rounded-full shadow-lg backdrop-blur-md transform -rotate-3 hover:rotate-0 transition-transform duration-300">
               <StarIcon className="w-4 h-4 mr-1" />
               <span className="text-xs font-bold uppercase">FREE</span>
             </div>

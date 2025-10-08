@@ -100,6 +100,9 @@ export interface Article {
   seoDescription?: string
   createdAt: Date
   updatedAt: Date
+  // Preview/Paywall fields
+  isPreview?: boolean // True if content is truncated for non-premium users
+  fullContentAvailable?: boolean // True if user has access to full content
 }
 
 // Template configuration system
@@ -407,4 +410,33 @@ export interface MediaFile {
   tags: string[]
   usageCount: number
   thumbnail?: string
+}
+
+// Article Status - MUST match backend Prisma ArticleStatus enum
+export type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+
+// Article Zone - MUST match backend Prisma ZoneType enum
+export type ArticleZone = 'READ' | 'coach' | 'player' | 'parent' | 'series'
+
+// Article Category type
+export type ArticleCategory =
+  | 'read' | 'coach' | 'player' | 'parent'
+  | 'tactics' | 'training' | 'psychology' | 'nutrition'
+  | 'technique' | 'fitness' | 'news' | 'interviews'
+  | 'analysis' | 'youth' | 'conditioning' | 'periodization' | 'management'
+
+// Full article interface with all backend fields
+export interface FullArticle extends Article {
+  zoneSettings?: Record<string, {
+    visible: boolean
+    requiresSubscription?: boolean
+  }>
+  analytics?: {
+    views: number
+    uniqueViews: number
+    avgReadTime: number
+    completionRate: number
+    lastViewed?: Date
+  }
+  order?: number
 }

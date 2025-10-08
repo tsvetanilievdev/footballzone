@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { PencilIcon, CogIcon } from '@heroicons/react/24/outline'
 import { Article } from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AdminEditButtonProps {
   article: Article
@@ -11,15 +12,14 @@ interface AdminEditButtonProps {
   showAdminControls?: boolean
 }
 
-export default function AdminEditButton({ 
-  article, 
+export default function AdminEditButton({
+  article,
   className = '',
-  showAdminControls = true 
+  showAdminControls = true
 }: AdminEditButtonProps) {
-  // В реален проект тук ще проверяваме дали потребителят е админ
-  // За сега симулираме че винаги е логнат като админ
-  const isAdmin = true // В реалност: useAuth().user?.role === 'admin'
-  
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+
   if (!isAdmin || !showAdminControls) {
     return null
   }

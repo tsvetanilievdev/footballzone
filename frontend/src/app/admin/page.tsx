@@ -133,17 +133,34 @@ function AdminContent() {
         // Use editArticleData.id (real article ID from API)
         console.log('Updating article with ID:', editArticleData.id)
         console.log('Article data:', articleData)
-        await updateArticleMutation.mutateAsync({
+        const result = await updateArticleMutation.mutateAsync({
           id: editArticleData.id,
           data: articleData
         })
+
+        // Redirect to the article after successful update
+        const articleSlug = result?.data?.slug || editArticleData.slug
+        if (articleSlug) {
+          window.location.href = `/read/${articleSlug}`
+        } else {
+          setShowArticleEditor(false)
+          setEditingArticle(null)
+          setHasUnsavedChanges(false)
+        }
       } else {
         console.log('Creating new article')
-        await createArticleMutation.mutateAsync(articleData)
+        const result = await createArticleMutation.mutateAsync(articleData)
+
+        // Redirect to the new article
+        const articleSlug = result?.slug || articleData.slug
+        if (articleSlug) {
+          window.location.href = `/read/${articleSlug}`
+        } else {
+          setShowArticleEditor(false)
+          setEditingArticle(null)
+          setHasUnsavedChanges(false)
+        }
       }
-      setShowArticleEditor(false)
-      setEditingArticle(null)
-      setHasUnsavedChanges(false)
     } catch (error) {
       console.error('Error saving article:', error)
       alert('Грешка при запазване: ' + (error as any)?.response?.data?.error?.message || (error as Error).message)
@@ -165,12 +182,16 @@ function AdminContent() {
       setShowExitConfirmation(true)
       return
     }
+    // Clear the URL params and close editor
+    window.history.replaceState({}, '', '/admin')
     setShowArticleEditor(false)
     setEditingArticle(null)
     setHasUnsavedChanges(false)
   }
 
   const confirmExit = () => {
+    // Clear the URL params
+    window.history.replaceState({}, '', '/admin')
     setShowArticleEditor(false)
     setEditingArticle(null)
     setHasUnsavedChanges(false)
@@ -296,6 +317,7 @@ function AdminContent() {
                   article={editArticleData}
                   onSave={handleSaveArticle}
                   onCancel={handleCancelEdit}
+                  mode={editArticleData ? 'edit' : 'create'}
                 />
               </div>
             ) : (

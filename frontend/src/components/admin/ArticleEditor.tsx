@@ -30,6 +30,7 @@ interface ArticleData {
   excerpt: string
   content: string
   template: string
+  displayTemplate?: string
   category: string
   subcategory?: string
   tags: string[]
@@ -42,7 +43,7 @@ interface ArticleData {
     isPermanentPremium: boolean
   }
   zones: string[]
-  status: 'draft' | 'published' | 'archived'
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   author: {
     name: string
     avatar?: string
@@ -96,7 +97,7 @@ export default function ArticleEditor({
     videos: article?.videos || [],
     isPremium: article?.isPremium || false,
     zones: article?.zones || ['read'],
-    status: article?.status || 'draft',
+    status: article?.status || 'DRAFT',
     author: {
       name: article?.author?.name || '',
       avatar: article?.author?.avatar || '',
@@ -1004,9 +1005,9 @@ export default function ArticleEditor({
               onChange={(e) => handleInputChange('status', e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
             >
-              <option value="draft">Чернова</option>
-              <option value="published">Публикувана</option>
-              <option value="archived">Архивирана</option>
+              <option value="DRAFT">Чернова</option>
+              <option value="PUBLISHED">Публикувана</option>
+              <option value="ARCHIVED">Архивирана</option>
             </select>
           </div>
         </div>
@@ -1038,7 +1039,13 @@ export default function ArticleEditor({
           </button>
           <button
             type="button"
-            onClick={() => handleInputChange('status', 'draft')}
+            onClick={() => {
+              handleInputChange('status', 'DRAFT')
+              setTimeout(() => {
+                const form = document.querySelector('form')
+                if (form) form.requestSubmit()
+              }, 100)
+            }}
             className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
           >
             Запази като чернова

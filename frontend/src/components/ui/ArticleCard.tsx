@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Article } from '@/types'
-import { ClockIcon, UserIcon, LockIcon, StarIcon, TrendingUpIcon } from 'lucide-react'
+import { ClockIcon, UserIcon, StarIcon, TrendingUpIcon, Crown } from 'lucide-react'
 import { Card } from './Card'
 import { Badge } from './Badge'
 import { cn } from '@/lib/utils'
@@ -47,8 +47,9 @@ export default function ArticleCard({
                 className="object-cover"
               />
               {article.isPremium && (
-                <div className="absolute top-1 right-1">
-                  <LockIcon className="w-3 h-3 text-warning bg-white rounded-full p-0.5" />
+                <div className="absolute top-1 right-1 bg-gradient-to-br from-amber-500/90 to-amber-600/90 text-white rounded px-1.5 py-0.5 flex items-center gap-0.5 shadow-md backdrop-blur-sm">
+                  <Crown className="w-3 h-3" />
+                  <span className="text-[9px] font-bold uppercase">Premium</span>
                 </div>
               )}
             </div>
@@ -70,30 +71,25 @@ export default function ArticleCard({
 
   return (
     <article className="group h-full">
-      <Card 
-        variant="interactive" 
-        size={variant === 'featured' ? 'lg' : 'default'} 
+      <Card
+        variant="interactive"
+        size="default"
         className={cn(
-          'h-full overflow-hidden',
+          'h-full overflow-hidden flex flex-col',
           variant === 'featured' && 'border-2 border-primary-200'
         )}
       >
-        <div className={cn(
-          'relative overflow-hidden',
-          variant === 'featured' ? 'aspect-[16/10]' : 'aspect-[16/9]'
-        )}>
+        <div className="relative overflow-hidden aspect-[16/9]">
           <Image
             src={article.featuredImage}
             alt={article.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-normal"
+            className="object-cover transition-all duration-300 group-hover:blur-sm group-hover:scale-105"
           />
-          
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-normal" />
-          
+
           {/* Badges overlay */}
-          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-            <div className="flex gap-2">
+          <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+            <div className="flex gap-2 flex-wrap">
               {article.isFeatured && (
                 <Badge variant="warning" size="sm" className="backdrop-blur-sm">
                   <StarIcon className="w-3 h-3 mr-1" />
@@ -106,13 +102,17 @@ export default function ArticleCard({
                 </Badge>
               )}
               {article.isPremium && (
-                <Badge variant="outline" size="sm" className="backdrop-blur-sm bg-white/90">
-                  <LockIcon className="w-3 h-3 mr-1" />
+                <Badge
+                  variant="warning"
+                  size="sm"
+                  className="backdrop-blur-md bg-gradient-to-br from-amber-500/90 to-amber-600/90 text-white border-amber-600/50 shadow-lg"
+                >
+                  <Crown className="w-3.5 h-3.5 mr-1" />
                   Premium
                 </Badge>
               )}
             </div>
-            
+
             {variant === 'featured' && (
               <Badge variant="info" size="sm" className="backdrop-blur-sm">
                 <TrendingUpIcon className="w-3 h-3 mr-1" />
@@ -120,64 +120,67 @@ export default function ArticleCard({
               </Badge>
             )}
           </div>
+
+          {/* Full title overlay on image hover */}
+          <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6">
+            <h3
+              className={cn(
+                "font-bold text-center leading-tight",
+                article.title.length > 60 ? "text-base sm:text-lg" : "text-xl sm:text-2xl"
+              )}
+              style={{ color: '#ffffff' }}
+            >
+              {article.title}
+            </h3>
+          </div>
         </div>
-        
-        <div className={cn(
-          'p-4 flex flex-col',
-          variant === 'featured' ? 'gap-4' : 'gap-3'
-        )}>
+
+        <div className="p-5 flex flex-col gap-3 flex-1">
           {/* Article metadata */}
-          <div className="flex items-center gap-3 text-xs text-black">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
             <div className="flex items-center gap-1">
-              <UserIcon className="w-3 h-3" />
+              <UserIcon className="w-3.5 h-3.5" />
               <span>{article.author.name}</span>
             </div>
-            <span>•</span>
+            <span className="text-gray-400">•</span>
             <div className="flex items-center gap-1">
-              <ClockIcon className="w-3 h-3" />
-              <span>{article.readTime} мин четене</span>
+              <ClockIcon className="w-3.5 h-3.5" />
+              <span>{article.readTime} мин</span>
             </div>
-            <span>•</span>
-            <time>{new Date(article.publishedAt).toLocaleDateString('bg-BG')}</time>
           </div>
-          
-          {/* Article title */}
-          <h3 className={cn(
-            'font-semibold text-heading line-clamp-2 group-hover:text-primary transition-colors duration-normal',
-            variant === 'featured' ? 'text-xl' : 'text-lg'
-          )}>
+
+          {/* Article title - Fixed height for consistency - Hidden on hover */}
+          <h3 className="font-bold text-heading group-hover:opacity-0 transition-opacity duration-normal text-base leading-tight line-clamp-2 min-h-[2.5rem]">
             <Link href={getArticleLink()}>
               {article.title}
             </Link>
           </h3>
-          
-          {/* Article excerpt */}
-          <p className={cn(
-            'text-black line-clamp-3 flex-1',
-            variant === 'featured' ? 'text-base' : 'text-sm'
-          )}>
+
+          {/* Article excerpt - Fixed height */}
+          <p className="text-gray-700 text-sm line-clamp-2 leading-relaxed min-h-[2.5rem]">
             {article.excerpt}
           </p>
-          
-          {/* Tags and date */}
-          <div className="flex items-center justify-between pt-2 border-t border-card-border">
-            <div className="flex flex-wrap gap-1.5">
-              {article.tags.slice(0, variant === 'featured' ? 3 : 2).map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  size="sm"
-                  className="hover:bg-primary-100 hover:text-primary transition-colors"
-                >
-                  {tag}
-                </Badge>
-              ))}
-              {article.tags.length > (variant === 'featured' ? 3 : 2) && (
-                <Badge variant="outline" size="sm">
-                  +{article.tags.length - (variant === 'featured' ? 3 : 2)}
-                </Badge>
-              )}
-            </div>
+
+          {/* Spacer to push footer to bottom */}
+          <div className="flex-1" />
+
+          {/* Tags footer */}
+          <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
+            {article.tags.slice(0, 2).map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                size="sm"
+                className="hover:bg-primary-100 hover:text-primary transition-colors text-xs"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {article.tags.length > 2 && (
+              <Badge variant="outline" size="sm" className="text-xs">
+                +{article.tags.length - 2}
+              </Badge>
+            )}
           </div>
         </div>
       </Card>

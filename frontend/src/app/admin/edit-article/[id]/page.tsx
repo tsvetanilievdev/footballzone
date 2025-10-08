@@ -58,10 +58,17 @@ export default function EditArticlePage() {
       const result = await updateArticleMutation.mutateAsync({ id: articleId, data: backendData })
       setUpdatedArticle(result)
 
-      // Пренасочване след 3 секунди
-      setTimeout(() => {
-        router.push('/admin')
-      }, 3000)
+      // Пренасочване към статията след успешен update
+      const articleSlug = result?.data?.slug || articleData.slug
+      if (articleSlug) {
+        setTimeout(() => {
+          window.location.href = `/read/${articleSlug}`
+        }, 2000)
+      } else {
+        setTimeout(() => {
+          router.push('/admin')
+        }, 2000)
+      }
     } catch (error) {
       console.error('Грешка при обновяване на статия:', error)
       alert('Грешка при обновяване на статията: ' + (error as Error).message)
@@ -166,7 +173,7 @@ export default function EditArticlePage() {
                 Статията "{updatedArticle.title}" беше обновена успешно.
               </p>
               <p className="text-sm text-gray-500">
-                Пренасочване към админ панела след 3 секунди...
+                Пренасочване към статията след 2 секунди...
               </p>
             </div>
           </div>
@@ -218,6 +225,7 @@ export default function EditArticlePage() {
       excerpt: article.excerpt || '',
       content: article.content,
       template: article.template?.id || 'classic',
+      displayTemplate: article.displayTemplate || 'CLASSIC',
       category: article.category,
       subcategory: article.subcategory || '',
       tags: article.tags || [],
@@ -227,16 +235,16 @@ export default function EditArticlePage() {
       isPremium: article.isPremium || false,
       premiumSchedule: article.premiumSchedule,
       zones: Array.isArray(article.zones) ? article.zones : [],
-      status: article.status?.toLowerCase() as 'draft' | 'published' | 'archived',
+      status: article.status || 'DRAFT',
       author: {
         name: article.author?.name || '',
         avatar: article.author?.avatar || '',
         bio: article.author?.bio || ''
       },
       seo: {
-        title: article.seo?.title || '',
-        description: article.seo?.description || '',
-        keywords: article.seo?.keywords || []
+        title: article.seoTitle || '',
+        description: article.seoDescription || '',
+        keywords: []
       },
       readTime: article.readTime || 5
     }

@@ -22,6 +22,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import PremiumCTA from '@/components/ui/PremiumCTA'
 import AdminEditButton from '@/components/admin/AdminEditButton'
+import ArticlePaywall from '@/components/articles/ArticlePaywall'
 import { useArticle, useTrackArticleView } from '@/hooks/api/useArticles'
 import { ArticleDetailSkeleton } from '@/components/ui/LoadingSpinner'
 import { ApiErrorDisplay } from '@/components/ui/ErrorBoundary'
@@ -193,6 +194,11 @@ function ClassicTemplate({ article }: { article: Article }) {
                       dangerouslySetInnerHTML={{ __html: article.content }}
                       className="article-content text-gray-800"
                     />
+
+                    {/* Show paywall if this is a preview */}
+                    {article.isPreview && !article.fullContentAvailable && (
+                      <ArticlePaywall articleTitle={article.title} className="mt-8" />
+                    )}
                   </div>
 
                   <style jsx global>{`
@@ -500,12 +506,17 @@ function ModernTemplate({ article }: { article: Article }) {
         
         <article className="bg-white rounded-3xl shadow-xl p-8 lg:p-16">
           <div className="prose prose-xl max-w-none prose-gray">
-            <div 
-              dangerouslySetInnerHTML={{ __html: article.content }} 
+            <div
+              dangerouslySetInnerHTML={{ __html: article.content }}
               className="text-gray-800 leading-relaxed"
             />
+
+            {/* Show paywall if this is a preview */}
+            {article.isPreview && !article.fullContentAvailable && (
+              <ArticlePaywall articleTitle={article.title} className="mt-8" />
+            )}
           </div>
-          
+
           {/* Tags */}
           {article.tags && article.tags.length > 0 && (
             <div className="mt-16 pt-8 border-t border-gray-200">
@@ -598,12 +609,17 @@ function MagazineTemplate({ article }: { article: Article }) {
               
               {/* Content */}
               <div className="prose prose-2xl max-w-none prose-gray leading-loose">
-                <div 
-                  dangerouslySetInnerHTML={{ __html: article.content }} 
+                <div
+                  dangerouslySetInnerHTML={{ __html: article.content }}
                   className="text-gray-800 font-serif text-xl leading-loose"
                 />
+
+                {/* Show paywall if this is a preview */}
+                {article.isPreview && !article.fullContentAvailable && (
+                  <ArticlePaywall articleTitle={article.title} className="mt-12" />
+                )}
               </div>
-              
+
               {/* Tags */}
               {article.tags && article.tags.length > 0 && (
                 <div className="mt-20 pt-12 border-t-2 border-gray-200">

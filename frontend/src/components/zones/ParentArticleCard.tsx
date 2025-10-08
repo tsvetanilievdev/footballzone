@@ -48,11 +48,11 @@ export default function ParentArticleCard({ article, categoryColor }: Props) {
         {/* Category Badge */}
         <div className="absolute top-4 left-4">
           {article.isPremium ? (
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+            <div className="bg-gradient-to-r from-yellow-400/90 to-yellow-500/90 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg backdrop-blur-md">
               ⭐ ПРЕМИУМ
             </div>
           ) : (
-            <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+            <div className="bg-green-500/90 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg backdrop-blur-md">
               ✅ БЕЗПЛАТНО
             </div>
           )}

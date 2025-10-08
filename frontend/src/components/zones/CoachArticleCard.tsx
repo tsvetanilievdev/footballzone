@@ -34,12 +34,12 @@ export default function CoachArticleCard({ article }: CoachArticleCardProps) {
         {/* Premium/Free Badge */}
         <div className="absolute top-3 right-3">
           {article.isPremium ? (
-            <div className="flex items-center px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black rounded-full shadow-lg">
+            <div className="flex items-center px-3 py-1.5 bg-gradient-to-r from-yellow-400/90 to-orange-500/90 text-black rounded-full shadow-lg backdrop-blur-md">
               <LockClosedIcon className="w-4 h-4 mr-1" />
               <span className="text-xs font-bold uppercase">Премиум</span>
             </div>
           ) : (
-            <div className="flex items-center px-3 py-1.5 bg-green-500 text-white rounded-full shadow-lg">
+            <div className="flex items-center px-3 py-1.5 bg-green-500/90 text-white rounded-full shadow-lg backdrop-blur-md">
               <StarIcon className="w-4 h-4 mr-1" />
               <span className="text-xs font-bold uppercase">Безплатно</span>
             </div>

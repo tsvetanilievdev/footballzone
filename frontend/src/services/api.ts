@@ -125,6 +125,7 @@ class ApiService {
       publishedAt: new Date(backendArticle.publishedAt || backendArticle.createdAt),
       readTime: backendArticle.readTime || 5,
       isPremium: backendArticle.isPremium || false,
+      status: backendArticle.status || (backendArticle.publishedAt ? 'PUBLISHED' : 'DRAFT'),
       premiumSchedule: backendArticle.premiumReleaseDate ? {
         releaseFree: new Date(backendArticle.premiumReleaseDate),
         isPermanentPremium: backendArticle.isPermanentPremium || false
@@ -139,9 +140,12 @@ class ApiService {
         totalParts: undefined // Can be calculated if needed
       } : undefined,
       template: backendArticle.template || null,
+      displayTemplate: backendArticle.displayTemplate || 'CLASSIC',
       order: backendArticle.customOrder || undefined,
       isFeatured: backendArticle.isFeatured || false,
       viewCount: backendArticle.viewCount || 0,
+      createdAt: backendArticle.createdAt,
+      updatedAt: backendArticle.updatedAt,
       analytics: {
         views: backendArticle.viewCount || 0,
         uniqueViews: backendArticle.viewCount || 0, // Placeholder
@@ -321,7 +325,7 @@ class ApiService {
   async updateArticle(id: string, articleData: Partial<Article>) {
     // Transform frontend Article format to backend API format
     const transformedData: any = {};
-    
+
     if (articleData.title !== undefined) transformedData.title = articleData.title;
     if (articleData.slug !== undefined) {
       transformedData.slug = articleData.slug || articleData.title?.toLowerCase()
@@ -339,8 +343,9 @@ class ApiService {
     if (articleData.isPremium !== undefined) transformedData.isPremium = articleData.isPremium;
     if (articleData.isFeatured !== undefined) transformedData.isFeatured = articleData.isFeatured;
     if (articleData.order !== undefined) transformedData.customOrder = articleData.order;
+    if (articleData.status !== undefined) transformedData.status = articleData.status.toUpperCase();
     if (articleData.zones !== undefined) transformedData.zones = this.mapZonesToBackend(articleData.zones);
-    
+
     return apiClient.put(`/articles/${id}`, transformedData);
   }
 

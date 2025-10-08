@@ -167,17 +167,13 @@ export const getArticles = async (filters: ArticleFilters) => {
   }
 }
 
-export const getArticleBySlug = async (slug: string) => {
+export const getArticleBySlug = async (slug: string, user?: any) => {
   try {
     // Check cache first
     const cacheKey = `article:${slug}`
-    const cached = await redis.getJson(cacheKey)
-    
-    if (cached) {
-      return cached
-    }
+    const cached = await redis.getJson<any>(cacheKey)
 
-    const article = await prisma.article.findUnique({
+    const article = cached || await prisma.article.findUnique({
       where: { slug },
       include: {
         author: {
@@ -212,8 +208,10 @@ export const getArticleBySlug = async (slug: string) => {
       return null
     }
 
-    // Cache article for 1 hour
-    await redis.setJson(cacheKey, article, 3600)
+    // Cache article for 1 hour if not already cached
+    if (!cached) {
+      await redis.setJson(cacheKey, article, 3600)
+    }
 
     // Increment view count asynchronously
     prisma.article.update({
@@ -221,11 +219,84 @@ export const getArticleBySlug = async (slug: string) => {
       data: { viewCount: { increment: 1 } }
     }).catch(console.error)
 
-    return article
+    // Check if user has access to premium content
+    const hasPremiumAccess = user && (user.role === 'ADMIN' || user.isPremium)
+
+    // If article is premium and user doesn't have access, return preview
+    if (article.isPremium && !hasPremiumAccess) {
+      const previewContent = truncateContent(article.content, 0.20) // Show first 20%
+
+      return {
+        ...article,
+        content: previewContent,
+        isPreview: true,
+        fullContentAvailable: false
+      }
+    }
+
+    return {
+      ...article,
+      isPreview: false,
+      fullContentAvailable: true
+    }
   } catch (error) {
     console.error('Error fetching article:', error)
     throw new AppError('Failed to fetch article', 500)
   }
+}
+
+// Helper function to truncate HTML content
+function truncateContent(html: string, percentage: number): string {
+  // Strip HTML tags to count actual text
+  const textContent = html.replace(/<[^>]*>/g, '')
+  const targetLength = Math.floor(textContent.length * percentage)
+
+  // Find the cutoff point in the original HTML
+  let currentTextLength = 0
+  let result = ''
+  let inTag = false
+
+  for (let i = 0; i < html.length && currentTextLength < targetLength; i++) {
+    const char = html[i]
+
+    if (char === '<') {
+      inTag = true
+      result += char
+    } else if (char === '>') {
+      inTag = false
+      result += char
+    } else {
+      result += char
+      if (!inTag) {
+        currentTextLength++
+      }
+    }
+  }
+
+  // Close any open tags
+  const openTags: string[] = []
+  const tagRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi
+  let match
+
+  while ((match = tagRegex.exec(result)) !== null) {
+    const tag = match[1].toLowerCase()
+    if (match[0][1] !== '/') {
+      // Opening tag
+      if (!['br', 'hr', 'img', 'input'].includes(tag)) {
+        openTags.push(tag)
+      }
+    } else {
+      // Closing tag
+      openTags.pop()
+    }
+  }
+
+  // Close remaining open tags
+  while (openTags.length > 0) {
+    result += `</${openTags.pop()}>`
+  }
+
+  return result
 }
 
 export const getArticleById = async (id: string) => {

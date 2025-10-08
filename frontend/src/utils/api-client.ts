@@ -52,9 +52,6 @@ class ApiClient {
     }
 
     this.setToken(null);
-    if (typeof window !== 'undefined') {
-      window.location.href = '/auth/login';
-    }
     return null;
   }
 
